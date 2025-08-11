@@ -1,0 +1,34 @@
+# OS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+.venv/
+venv/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# IDE / Editors
+.vscode/
+.idea/
+
+# Data/exports/uploads (adjust to taste)
+data/
+exports/
+uploads/
+reports/
+*.xlsx
+*.csv
+
+# Logs
+*.log
+
+# Byte-compiled / C extensions
+*.so
+
+# Mac cruft
+Icon?
