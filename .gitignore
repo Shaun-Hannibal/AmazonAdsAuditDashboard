@@ -24,6 +24,13 @@ reports/
 *.xlsx
 *.csv
 
+# Large client session files (over 100MB)
+client_sessions/
+
+# Database files
+*.db
+audit_cache.db
+
 # Logs
 *.log
 

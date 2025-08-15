@@ -1,0 +1,10 @@
+<svg width="800" height="220" viewBox="0 0 800 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="220" fill="#181A1B"/>
+  <!-- Blue Wheel Icon -->
+  <circle cx="110" cy="110" r="55" stroke="#4FC3F7" stroke-width="12" fill="none"/>
+  <path d="M110 55 A55 55 0 0 1 165 110" stroke="#4FC3F7" stroke-width="12" fill="none" stroke-linecap="round"/>
+  <!-- Text -->
+  <text x="200" y="135" font-family="Arial, Helvetica, sans-serif" font-size="80" fill="#FFFFFF" font-weight="bold" letter-spacing="6">
+    BLUE WHEEL
+  </text>
+</svg>

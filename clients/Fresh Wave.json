@@ -1,0 +1,2178 @@
+{
+    "client_name": "Fresh Wave",
+    "branded_keywords": [
+        "fresh wave",
+        "freshwave"
+    ],
+    "branded_asins": [],
+    "product_groups": {},
+    "goals": {
+        "account_wide_acos": null,
+        "branded_acos": null,
+        "non_branded_acos": null,
+        "use_avg_acos_account": true,
+        "use_avg_acos_branded": true,
+        "use_avg_acos_nonbranded": true
+    },
+    "branded_asins_data": {
+        "B0BGSR6QMQ": {
+            "product_title": "Fresh Wave Lemon Odor Removing Gel Refill, 63 oz. - Safer Odor Absorbers for Home, Natural Plant-Based Odor Eliminator, Every 15 oz. lasts 30-60 Days, For Cooking, Trash & Pets",
+            "product_group": "Gel Refill"
+        },
+        "B08XY8MDBL": {
+            "product_title": "Fresh Wave Lavender Odor Removing Gel, 15 oz. & 7 oz.| Safer Odor Absorbers for Home | Natural Plant-Based Odor Eliminator | Every 7 oz. lasts 30-60 Days | For Cooking, Smoke, Trash & Pets",
+            "product_group": "Gel"
+        },
+        "B09SVNL6VL": {
+            "product_title": "Fresh Wave Lemon Odor Removing Gel, 7 oz., Pack of 3 - Safer Odor Absorbers for Home, Natural Plant-Based Odor Eliminator, Every 7 oz. lasts 15-30 Days, For Cooking, Trash & Pets",
+            "product_group": "Gel"
+        },
+        "B09SN2B5R2": {
+            "product_title": "Fresh Wave Lemon Odor Eliminating & Deodorizing Packs | Bag of 6 | Safer Odor Relief for Small Spaces | Natural Plant-Based Odor Eliminator | Odor Absorbers for Home",
+            "product_group": "Packs"
+        },
+        "B003R9A2KO": {
+            "product_title": "Fresh Wave Lemon Odor Eliminating & Deodorizing Packs | Bag of 6 & Fresh Pod Case | Safer Odor Relief for Small Spaces | Natural Plant-Based Odor Eliminator | Odor Absorbers for Home",
+            "product_group": "Packs"
+        },
+        "B079SMDCG6": {
+            "product_title": "Fresh Wave Lavender Odor Removing Gel, 15 oz. | Odor Absorbers for Home | Safer Odor Relief | Natural Plant-Based Odor Eliminator | Every 15 oz. Lasts 30-60 Days | for Cooking, Trash & Pets",
+            "product_group": "Gel"
+        },
+        "B01N79KYZB": {
+            "product_title": "Fresh Wave Odor Removing Laundry Booster, 24 fl. Oz., Pack of 2 - Laundry Scent Booster, Safer Odor Relief, Natural Plant-Based Odor Eliminator, Pet Bedding, Activewear, Blankets & Fabrics",
+            "product_group": "Laundry Booster"
+        },
+        "B07S2SWQXV": {
+            "product_title": "Fresh Wave Lavender Odor Eliminator Spray & Air Freshener, 8 oz. | Pack of 2 | Non-Aerosol, Fine Mist | Safer Odor Relief | Natural Plant-Based Odor Eliminator | For Furniture, Fabrics & Trash",
+            "product_group": "Spray"
+        },
+        "B0DLHKMR7D": {
+            "product_title": "Fresh Wave Odor Removing Lemon Variety Bundle: (1) 8 fl.oz. Spray, (1) 6ct Packs, (1) 15 oz. Gel",
+            "product_group": "Bundle"
+        },
+        "B0DWZ192S3": {
+            "product_title": "Fresh Wave Odor Eliminating & Deodorizing Packs | Bag of 16",
+            "product_group": "Packs"
+        },
+        "B07B381CQ1": {
+            "product_title": "Fresh Wave Lavender Odor Eliminating & Deodorizing Packs | Bag of 6 & Fresh Pod Case | Safer Odor Relief for Small Spaces | Natural Plant-Based Odor Eliminator | Odor Absorbers for Home",
+            "product_group": "Packs"
+        },
+        "B098W74V48": {
+            "product_title": "Fresh Wave Odor Removing Dog Shampoo, 16 Fl. Oz. | Shampoo for Smelly Dogs | Safer Odor Relief",
+            "product_group": "Pet Products"
+        },
+        "B01MRKX5UI": {
+            "product_title": "Fresh Wave Odor Removing Fresh Pod | 2 Refillable Fresh Pods & 2 Fresh Wave Packs | Safer Odor Relief | Natural Plant-Based Odor Eliminator for Small Spaces | Garbage Cans, Closets & Lockers",
+            "product_group": "Packs"
+        },
+        "B0CKJ9R9P7": {
+            "product_title": "Fresh Wave Lemon Odor Removing Gels and Spray Bundle: (2) 15oz. Gels and (1) 8fl. oz. Spray",
+            "product_group": "Bundle"
+        },
+        "B07Q62MLYT": {
+            "product_title": "Fresh Wave Original Scent Odor Eliminator Spray & Air Freshener, 2 fl. oz. Travel Size (Pack of 2)",
+            "product_group": "Spray"
+        },
+        "B0DLCDWMBM": {
+            "product_title": "Fresh Wave Odor Removing Gels Bundle: Lavender Scent 3-Pack 7oz. & 63oz. Gel Refill",
+            "product_group": "Gel"
+        },
+        "B0CKJQ3KBB": {
+            "product_title": "Fresh Wave Lemon Odor Removing Spray and Gel Bundle: (1) 8fl. oz. Spray and (3) 7oz. Gels",
+            "product_group": "Bundle"
+        },
+        "B09TWZWFBS": {
+            "product_title": "Fresh Wave Lemon Odor Removing Gel, 15 oz. | Odor Absorbers for Home | Safer Odor Relief | Natural Plant-Based Odor Eliminator | Every 15 oz. lasts 30-60 Days | For Cooking, Trash & Pets",
+            "product_group": "Gel"
+        },
+        "B0CKQQ5FMQ": {
+            "product_title": "Fresh Wave Lemon Odor Removing Packs and Sprays Bundle: (2) 8 fl. oz. Sprays, (1) 6ct Packs and Pod Combo",
+            "product_group": "Bundle"
+        },
+        "B075GCJ8YT": {
+            "product_title": "Fresh Wave Odor Removing Gel Refill, 63 oz., Pack of 2 - Safer Odor Absorbers for Home, Natural Plant-Based Odor Eliminator, Every 15 oz. lasts 30-60 Days, For Cooking, Trash & Pets",
+            "product_group": "Gel Refill"
+        },
+        "B01DEAA3O0": {
+            "product_title": "Fresh Wave Odor Eliminating & Deodorizing Packs | 2 Bags of 6 Each | Safer Odor Relief for Small Spaces | Natural Plant-Based Odor Eliminator | Odor Absorbers for Home",
+            "product_group": "Packs"
+        },
+        "B09TWZNCH9": {
+            "product_title": "Fresh Wave Lemon Odor Removing Gel, 15 oz., Pack of 2 - Safer Odor Absorbers for Home, Natural Plant-Based Odor Eliminator, Every 15 oz. lasts 30-60 Days, For Cooking, Trash & Pets",
+            "product_group": "Gel"
+        },
+        "B0CKJXCQTQ": {
+            "product_title": "Fresh Wave Lemon Odor Removing Gels Bundle: 2-Pack 15 oz. Gel & 63 oz. Refill",
+            "product_group": "Bundle"
+        },
+        "B0DD8WFVR2": {
+            "product_title": "Fresh Wave Cat Odor Removing Bundle: (2) Odor Removing Litter Box Gels 7oz., (1) Citrus Odor Removing Pet Spray 16 fl. oz.",
+            "product_group": "Bundle"
+        },
+        "B00F2PS8HK": {
+            "product_title": "Fresh Wave Odor Eliminating & Deodorizing Packs, Bag of 6 - Safer Odor Relief for Small Spaces, Natural Plant-Based Odor Eliminator, Odor Absorbers for Home",
+            "product_group": "Packs"
+        },
+        "B0CK477K9R": {
+            "product_title": "Fresh Wave Lavender Odor Removing Gel & Spray Bundle: (2) 15oz. Gels + (2) 8 fl.oz. Sprays",
+            "product_group": "Bundle"
+        },
+        "B08HSRBYHS": {
+            "product_title": "Fresh Wave Lavender Scent Odor Eliminator Spray & Air Freshener Refill, 32 fl. oz.",
+            "product_group": "Spray"
+        },
+        "B08FWDTQ4C": {
+            "product_title": "Fresh Wave Lavender Odor Removing Spray + Packs Bundle: (2) 8 fl. oz. Sprays + (1) Packs + Pod Combo",
+            "product_group": "Bundle"
+        },
+        "B0DCLBN2JX": {
+            "product_title": "Dog Odor Eliminating Bundle: (1) Citrus Odor Removing Pet Spray 16 fl. oz., (1) Odor Removing Dog Shampoo 16 fl. oz., (1) Pet Stain & Odor Removing Spray 24 fl. oz.",
+            "product_group": "Bundle"
+        },
+        "B0DPXQQLLF": {
+            "product_title": "Fresh Wave Lemon Odor Eliminator Spray & Air Freshener, 2 oz. | Pack of 2 | Travel Size | Odor Absorbers for On-the-Go | Safer Odor Relief | Natural Plant-Based | For Hotels, Gyms, Cars & Bathrooms",
+            "product_group": "Spray"
+        },
+        "B0B94X6W56": {
+            "product_title": "Fresh Wave Odor Removing Packs Bundle: (3) 6 ct. Packs - Lemon, Lavender, Original",
+            "product_group": "Packs"
+        },
+        "B0016PS3I4": {
+            "product_title": "Fresh Wave Odor Eliminator Spray & Air Freshener, 8 fl. oz., Natural Ingredients",
+            "product_group": "Spray"
+        },
+        "B07XPDM9PZ": {
+            "product_title": "Fresh Wave Odor Removing Gel, Original 15 oz. & Lavender 7 oz.| Safer Odor Absorbers for Home | Natural Plant-Based Odor Eliminator | Every 7 oz. Lasts 15-30 Days | for Cooking, Trash & Pets",
+            "product_group": "Gel"
+        },
+        "B0B94QW6RH": {
+            "product_title": "Fresh Wave Odor Removing Sprays Bundle: (3) 8 fl. oz. Sprays - Lavender, Lemon, Original",
+            "product_group": "Spray"
+        },
+        "B0D342BL6P": {
+            "product_title": "Fresh Wave Citrus Odor Removing Pet Spray, 16 Fl. Oz. | Pet Odor Eliminator for Home | Safer Odor Relief",
+            "product_group": "Spray"
+        },
+        "B0DLCKBC77": {
+            "product_title": "Fresh Wave Odor Removing Variety Bundle: (1) 8 fl.oz. Spray, (1) 6ct Packs, (1) 15 oz. Gel",
+            "product_group": "Bundle"
+        },
+        "B077ZD7CX6": {
+            "product_title": "Fresh Wave Original Scent Odor Eliminator Spray & Air Freshener Refill, 32 fl. oz.",
+            "product_group": "Spray"
+        },
+        "B0BSRBB1ML": {
+            "product_title": "Fresh Wave Odor Removing Litter Box Gel, 7 oz. | Safer Pet Odor Eliminator for Home and Litter Box Area",
+            "product_group": "Pet Products"
+        },
+        "B0DCL2451D": {
+            "product_title": "Pet Odor Eliminating Bundle - Citrus Odor Removing Pet Spray 16 fl. oz. & Stain & Odor Removing Spray 24 fl. oz.",
+            "product_group": "Pet Products"
+        },
+        "B0015MN7HA": {
+            "product_title": "Fresh Wave Original Scent Odor Removing Gel Refill, 63 oz. | Safer Odor Absorbers for Home, Cooking, Trash, & Pets Areas | Natural Plant-Based Odor Eliminator",
+            "product_group": "Gel Refill"
+        },
+        "B0CKK2F1CL": {
+            "product_title": "Fresh Wave Lemon Odor Removing Gel & Packs Bundle: 3-Pack 7 oz. Gels & Packs + Pod Combo",
+            "product_group": "Bundle"
+        },
+        "B0CKQQT98K": {
+            "product_title": "Fresh Wave Odor Removing Litter Box Bundle: (2) 7 oz. Litter Box Gels, (1) 6ct Lemon Packs and Pod Combo",
+            "product_group": "Bundle"
+        },
+        "B079SKD314": {
+            "product_title": "Fresh Wave Lavender Odor Eliminating & Deodorizing Packs | Bag of 6 | Safer Odor Relief for Small Spaces | Natural Plant-Based Odor Eliminator | Odor Absorbers for Home",
+            "product_group": "Packs"
+        },
+        "B079SKRQT8": {
+            "product_title": "Fresh Wave Lavender Odor Removing Spray, 8 fl. oz.",
+            "product_group": "Spray"
+        },
+        "B07QDV4D21": {
+            "product_title": "Fresh Wave Lavender Scent Odor Removing Spray, 8 fl. oz. | Pack of 2 | Odor Absorber for Home, Furniture, Fabrics & Trash | Safer Odor Relief",
+            "product_group": "Spray"
+        },
+        "B0CKJSX8ZB": {
+            "product_title": "Fresh Wave Vacuum Odor Eliminating Beads & 8 fl. oz. Original Spray Bundle",
+            "product_group": "Bundle"
+        },
+        "B07QCVXQYL": {
+            "product_title": "Fresh Wave Odor Eliminator Spray & Air Freshener, 8 oz. | Pack of 2 | Non-Aerosol, Fine Mist | Odor Absorbers | Safer Odor Relief | Natural Plant-Based Odor Eliminator | For Furniture, Fabrics & Trash",
+            "product_group": "Spray"
+        },
+        "B07FGGC8G1": {
+            "product_title": "Fresh Wave Odor Eliminator Spray & Air Freshener, 8 oz. | Non-Aerosol, Fine Mist | Odor Absorbers for Home | Safer Odor Relief | Natural Plant-Based Odor Eliminator | For Furniture, Fabrics & Trash",
+            "product_group": "Spray"
+        },
+        "B09SN7TZ3H": {
+            "product_title": "Fresh Wave Lemon Scent Odor Removing Spray, 8 fl. oz. | Pack of 2 | Odor Absorber for Home, Furniture, Fabrics & Trash | Safer Odor Relief",
+            "product_group": "Spray"
+        },
+        "B0CKJW1RGW": {
+            "product_title": "Fresh Wave Odor Removing Laundry Booster Bundle: (3) 24 fl. oz. Laundry Booster",
+            "product_group": "Laundry Booster"
+        },
+        "B0DT4VT7VM": {
+            "product_title": "Fresh Wave Orange Odor Removing Gel Refill, 63 oz",
+            "product_group": "Gel Refill"
+        },
+        "B000IAG7R2": {
+            "product_title": "Fresh Wave Odor Removing Gel Bucket, 15.5 lb. (248 oz.), Original Scent Refill - Odor Absorbers for Home, Safer Odor Relief, Natural Plant-Based Odor Eliminator, For Cooking, Trash & Pets",
+            "product_group": "Gel Refill"
+        },
+        "B01CD4XZV6": {
+            "product_title": "Fresh Wave Odor Removing Gel, 15 oz. - Odor Absorbers for Home, Safer Odor Relief, Natural Plant-Based Odor Eliminator, Every 15 oz. lasts 30-60 Days, For Cooking, Trash & Pets",
+            "product_group": "Gel"
+        },
+        "B08FSLYW8V": {
+            "product_title": "Fresh Wave Odor Removing Gel + Packs Bundle: (3) 7 oz. Gels + (1) Packs + Pod Combo",
+            "product_group": "Bundle"
+        },
+        "B0DLCGRF2P": {
+            "product_title": "Fresh Wave Odor Removing Gels Bundle: Original Scent 3-Pack 7oz. & 63oz. Gel Refill",
+            "product_group": "Gel"
+        },
+        "B08FVHTSB9": {
+            "product_title": "Fresh Wave Odor Removing Gel + Spray Bundle: (2) 8 fl. oz. Sprays + (3) 7 oz. Gels",
+            "product_group": "Bundle"
+        },
+        "B0CKJFPZ16": {
+            "product_title": "Fresh Wave Odor Removing Gel Refills Bundle: Original, Lavender & Lemon 63 oz. Gel Refills",
+            "product_group": "Gel Refill"
+        },
+        "B0DL889JBL": {
+            "product_title": "Fresh Wave Odor Removing Gel Bundle: Variety 9pk 7oz Gels - Lemon, Lavender, Original",
+            "product_group": "Gel"
+        },
+        "B0DLHKJ9Q8": {
+            "product_title": "Fresh Wave Odor Removing Lavender Variety Bundle: (1) 8 fl.oz. Spray, (1) 6ct Packs, (1) 15 oz. Gel",
+            "product_group": "Bundle"
+        },
+        "B0DLHLD66L": {
+            "product_title": "Fresh Wave Odor Removing Variety Bundle: (1) 24 fl.oz. Laundry Booster, (1) 16 fl.oz Citrus Pet Spray",
+            "product_group": "Bundle"
+        },
+        "B0CKQR258D": {
+            "product_title": "Fresh Wave Odor Removing Litter Box Bundle: (2) 7 oz. Litter Box Gels, (1) 6ct Original Packs and Pod Combo",
+            "product_group": "Bundle"
+        },
+        "B000IAGW86": {
+            "product_title": "Fresh Wave Odor Removing Gel, 7 oz., Pack of 3 - Odor Absorbers for Home, Safer Odor Relief, Natural Plant-Based Odor Eliminator, Every 7 oz. lasts 15-30 Days, For Cooking, Trash & Pets",
+            "product_group": "Gel"
+        },
+        "B000I9QJ5S": {
+            "product_title": "Fresh Wave Odor Removing Gel, 15 oz., Pack of 2 - Odor Absorbers for Home, Safer Odor Relief, Natural Plant-Based Odor Eliminator, Every 15 oz. lasts 30-60 Days, For Cooking, Trash & Pets",
+            "product_group": "Gel"
+        },
+        "B0DLHZYQ8H": {
+            "product_title": "Fresh Wave Odor Removing Variety Bundle: (1) 8fl.oz Spray, (1) 24 fl.oz Laundry Booster, (1) 15 oz. Gel",
+            "product_group": "Bundle"
+        },
+        "B0DDVPRTZT": {
+            "product_title": "Fresh Wave Lemon Scent Odor Eliminator Spray & Air Freshener Refill, 32 fl. oz.",
+            "product_group": "Spray"
+        },
+        "B0CKK21734": {
+            "product_title": "Fresh Wave Lavender Odor Removing Gel & Packs Bundle: 3-Pack 7 oz. Gels & Packs + Pod Combo",
+            "product_group": "Gel"
+        },
+        "B09WD3M284": {
+            "product_title": "Fresh Wave Odor Removing Gel Bucket, 15.5 lb. (248 oz.) | Lavender Scent Refill | Odor Absorbers for Home | Safer Odor Relief | Natural Plant-Based Odor Eliminator | For Cooking, Trash & Pets",
+            "product_group": "Gel Refill"
+        },
+        "B0DL878RNR": {
+            "product_title": "Fresh Wave Spray Refill Odor Removing Bundle: (3) 32 fl oz. Sprays - (1) Lemon, (1) Lavender, (1) Original",
+            "product_group": "Spray Refill"
+        },
+        "B0DLCRPJRW": {
+            "product_title": "Fresh Wave Lemon Odor Removing Spray Bundle: (2) 8 fl.oz. Sprays, (1) 32 fl.oz. Spray Refill",
+            "product_group": "Spray"
+        },
+        "B07X1LN1KZ": {
+            "product_title": "Fresh Wave Lavender Odor Removing Gel Refill, 63 oz. - Safer Odor Absorbers for Home, Natural Plant-Based Odor Eliminator, Every 15 oz. lasts 30-60 Days, For Cooking, Trash & Pets",
+            "product_group": "Gel Refill"
+        },
+        "B0BSR9GQ3V": {
+            "product_title": "Fresh Wave Odor Removing Litter Box Gel, 7 oz. |Pack of 2 | Safer Pet Odor Eliminator for Home and Litter Box Area",
+            "product_group": "Pet Products"
+        },
+        "B07S1PVN8D": {
+            "product_title": "Fresh Wave Lavender Odor Eliminator Spray & Air Freshener, 8 oz. | Non-Aerosol, Fine Mist | Odor Absorbers | Safer Odor Relief | Natural Plant-Based Odor Eliminator | For Furniture, Fabrics & Trash",
+            "product_group": "Spray"
+        },
+        "B08FW9D8TP": {
+            "product_title": "Fresh Wave Odor Removing Spray Bundle: (2) 8 fl. oz. Sprays + (1) 32 fl. oz. Spray Refill",
+            "product_group": "Spray"
+        },
+        "B0DM6S6MBD": {
+            "product_title": "Fresh Wave Variety Odor Removing Bundle: (1) 8 floz. Spray, (1) 15 oz. Gel, (1) 5.25 oz. Vacuum Beads",
+            "product_group": "Bundle"
+        },
+        "B088QRJRW3": {
+            "product_title": "Fresh Wave Lavender Odor Removing Gel, 15 oz., Pack of 2 - Safer Odor Absorbers for Home, Natural Plant-Based Odor Eliminator, Every 15 oz. lasts 30-60 Days, For Cooking, Trash & Pets",
+            "product_group": "Gel"
+        },
+        "B0CKQRWDWR": {
+            "product_title": "Fresh Wave Odor Removing Packs and Sprays Bundle: (2) 8 fl. oz. Sprays, (1) 6ct Packs and Pod Combo",
+            "product_group": "Bundle"
+        },
+        "B01M07RTKT": {
+            "product_title": "Fresh Wave Original Scent Odor Removing Spray, 8 fl. oz. | Pack of 2 | Odor Absorber for Home, Furniture, Fabrics & Trash | Safer Odor Relief",
+            "product_group": "Spray"
+        },
+        "B0CK3MM933": {
+            "product_title": "Fresh Wave Lavender Odor Removing Packs and Pod Bundle: (2) 6ct. Packs (1) Pod",
+            "product_group": "Bundle"
+        },
+        "B0DD8MRKDH": {
+            "product_title": "Fresh Wave Dog Odor Eliminating Bundle: (1) Citrus Odor Removing Pet Spray 16 fl. oz., (1) Odor Removing Dog Shampoo 16 fl. oz.",
+            "product_group": "Bundle"
+        },
+        "B079XYSDNN": {
+            "product_title": "Fresh Wave Original Odor Eliminating & Deodorizing Packs - Bag of 6 & Fresh Pod Case - Safer Odor Relief for Small Spaces, Natural Plant-Based Odor Eliminator, Odor Absorbers for Home",
+            "product_group": "Packs"
+        },
+        "B0DJ9W3PCG": {
+            "product_title": "Fresh Wave Odor Removing Litter Box Jumbo Gel, 30 oz. | Safer Pet Odor Eliminator for Home and Litter Box Area",
+            "product_group": "Pet Products"
+        },
+        "B08FSW46Q5": {
+            "product_title": "Fresh Wave Odor Removing Gel Bundle: (2) 15 oz. Gels + (1) 63 oz. Gel Refill",
+            "product_group": "Gel"
+        },
+        "B08ZDVD1SL": {
+            "product_title": "Fresh Wave Lavender Odor Eliminator Spray & Air Freshener, 2 oz. | Pack of 2 | Travel Size | Odor Absorbers for On-the-Go | Safer Odor Relief | Natural Plant-Based | For Hotels, Gyms, Cars & Bathrooms",
+            "product_group": "Spray"
+        },
+        "B0DJC57NYS": {
+            "product_title": "Fresh Wave Shoe Deodorizer, 1 Pack (2 Count) \u2013 Natural & Safe Shoe Freshener for All Types of Shoes, Long-Lasting and Reusable, Odor Eliminator for Strong Odor, Easy-to-Use Shoe Smell Remover",
+            "product_group": "Shoe Deodorizer"
+        },
+        "B01DD1JKRG": {
+            "product_title": "Fresh Wave Odor Removing Candle, 7 oz. | Safer Odor Relief | Burns at Least 30 Hours | Natural Plant-Based Odor Eliminator | Odor Absorbers for Home | Clean-Burning Soy",
+            "product_group": "Candle"
+        },
+        "B0CKQRPT7Y": {
+            "product_title": "Fresh Wave Lavender Odor Removing Gels Bundle: (2) 15oz. Gels, (1) 63oz. Gel Refill",
+            "product_group": "Gel"
+        },
+        "B0012T551C": {
+            "product_title": "Fresh Wave Vacuum Odor Eliminating & Deodorizer Beads, 5.25 oz. - Safer Odor Relief, Natural Plant-Based Odor Eliminator, Odor Absorbers for Home, Keeps Vacuum Fresh Between Uses",
+            "product_group": "Vacuum Beads"
+        },
+        "B0BG9B1TSD": {
+            "product_title": "Fresh Wave Lavender Odor Removing Spray Bundle: 2-Pack 8 fl. oz. Spray & 32 fl. oz. Refill",
+            "product_group": "Spray"
+        },
+        "B0DLCGN391": {
+            "product_title": "Fresh Wave Odor Removing Gels Bundle: Lemon Scent 3-Pack 7oz. & 63oz. Gel Refill",
+            "product_group": "Gel"
+        },
+        "B01N94V5M0": {
+            "product_title": "Fresh Wave Vacuum Odor Eliminating & Deodorizer Beads, 5.25 oz. | Pack of 2 | Safer Odor Relief | Natural Plant-Based Odor Eliminator | Odor Absorbers for Home | Keeps Vacuum Fresh Between Uses",
+            "product_group": "Vacuum Beads"
+        },
+        "B01ES2L7NY": {
+            "product_title": "Fresh Wave Odor Removing Laundry Booster, 24 fl. Oz. | Laundry Scent Booster | Safer Odor Relief | Natural Plant-Based Odor Eliminator | Pet Bedding, Activewear, Blankets, Clothes & Fabrics",
+            "product_group": "Laundry Booster"
+        },
+        "B0BZWYBCVJ": {
+            "product_title": "Fresh Wave Pet Odor Removing Litter Box Gel 7 oz. (Pack of 3)",
+            "product_group": "Pet Products"
+        },
+        "B08F2WGMX3": {
+            "product_title": "Fresh Wave Odor Removing Gel + Spray Bundle: (2) 15 oz. Gels + (2) 8 fl. oz. Sprays",
+            "product_group": "Bundle"
+        },
+        "B0B984TX9N": {
+            "product_title": "Fresh Wave Odor Removing Gels Bundle: (3) 15 oz. Gels - Lemon, Lavender, Original",
+            "product_group": "Gel"
+        },
+        "B08ZDS4FHD": {
+            "product_title": "Fresh Wave Lavender Odor Removing Gel, 7 oz., Pack of 3 - Safer Odor Absorbers for Home, Natural Plant-Based Odor Eliminator, Every 7 oz. lasts 15-30 Days, For Cooking, Trash & Pets",
+            "product_group": "Gel"
+        },
+        "B0CKJFZFGY": {
+            "product_title": "Fresh Wave Odor Removing Spray Refill Bundle: Original & Lavender 32 fl. oz. Spray Refill",
+            "product_group": "Spray Refill"
+        },
+        "B09SN8JFJH": {
+            "product_title": "Fresh Wave Lemon Odor Eliminator Spray & Air Freshener, 8 oz. | Odor Absorbers for Home | Safer Odor Relief | Natural Plant-Based Odor Eliminator | For Furniture, Fabrics & Trash",
+            "product_group": "Spray"
+        },
+        "B0BGYKXNJZ": {
+            "product_title": "Fresh Wave Odor Removing Gel Bucket, 15.5 lb. (248 oz.) | Lemon Scent Refill | Odor Absorbers for Home | Safer Odor Relief | Natural Plant-Based Odor Eliminator | For Cooking, Trash & Pets",
+            "product_group": "Gel Refill"
+        },
+        "B0CXRMXQ2V": {
+            "product_title": "Fresh Wave Citrus Pet Stain & Odor Remover, 24 fl. oz.",
+            "product_group": "Pet Products"
+        },
+        "B0CK3CNHNR": {
+            "product_title": "Fresh Wave Lemon Odor Removing Packs and Pod Bundle: (2) 6 ct Packs, (1) Pod",
+            "product_group": "Bundle"
+        },
+        "B01MR06KV8": {
+            "product_title": "Fresh Wave Odor Removing Gel, 15 oz. & 7 oz. - Odor Absorbers for Home, Safer Odor Relief, Natural Plant-Based Odor Eliminator, Every 15 oz. lasts 30-60 Days, For Cooking, Trash & Pets",
+            "product_group": "Gel"
+        },
+        "B0DT773M7V": {
+            "product_title": "Fresh Wave Orange Odor Eliminating & Deodorizing Packs - Bag of 6 & Fresh Pod Case",
+            "product_group": "Packs"
+        },
+        "B0DT4XFR49": {
+            "product_title": "Fresh Wave Orange Odor Eliminator Spray & Air Freshener, 2 oz. | Pack of 2",
+            "product_group": "Spray"
+        },
+        "B0DT4V5WBF": {
+            "product_title": "Fresh Wave Orange Odor Removing Gel, 15 oz., Pack of 2 | Odor Absorbers for Home | Safer Odor Relief | Natural Plant-Based Odor Eliminator | Every 15 oz. lasts 30-60 Days | For Cooking, Trash & Pets",
+            "product_group": "Gel"
+        },
+        "B0DT79DN1V": {
+            "product_title": "Fresh Wave Orange Odor Removing Gel, 7 oz., Pack of 3",
+            "product_group": "Gel"
+        },
+        "B0DTKKT2DV": {
+            "product_title": "Fresh Wave Orange Scent Odor Eliminator Spray & Air Freshener, 24 fl oz. | Odor Absorber for Home, Furniture, Fabrics & Trash | Safer Odor Relief",
+            "product_group": "Spray"
+        },
+        "B0DTKJZB1L": {
+            "product_title": "Fresh Wave Lemon Scent Odor Eliminator Spray & Air Freshener, 24 fl. oz. | Odor Absorber for Home, Furniture, Fabrics & Trash | Safer Odor Relief",
+            "product_group": "Spray"
+        },
+        "B0DT72PL9C": {
+            "product_title": "Fresh Wave Orange Scent Odor Removing Spray, 8 fl. oz. | Pack of 2 | Odor Absorber for Home, Furniture, Fabrics & Trash | Safer Odor Relief",
+            "product_group": "Spray"
+        },
+        "B0DT4Y5Y6R": {
+            "product_title": "Fresh Wave Orange Scent Odor Removing Spray, 8 fl. oz. | Odor Absorber for Home, Furniture, Fabrics & Trash | Safer Odor Relief",
+            "product_group": "Spray"
+        },
+        "B0DTKGWPW9": {
+            "product_title": "Fresh Wave Lavender Scent Odor Eliminator Spray & Air Freshener, 24 fl. oz. | Odor Absorber for Home, Furniture, Fabrics & Trash | Safer Odor Relief",
+            "product_group": "Bundle"
+        },
+        "B0DT4W8JKD": {
+            "product_title": "Fresh Wave Orange Odor Removing Gel, 15 oz. | Odor Absorbers for Home | Safer Odor Relief | Natural Plant-Based Odor Eliminator | Every 15 oz. lasts 30-60 Days | For Cooking, Trash & Pets",
+            "product_group": "Gel"
+        },
+        "B0DT4VF74Q": {
+            "product_title": "Fresh Wave Orange Odor Eliminating & Deodorizing Packs | Bag of 6",
+            "product_group": "Spray"
+        },
+        "B0DTKJQMF3": {
+            "product_title": "Fresh Wave Original Scent Odor Eliminator Spray & Air Freshener, 24 fl. oz. | Odor Absorber for Home, Furniture, Fabrics & Trash | Safer Odor Relief",
+            "product_group": "Spray"
+        },
+        "B0DT4QDJ4Z": {
+            "product_title": "Fresh Wave Odor Removing Gel Bucket, 15.5 lb. (248 oz.) | Orange Scent Refill",
+            "product_group": "Gel Refill"
+        },
+        "B0DT4XV8F3": {
+            "product_title": "Fresh Wave Orange Odor Eliminator Spray & Air Freshener Refill, 32 fl. oz.",
+            "product_group": "Gel Refill"
+        }
+    },
+    "campaign_tags_data": {
+        "(KL) - Fresh Wave - SP - Spray - Generic": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Spray | Ranking | ST IS | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Branded | Packs | LMG": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Packs",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Spray | Research | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(KL) - Fresh Wave - SP - Gel - Generic": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(KL) - Fresh Wave - SP - Packs - Generic": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Packs",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Spray | Performance | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(KL) - Fresh Wave - SP - PAT - Gel - Category": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | NonBrnd | PAT | Gels | LMG": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Automatic | Gels | LMG": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Spray | ASIN Targeting | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Gel | Ranking | ST IS | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Branded | Gel | LMG": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Branded | Spray | LMG": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | NonBrnd | Spray | LMG": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(KL) - Fresh Wave - SP - Packs - Auto": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Packs",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Ranking | Bottom Products | Opportunity Keywords | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Gel | Research | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Gels | 010 | LMG": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | NonBrnd | Gel | LMG": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(KL) - Fresh Wave - SP - Gel Refill - Branded": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel Refill",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Branded | Gel Refill | 015 & 142 | LMG": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel Refill",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Automatic | Sprays | LMG": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Brand | Gel Refill | ASIN Targeting | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel Refill",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Gel | Performance | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | NonBrnd | PAT | Spray | LMG": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | NonBrnd | Packs | LMG": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Packs",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Gel | Auto | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Ranking | Top Products | Opportunity Keywords | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Brand | Spray | Performance | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Brand | Spray | ASIN Targeting | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Branded | Lav Spray | LMG": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(KL) - Fresh Wave - SP - Candle - Auto": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Candle",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Pet Products | Research | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Pet Products",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Laundry Booster | ASIN Targeting | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Laundry Booster",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(KL) - Fresh Wave - SP - PAT - Gel - Competitors": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Gel | 024 | LMG": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(KL) - Fresh Wave - PAT - Packs - Competitor": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Packs",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Automatic | Lemon | LMG": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Lemon",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Vacuum Beads | Auto | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Vacuum Beads",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(KL) - Fresh Wave - SP - Laundry Booster - Generic": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Laundry Booster",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Spray | Auto | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | NonBrnd | PAT | Packs | LMG": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Packs",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Branded | Lav Gel | LMG": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Branded | Laundry Booster | LMG": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Laundry Booster",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Brand | Spray Refill | Performance | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Cat Litter | ASIN Targeting | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Pet Products",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Cat Litter | Auto | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Pet Products",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Brand | Gel Refill | Performance | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel Refill",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Packs | Performance | Closeout 40 | 047 | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Packs",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(KL) - Fresh Wave - SP - Candle - Generic": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Candle",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Brand | Gel | Performance | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(JD) - Fresh Wave - SP - Auto - Pet Products - Cat Litter Gel": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Pet Products",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Vacuum Beads | Research | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Vacuum Beads",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(JD) - Fresh Wave - SP - Auto - Spray - Non-Aerosol": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(KL) - Fresh Wave - SP - Gel - Auto": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | NonBrnd | PAT | Gel | LMG": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Packs | Performance | Closeout 50 | 046 | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Packs",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Gel | ASIN Targeting | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Brand | Pet Products | Research | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Pet Products",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | NonBrnd | Lav Gel | LMG": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Shoe Deodorizer | ASIN Targeting | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Shoe Deodorizer",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Brand | Shoe Deodorizer | ASIN Targeting | Cross Selling | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Shoe Deodorizer",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Brand | Spray Refill | Research | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(KL) - Fresh Wave - SP - Vacuum Beads - Generic": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Vacuum Beads",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Shoe Deodorizer | Auto | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Shoe Deodorizer",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Vacuum Beads | Performance | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Vacuum Beads",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Shoe Deodorizer | Keywords | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Shoe Deodorizer",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(KL) - Fresh Wave - SP - Laundry Booster - Auto": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Laundry Booster",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Cat Litter | Keywords | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Pet Products",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Brand | Gel Refill | Research | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel Refill",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(KL) - Fresh Wave - SP - Vacuum Beads - Auto": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Vacuum Beads",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Brand | Spray | Research | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Brand | Spray Refill | ASIN Targeting | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Packs | Auto | Closeout 50 | 046 | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Packs",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Brand | Pet Products | ASIN Targeting | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Pet Products",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Vacuum Beads | ASIN Targeting | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Vacuum Beads",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Pet Products | Performance | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Pet Products",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Gels | 024 | ASIN Targeting | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Branded | Lemon | LMG": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Lemon",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Branded | Vacuum Beads | 022 &  022-2 | LMG": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Vacuum Beads",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(KL) - Fresh Wave - PAT - Packs - Category": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Packs",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Brand | Vacuum Beads | Research | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Vacuum Beads",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Brand | Pet Products | Performance | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Pet Products",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Brand | Gels | 024 | Research | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Pet Products | ASIN Targeting | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Pet Products",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Brand | Vacuum Beads | ASIN Targeting | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Vacuum Beads",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Non | Pet Products | Auto | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Pet Products",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Brand | Gel | Research | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Vacuum Beads | Performance | Closeout 50 | 022 | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Vacuum Beads",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Brand | Cat Litter | Keywords | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Pet Products",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Brand | Gel | ASIN Targeting | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Brand | Cat Litter Refill | ASIN Targeting | Cross Selling | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Pet Products",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Brand | Gels | 024 | Performance | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | NonBrnd | Lemon | Gel | LMG": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Lemon",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | NonBrnd | IS | Gel | LMG": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Brand | Shoe Deodorizer | Keywords | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Shoe Deodorizer",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Brand | Vacuum Beads | Performance | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Vacuum Beads",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Gel Refill | Performance | Closeout 40 | 015 | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel Refill",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Brand | Gels | 024 | ASIN Targeting | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SBV | Laundry Booster | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SB | Non | Spray | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SB | Non | Gels | Store | VCPM | Keywords | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SBV | Brand | Spray Refill | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Spray Refill",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SB | Lavender | Store | Keywords | VCPM | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SB | Brand | Gels | 024 & 142 & 015 | Performance | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(KL) - Fresh Wave - SB - Gel Refill - Branded": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Gel Refiill",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SB | Brand | Pet Products | Research | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Pet Products",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SBV | Vacuum Beads | ASIN Targeting | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Vacuum Beads",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SB | Non | All Products | Store | VCPM | Generic Keywords | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SB | Non | Spray | PAT | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(JD) - Fresh Wave - SB - Branded - Product Collection": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(KL) - Fresh Wave - SB - Pet Products - Dog Shampoo - Video - Generic": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Pet Products",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SBV | Brand | Packs | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Packs",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SBV | Gels | Non | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SB | Non | Gel | Store | PAT | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SBV | Brand | Spray Refill | ASIN Targeting | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Spray Refill",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SB | Branded | Spray | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SBV | Brand | Spray Refill | Refill Only | Keywords | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Spray Refill",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SB | Non | Pet Products | Performance | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SB | Brand | Gels | 024 & 142 & 015 | Research | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SB | Non | Gel | Store | Performance | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SBV | Gels | Non | Keywords | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SBV | Vacuum Beads | Keywords | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Vacuum Beads",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SBV | Non | Packs | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Packs",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SB | Non | Lemon Store Page | Keywords | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Lemon",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SB | Non | Packs | PAT | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Packs",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(KL) - Fresh Wave - SB - Spray Refill - Branded": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Spray Refill",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SBV | Gels | Brand | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SBV | Non | Gels | 024 | ASIN Targeting | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SB | Non | Spray | Store | VCPM | Keywords | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SBV | Brand | Gel Refill | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SB | Non | All Products | Store | Generic Keywords | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SB | Brand | Pet Products | Performance | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Pet Products",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SD | Brand | Video | Gel | BW": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SD | Gel Refill | Remarketing | BW": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "Gel Refill",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SD | Gel | Remarketing | BW": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(KL) - Fresh Wave - Display - Gel - Competitor - Graphic": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SD | Branded | PAT | All Products | LMG": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SD | Packs | Previous Purchasers | LMG": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "Packs",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SD | Branded | Gel | Cross Selling | BW": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SD | Non | Video | Gel | BW": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SD | Non | Shoe Deodorizer | ASIN Targeting | BW": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "Shoe Deodorizer",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SD | Branded | Spray | Cross Selling | BW": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SD | Brand | Shoe Deodorizer | ASIN Targeting | Cross Selling | BW": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "Shoe Deodorizer",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SD | Spray | Remarketing | BW": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SD | Non | Video | Spray | BW": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(KL) - Fresh Wave - Display - Spray - Competitor - Graphic": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(KL) - Fresh Wave - Display - Pet Spray - Competitor": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(KL) - Fresh Wave - Display - Vacuum Beads - Competitor - Graphic": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "Vacuum Beads",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SD | Branded | PAT | Lemon | LMG": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "Lemon",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SD | Gels | Category | LMG": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SD | Brand | Cat Litter Refill | ASIN Targeting | Cross Selling | BW": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "Pet Products",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(KL) - Fresh Wave - SP - Display - Spray - Category": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SD | Video | Home Page | BW": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(KL) - Fresh Wave - Display - Packs - Competitor - Graphic": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "Packs",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SD | Non | Gels | 024 | ASIN Targeting | BW": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SD | Brand | Video | Spray | BW": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(KL) - Fresh Wave - Display - Packs - Category": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "Packs",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "(KL) - Fresh Wave - Display - Laundry Booster - Competitor - Custom Graphic": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "Laundry Booster",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SD | Brand | 142 & 015 | BW": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": "Gel Refill",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SBV | All Products | Brand | Store | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SBV | All Products | Non | Store | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SBV | Non | Home Page | VCPM | Generic Category Keywords | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SBV | Non | Gels | Store | VCPM | Keywords | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Gel",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SBV | Non | Spray | Store | VCPM | Generic Category Keywords | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Spray",
+            "tag_2": "",
+            "tag_3": ""
+        },
+        "SP | Auto | NetStamps": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "Auto | Boxes": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "Tape | Auto": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SPM / NetStamp 5 Pack ASINs / DOWN / KW 1bd8ce": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Auto | Certified Mail Labels": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "Envelopes & Mailers | Auto": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SPM / NetStamp 10 Pack ASINs / DOWN / KW 397d77": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "Auto | Shipping Label Sheets": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SPA / NetStamp Rolls / DOWN / KW 03b222": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SPM / NetStamp 25 Pack ASINs / DOWN / KW f7db4b": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SPM / NetStamp 50 Pack ASINs / DOWN / KW 04747b": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "Auto | Mailing Tubes": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "Campaign - 2/11/2025 15:38:00.338": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "How-To Video NetStamp Sheets": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "Sponsored Brand Ads": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SP | Girdles | Brand | ASIN | Legacy": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Recovery High-Waist Girdle | B09Z3R8C9Q | Non | Auto | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 2 Panty-Length Girdle | B0BYTG15F1 | Non | Auto | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Flexfit Adjustable Sport Bra | B0C1PSTQQ6 | Non | Auto | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 2 Panty-Length Girdle | B0BYTG15F1 | Non | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Recovery High-Waist Zipperless Girdle | B07K6LS4Q2 | Non | Auto | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Mid-Calf Girdle Stage 1 | B08GGF92DT | Non | Auto | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Recovery High-Waist Zipperless Girdle | B07K6LS4Q2 | Branded | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 2 Short Length Pull On Girdle | B08GH3V3RY | Branded | Research | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Recovery High-Waist Zipperless Girdle | B07K6LS4Q2 | Non | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 1 Short Length Girdle | B08GGCS2KN | Non | Auto | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Recovery Mid-Calf-Length Girdle with Suspenders | B09Z432SMC | Branded | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 1 Short Length Girdle | B08GGCS2KN | Branded | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Recovery High-Waist Girdle | B09Z3R8C9Q | Non | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Recovery High-Waist Girdle | B09Z3R8C9Q | Branded | Research | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Lipedema Early-State Legging | B0CZMM7F26 | Non | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Non | FlexFit Original Sports Bra | ASIN Targeting | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Full-length Recovery Arm Sleeve | B09ZBCV6ZW | Non | ASIN | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 1 Panty-Length Girdle | B08GGWYD9K | Branded | Research | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Flexfit Adjustable Sport Bra | B0C1PSTQQ6 | Non | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Flexfit Adjustable Sport Bra | B0C1PSTQQ6 | Non | ASIN | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Non | FlexFit Original Sports Bra | Research | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Zipperless Knee Length Girdle | B09Z36X8QN | Non | Auto | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 2 Short Length Pull On Girdle | B08GH3V3RY | Non | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Non | FlexFit Original Sports Bra | Performance | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Recovery High-Waist Girdle | B09Z3R8C9Q | Branded | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Recovery High-Waist Zipperless Girdle | B07K6LS4Q2 | Non | ASIN | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Non | FlexFit Original Sports Bra | Auto | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 1 Short Length Girdle | B08GGCS2KN | Branded | Research | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Caress High Coverage | B0BYG2YD9V | Brand | Research | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 1 Short Length Girdle | B08GGCS2KN | Non | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Recovery Men's Compression Vest | B09Z4F56HC | Non | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Recovery Mid-Calf-Length Girdle | B0CKC3MPZQ | Branded | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Recovery Mid-Calf-Length Girdle | B0CKC3MPZQ | Non | Auto | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Brand | FlexFit Original Sports Bra | Keywords | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Zipperless Knee Length Girdle | B09Z36X8QN | Branded | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Recovery Mid-Calf-Length Girdle | B0CKC3MPZQ | Non | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Recovery High-Waist Zipperless Girdle | B07K6LS4Q2 | Branded | Research | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Mid-Calf Girdle Stage 1 | B08GGF92DT | Non | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 1 Recovery High-Waist Girdle | B09Z3R8C9Q | Brand | ASIN | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Unisex Recovery Compression Chin Strap | B09VPYHP2S | Non | ASIN | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Recovery Mid-Calf-Length Girdle | B0CKC3MPZQ | Branded | Research | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Full-length Recovery Arm Sleeve | B09ZBCV6ZW | Non | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Female Curves Bodysuit | Hidden Reinforcement Panels | B0B75WGGF7 | Non | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 2 Panty-Length Girdle | B0BYTG15F1 | Brand | ASIN | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Recovery Mid-Calf-Length Girdle with Suspenders | B09Z432SMC | Non | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Recovery High-Waist Girdle | B09Z3R8C9Q | Non | ASIN | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Female Curves Bodysuit | Hidden Reinforcement Panels | B0B75WGGF7 | Non | Auto | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Recovery Men's Compression Vest | B09Z4F56HC | Non | Auto | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Female Curves Bodysuit | Hidden Reinforcement Panels | B0B75WGGF7 | Branded | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 2 Panty-Length Girdle | B0BYTG15F1 | Branded | Research | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Lipedema Post-Surgical Girdle | B0CVXV8NKH & B0CVXW2ZVB | Non | Auto | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 1 Panty-Length Girdle | B08GGWYD9K | Non | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Recovery Mid-Calf-Length Girdle with Suspenders | B09Z432SMC | Branded | Research | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Full-length Recovery Arm Sleeve | B09ZBCV6ZW | Non | Auto | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 2 Panty-Length Girdle | B0BYTG15F1 | Non | ASIN | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Zipperless Knee Length Girdle | B09Z36X8QN | Non | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Caress High Coverage | B0BYG2YD9V | Non | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Girdles | Non | Conquesting | Isavela 2 | Catch-All | Legacy": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Lipedema Post-Surgical Girdle | B0CVXV8NKH & B0CVXW2ZVB | Brand | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Full-length Recovery Arm Sleeve | B09ZBCV6ZW | Branded | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Caress High Coverage | B0BYG2YD9V | Non | Auto | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Lipedema Post-Surgical Girdle | B0CVXV8NKH & B0CVXW2ZVB | Brand | Research | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 1 Panty-Length Girdle | B08GGWYD9K | Branded | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Unisex Recovery Compression Chin Strap | B09VPYHP2S | Non | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Female Curves Bodysuit | Hidden Reinforcement Panels | B0B75WGGF7 | Branded | Research | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Caress High Coverage | B0BYG2YD9V | Brand | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 2 Panty-Length Girdle | B0BYTG15F1 | Branded | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Zipperless Knee Length Girdle | B09Z36X8QN | Branded | Research | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 2 Short Length Pull On Girdle | B08GH3V3RY | Brand | ASIN | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 1 Short Length Girdle | B08GGCS2KN | Brand | ASIN | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 2 Short Length Pull On Girdle | B08GH3V3RY | Non | Auto | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Unisex Recovery Compression Chin Strap | B09VPYHP2S | Branded | Research | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Lipedema Early-State Legging | B0CZMM7F26 | Brand | Research | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Lipedema Mid-State Legging | B0CZMMHHCV | Brand | Research | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Lipedema Mid-State Legging | B0CZMMHHCV | Non | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 1 Panty-Length Girdle | B08GGWYD9K | Non | Auto | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 2 Recovery Mid-Calf-Length Girdle | B0CKC3MPZQ | Brand | ASIN | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Full-length Recovery Arm Sleeve | B09ZBCV6ZW | Branded | Research | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Flexfit Adjustable Padded Bra | B0CBSX3GQP | Non | ASIN | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 1 Short Length Girdle | B08GGCS2KN | Non | Conquesting | Snatched Body | ASIN | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 2 Short Length Pull On Girdle | B08GH3V3RY | Branded | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Recovery Men's Compression Vest | B09Z4F56HC | Non | ASIN | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Lipedema Mid-State Legging | B0CZMMHHCV | Non | Auto | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 2 Panty-Length Girdle | B0BYTG15F1 | Non | Conquesting | Snatched Body | ASIN | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 2 Short Length Pull On Girdle | B08GH3V3RY | Non | ASIN | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 1 Panty-Length Girdle | B08GGWYD9K | Non | ASIN | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Recovery Mid-Calf-Length Girdle | B0CKC3MPZQ | Non | ASIN | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Girdles | Non | Conquesting | Isavela 1 | Catch-All | Legacy": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Unisex Recovery Compression Chin Strap | B09VPYHP2S | Non | Auto | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Stage 2 Short Length Pull On Girdle | B08GH3V3RY | Non | Conquesting | Snatched Body | ASIN | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Flexfit Adjustable Padded Bra | B0CBSX3GQP | Non | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Recovery Mid-Calf-Length Girdle with Suspenders | B09Z432SMC | Non | ASIN | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Face Masks | Non | Catch-All | Legacy": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Recovery Men's Compression Vest | B09Z4F56HC | Branded | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Lipedema Mid-State Legging | B0CZMMHHCV | Brand | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Flexfit Adjustable Padded Bra | B0CBSX3GQP | Non | Auto | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Lipedema Post-Surgical Girdle | B0CVXV8NKH & B0CVXW2ZVB | Brand | ASIN | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Lipedema Early-State Legging | B0CZMM7F26 | Brand | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Lipedema Post-Surgical Girdle | B0CVXV8NKH & B0CVXW2ZVB | Non | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Recovery Men's Compression Vest | B09Z4F56HC | Branded | Research | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Unisex Recovery Compression Chin Strap | B09VPYHP2S | Branded | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Zipperless Knee Length Girdle | B09Z36X8QN | Non | ASIN | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Lipedema Early-State Legging | B0CZMM7F26 | Non | Auto | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Lipedema Early-State Legging | B0CZMM7F26 | Brand | ASIN | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Recovery Mid-Calf-Length Girdle with Suspenders | B09Z432SMC | Non | Auto | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SP | Lipedema Mid-State Legging | B0CZMMHHCV | Brand | ASIN | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SD | Recovery Knee-Length Girdle | B08GH3V3RY | Remarketing | Views | Brand | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Stage 2 Recovery Mid-Calf-Length Girdle | B0CKC3MPZQ | Brand | ASIN | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Stage 1 Short-Length Girdle | B08GGCS2KN | Remarketing | Views | Brand | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Stage 2 Short Length Pull On Girdle | B08GH3V3RY | Brand | ASIN | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Recovery Panty-Length Girdle | B08GGWYD9K | Remarketing | Views | Brand | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Men's Compression Vest | B09Z4F56HC | Remarketing | Views | Brand | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Stage 2 Recovery Mid-Calf-Length Girdle | B0CKC3MPZQ | Remarketing | Views | Brand | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Full-length Recovery Arm Sleeve | B09ZBCV6ZW | Remarketing | Views | Brand | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Stage 1 Recovery High-Waist Girdle | B09Z3R8C9Q | Remarketing | Views | Brand | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Stage 1 Mid-Calf-Length Girdle | B08GGF92DT | Remarketing | Views | Brand | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Stage 2 Recovery High-Waist Zipperless Girdle | B07K6LS4Q2 | Remarketing | Views | Brand | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Flexfit Adjustable Sport Bra | B0C1PSTQQ6 | Remarketing | Views | Brand | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Stage 1 Panty-Length Girdle | B08GGWYD9K | VCPM | Similar to Advertised Products | Non | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Female Curves Bodysuit | B0B75WGGF7 | Remarketing | Views | Brand | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Top 10 Products | VCPM | Similar to Advertised Products | Non | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Non | Girdles | Competitor Remarketing | Store | BW": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Stage 2 Panty-Length Girdle | B0BYTG15F1 | Similar to Advertised Products | Non | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Unisex Compression Chin Strap | B09VPYHP2S | Remarketing | Views | Brand | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Zipperless Knee Length Girdle | B09Z36X8QN | Remarketing | Views | Brand | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Recovery Mid-Calf-Length Girdle with Suspenders | B09Z432SMC | Remarketing | Views | Brand | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Stage 2 Panty-Length Girdle | B0BYTG15F1 | Remarketing | Views | Brand | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Flexfit Adjustable Padded Bra | B0CBSX3GQP | Remarketing | Views | Brand | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Stage 2 Short Length Pull On Girdle | B08GH3V3RY | Category | Non | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Stage 1 Short Length Girdle | B08GGCS2KN | Category | Non | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Stage 1 Short Length Girdle | B08GGCS2KN | VCPM | Similar to Advertised Products | Non | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Lipedema Post-Surgical Girdle | B0CVXV8NKH & B0CVXW2ZVB | Brand | ASIN | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Stage 2 Panty-Length Girdle | B0BYTG15F1 | Brand | ASIN | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Stage 1 Panty-Length Girdle | B08GGWYD9K | Category | Non | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Stage 2 Short Length Pull On Girdle | B08GH3V3RY | VCPM | Similar to Advertised Products | Non | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Stage 2 Recovery Mid-Calf-Length Girdle | B0CKC3MPZQ | Category | Non | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD | Stage 1 Short Length Girdle | B08GGCS2KN | Page Visits | In-Market | Non | BWM": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SBA | Non | Bodysuits & Girdles | ASIN Targeting | Store | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SBA | Non | Bodysuits & Girdles | B0CKC3MPZQ | Performance | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SBA | Brand | Bodysuits & Girdles | B0CKC3MPZQ | Research | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SBA | Brand | Bodysuits & Girdles | B0BYTG15F1 & B08GGWYD9K | Research | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SBA | Non | Flexfit Adjustable Sport Bra | Performance | BWM": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SB | Non | Girdles | Performance | VCPM | Store | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SBA | Non | Bodysuits & Girdles | B0CKC3MPZQ | Research | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SBA | Non | Flexfit Adjustable Sport Bra | Research | BWM": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SBA | Brand | Bodysuits & Girdles | B0CKC3MPZQ | Performance | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SBA | Non | Bodysuits & Girdles | B0BYTG15F1 & B08GGWYD9K | Research | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SBA | Brand | Flexfit Adjustable Sport Bra | Performance | BWM": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SBA | Brand | Bodysuits & Girdles | B08GGCS2KN & B08GH3V3RY | Research | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SBSS | Brand | VCPM | Performance | BWM": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SBA | Brand | Flexfit Adjustable Sport Bra | Research | BWM": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SBA | Non | Bodysuits & Girdles | Keywords | Store | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SBA | Non | Bodysuits & Girdles | B08GGCS2KN & B08GH3V3RY | Performance | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SBA | Brand | Bodysuits & Girdles | B0BYTG15F1 & B08GGWYD9K | Performance | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SB | Brand | Catch All | Keywords | VCPM | Store | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SBA | Non | Bodysuits & Girdles | B08GGCS2KN & B08GH3V3RY | Research | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "(JD) - Fresh Wave - SP - Auto - Pet Spray Refill": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Spray"
+        },
+        "SBV | Gel Refill | Brand | BW": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Gel Refill"
+        }
+    },
+    "Branded Terms": [
+        "fresh wave",
+        "freshwave"
+    ],
+    "Branded ASINs": []
+}

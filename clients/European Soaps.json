@@ -1,0 +1,1291 @@
+{
+    "client_name": "European Soaps",
+    "branded_keywords": [
+        "European soaps",
+        "mercado",
+        "mercato",
+        "urbana",
+        "urbena",
+        "pre de",
+        "provence"
+    ],
+    "branded_asins": [],
+    "product_groups": {},
+    "goals": {
+        "account_wide_acos": null,
+        "branded_acos": null,
+        "non_branded_acos": null
+    },
+    "branded_asins_data": {
+        "B07DX8GSCJ": {
+            "product_title": "Via Mercato Liquid Soap, Shea Butter Enriched (12 oz), No. 6 - Fig, Orange Blossom & Cedarwood",
+            "product_group": "Via Mercato"
+        },
+        "B0B72DZZTS": {
+            "product_title": "Pre de Provence Collection Liquid Hand Soap, Sooths & Softens while Cleansing, Enriched with Shea Butter, Vitamin E & Glycerin, Soft & Soothing, 11 fl oz, Coconut",
+            "product_group": "Pre De Provence"
+        },
+        "B07CBNQJ99": {
+            "product_title": "Organic Aloe Collection Hydrating Enriched Daily Bar Soap (5.2oz), Fresh Cucumber Scent",
+            "product_group": ""
+        },
+        "B0BW4ST74P": {
+            "product_title": "Pre de Provence Bergamot & Thyme Men's Fragrance Collection, Beard Cream, 75 ML",
+            "product_group": "Pre De Provence"
+        },
+        "B01KJAKY2Y": {
+            "product_title": "Via Mercato Italian Soap Bar (200 g), No. 5 - Waterlily & Sandalwood",
+            "product_group": "Via Mercato"
+        },
+        "B07NXFX17H": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Lily Of The Valley",
+            "product_group": "Pre De Provence"
+        },
+        "B074R2QTFD": {
+            "product_title": "Via Mercato Liquid Soap, Shea Butter Enriched (12 oz), No. 7 - Peach, Fig Blossom & Rose",
+            "product_group": "Via Mercato"
+        },
+        "B01KKO1ISI": {
+            "product_title": "Pre de Provence Bergamot & Thyme Beard Oil, Shea Butter Enriched, 30 ML",
+            "product_group": "Pre De Provence"
+        },
+        "B00SX37MWA": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Raspberry",
+            "product_group": "Pre De Provence"
+        },
+        "B07DX1NT91": {
+            "product_title": "Pre de Provence No.63 Men's Collection, 100ml Eau de Toilette",
+            "product_group": "Pre De Provence"
+        },
+        "B07Q474NP1": {
+            "product_title": "Urbana Spa Prive Home Spa Collection, Volcanic Pumice Stone",
+            "product_group": "Urbana"
+        },
+        "B006IBZ5XM": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Agrumes, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B000IQVVDG": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Linden, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B001LNOEQQ": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Rose Petal",
+            "product_group": "Pre De Provence"
+        },
+        "B084STH5Q5": {
+            "product_title": "Pre de Provence Collection Liquid Hand Soap, Sooths & Softens while Cleansing, Enriched with Shea Butter, Vitamin E & Glycerin, Soft & Soothing, 11 fl oz, Sea Salt",
+            "product_group": "Pre De Provence"
+        },
+        "B001LNOCXQ": {
+            "product_title": "Pre De Provence Soothing & Moisturizing Hand Cream, 75 ml, Verbena 75ml, 1 Count",
+            "product_group": "Pre De Provence"
+        },
+        "B001LNOER0": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Sage",
+            "product_group": "Pre De Provence"
+        },
+        "B01JPVO2DA": {
+            "product_title": "Via Mercato Italian Soap Bar (200 g), No. 1 - Bergamot, Patchouli & Rosewood",
+            "product_group": "Via Mercato"
+        },
+        "B00158N0UI": {
+            "product_title": "Pre de Provence Bergamot & Thyme Men's Fragrance Collection, Shave Cream, 75 ML",
+            "product_group": "Pre De Provence"
+        },
+        "B0CS2JBSG8": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Mangosteen, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B07Y8GBZ98": {
+            "product_title": "Urbana Face hydrating mist - tea + tonic, Colorless",
+            "product_group": "Urbana"
+        },
+        "B07Q6GQTM6": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Ocean Air, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B07DX319KK": {
+            "product_title": "Via Mercato Italian Soap Bar (200 g), No. 9 - Grape, Black Currant & Musk",
+            "product_group": "Via Mercato"
+        },
+        "B000IQXOHM": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Coconut, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B00TSPNE8S": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Rosemary Mint, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B00T6IHTH4": {
+            "product_title": "Pre de Provence Versatile, Radiant, Massage Dry Body Oil - Rose De Mai, 1.0 Fl Oz",
+            "product_group": "Pre De Provence"
+        },
+        "B0BTN21X15": {
+            "product_title": "Pre de Provence Wrapped Artisanal Soap Bar, Organic Shea Butter Enriched, Natural French Skincare, Quad Milled for a Rich Smooth Lather, Iris & Peppercorn, 150 Gram",
+            "product_group": "Pre De Provence"
+        },
+        "B0F1ZMKG3L": {
+            "product_title": "Urbana Spa Prive Bath & Shower Wrap Soft, Absorbent Quick-Dry Microfiber, Secure Closure, White",
+            "product_group": "Urbana"
+        },
+        "B07NWZHFDJ": {
+            "product_title": "Pre de Provence Bergamot & Thyme Men's Fragrance Collection, Soap On A Rope, 200 G",
+            "product_group": "Pre De Provence"
+        },
+        "B074QWY7CD": {
+            "product_title": "Pre de Provence Soap On a Rope, Sage, 200 Gram",
+            "product_group": "Pre De Provence"
+        },
+        "B003DVWF5G": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, White Gardenia",
+            "product_group": "Pre De Provence"
+        },
+        "B09D2Q8M4W": {
+            "product_title": "Pre de Provence French Gift Soap Decorative Unique Shapes Traditionally Crafted in France | Long-Lasting, Rich & Creamy Lather | Moisturizing for Hands and Body, 200 Gram, Lavender Scented Heart",
+            "product_group": "Pre De Provence"
+        },
+        "B07RHMBPPN": {
+            "product_title": "Pre de Provence No. 63 Men's Shaving Scuttle, 4.2x5x3.26 Inch",
+            "product_group": "Pre De Provence"
+        },
+        "B07NTR49PZ": {
+            "product_title": "Urbana Spa Prive Home Spa Collection, Moisturizing Booties",
+            "product_group": "Urbana"
+        },
+        "B08D7QHC3F": {
+            "product_title": "Pre de Provence Advanced Alcohol Based Hand Sanitizer Gel Moisturizes & Softens Hands, 3.4 Fluid Ounces, Lavender",
+            "product_group": "Pre De Provence"
+        },
+        "B0CRSVJV2S": {
+            "product_title": "Pre de Provence Le Jardin Collection Scented Candle & Tin, Soy Blend, 21+ Burn Time, 3.5 oz, Lavender & Cassis",
+            "product_group": "Pre De Provence"
+        },
+        "B07MJ9MJX9": {
+            "product_title": "Via Mercato Primavera Spring Collection Mini Candle, 3 oz, Spring Flowers, 85 Gram (6201)",
+            "product_group": "Via Mercato"
+        },
+        "B01JPVO1WW": {
+            "product_title": "Via Mercato Italian Soap Bar (200 g), No. 8 - Clove, Vanilla Flower & Orange",
+            "product_group": "Via Mercato"
+        },
+        "B00I06ZR72": {
+            "product_title": "Pre de Provence Rose De Mai Collection Nourishing & Hydrating, Body Oil, 15ML",
+            "product_group": "Pre De Provence"
+        },
+        "B00I06ZTFM": {
+            "product_title": "Pre de Provence Rose de Mai Shower Gel 10.14oz",
+            "product_group": "Pre De Provence"
+        },
+        "B003C5KMP8": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Lime Zest, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B09M94GK8B": {
+            "product_title": "Urbana Spa Prive Home Spa Collection, Reusable Face Pad",
+            "product_group": "Urbana"
+        },
+        "B07DX1NXBQ": {
+            "product_title": "Via Mercato Liquid Soap, Shea Butter Enriched (12 oz), No. 9 - Grape, Black Currant & Musk",
+            "product_group": "Via Mercato"
+        },
+        "B00778AZXA": {
+            "product_title": "Pre De Provence La Mer Bath Salts, 13.2 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B001LNODUS": {
+            "product_title": "Pre de Provence Maison French Lavender Collection, Soothing & Fresh Scent, Dried Blossoms, 150 Grams",
+            "product_group": "Pre De Provence"
+        },
+        "B08QR5NQNV": {
+            "product_title": "Pre de Provence Collection Shea Butter Enriched Silky Smooth Emollient Hand Lotion, Lily of the Valley, 11 Fl Oz",
+            "product_group": "Pre De Provence"
+        },
+        "B001LNOCW2": {
+            "product_title": "Pre de Provence Beurre De Karit\u00e9 Moisturizing Collection, Shea Butter Enriched Nourishing, Hand Cream, 75ML, Lavender",
+            "product_group": "Pre De Provence"
+        },
+        "B01MUBWE19": {
+            "product_title": "Pre de Provence Hearts Collection Shea Butter Enriched Gift Soap, Camelia, 0.5 Pound",
+            "product_group": "Pre De Provence"
+        },
+        "B074R3G45H": {
+            "product_title": "Via Mercato Liquid Soap, Shea Butter Enriched (12 oz), No. 5 - Waterlily & Sandalwood",
+            "product_group": "Via Mercato"
+        },
+        "B07M7CJJ6N": {
+            "product_title": "Via Mercato Primavera Spring Collection, Soap Gift Set (4 x 50 gram), Fresh Herbs",
+            "product_group": "Via Mercato"
+        },
+        "B09FQY5X9G": {
+            "product_title": "Pre de Provence Heart Shaped Gift Soap, 200 Gram, Tea Rose, (6282)",
+            "product_group": "Pre De Provence"
+        },
+        "B07DX1KCFN": {
+            "product_title": "Via Mercato Liquid Soap, Shea Butter Enriched (12 oz), No. 2 - Green Tea & White Musk",
+            "product_group": "Via Mercato"
+        },
+        "B07DG1M1G8": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Cashmere Woods, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B074QWK7SL": {
+            "product_title": "Pre de Provence No.63 Men's Collection, Soap on a Rope",
+            "product_group": "Pre De Provence"
+        },
+        "B0CRSVCK13": {
+            "product_title": "Pre de Provence Le Jardin Collection Scented Candle & Tin, Soy Blend, 21+ Burn Time, 3.5 oz, Rhubarb & Lychee",
+            "product_group": "Pre De Provence"
+        },
+        "B01M1XZVW5": {
+            "product_title": "Pre de Provence Riche Collection Hand Butter, Mirabelle, 30 ml, 1 Count (35710MB),1 Count (Pack of 1)",
+            "product_group": "Pre De Provence"
+        },
+        "B07DG8P6VL": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Spiced Rum",
+            "product_group": "Pre De Provence"
+        },
+        "B0B6D6NRLJ": {
+            "product_title": "Pre de Provence Provincial Collection Luxurious & Soothing, Bath Salts, 500 Grams, Chamomile",
+            "product_group": "Pre De Provence"
+        },
+        "B09M7TLJWX": {
+            "product_title": "Via Mercato Natale Winter Woods Holiday Collection, Soap Gift Set, Assorted Scents",
+            "product_group": "Via Mercato"
+        },
+        "B07MFPJGW9": {
+            "product_title": "Via Mercato Primavera Spring Collection, Soap Gift Set (4 x 50 gram), Spring Flowers",
+            "product_group": "Via Mercato"
+        },
+        "B0B6YW5GZD": {
+            "product_title": "Pre de Provence Provincial Collection Lavender Oil Infused, Luxurious & Soothing, Massage Oil, 8.4 Fl Oz",
+            "product_group": "Pre De Provence"
+        },
+        "B01CVXQ926": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Juicy Pomegranate, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B07651VQCF": {
+            "product_title": "Via Mercato Travel Sized Italian Soap Bar (50g) - No. 1 Bergamot, Patchouli and Rosewood",
+            "product_group": "Via Mercato"
+        },
+        "B07Q7L6MH3": {
+            "product_title": "Urbana Spa Prive Home Spa Collection, Nail Brush",
+            "product_group": "Urbana"
+        },
+        "B00159ABPO": {
+            "product_title": "Urban Spa Moisturizing Gloves to Keep your Hands Smooth, Hydrated and Moisturized",
+            "product_group": ""
+        },
+        "B0BW4TFNYS": {
+            "product_title": "Pre de Provence No. 63 Men's Collection Aromatic, Warm, Spicy Masculine Fragrance, Beard & Face Cream, 75 ML",
+            "product_group": "Pre De Provence"
+        },
+        "B08PG4HH55": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Persimmon",
+            "product_group": "Pre De Provence"
+        },
+        "B01LZ2BQX6": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Herbs of Provence",
+            "product_group": "Pre De Provence"
+        },
+        "B0B6MBS3FZ": {
+            "product_title": "Pre de Provence Provincial Lavender Collection Soft Calming Scent for Your Home, Linen Water Refill, 33.8 fl oz",
+            "product_group": "Pre De Provence"
+        },
+        "B074QWY44X": {
+            "product_title": "Pre de Provence Soap On a Rope, Lavender, 200 Gram",
+            "product_group": "Pre De Provence"
+        },
+        "B08XM2KD79": {
+            "product_title": "Pre de Provence Liquid Soap & Hand Lotion Collection, Ceramic Caddy, 7.25x3.75",
+            "product_group": "Pre De Provence"
+        },
+        "B09FRFFGMZ": {
+            "product_title": "Urbana Spa Prive Collection Facial Soap Bar, 70 Gram, Egg White",
+            "product_group": "Urbana"
+        },
+        "B09M7SJPVQ": {
+            "product_title": "Pre de Provence Heritage Home Fragrance Collection Three Wick Candle Tins, 10.5 oz, Coconut",
+            "product_group": "Pre De Provence"
+        },
+        "B01LWWOLW2": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Sandalwood",
+            "product_group": "Pre De Provence"
+        },
+        "B07PNJXJVT": {
+            "product_title": "Pre de Provence Bergamot & Thyme Men's Fragrance Collection, Body Lotion, 250 ML",
+            "product_group": "Pre De Provence"
+        },
+        "B00T72R92E": {
+            "product_title": "Pre de Provence Marseille Shea Butter Enriched Artisanal French Soap Bar (150 g) - Pavot",
+            "product_group": "Pre De Provence"
+        },
+        "B00HNFPS8O": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, Angel's Trumpet, 8.8 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B08QRPKG8R": {
+            "product_title": "Pre de Provence Gift Set Collection 150 Gram Soap Bar & 1 fl oz Hand Cream, Lavender, (5319)",
+            "product_group": "Pre De Provence"
+        },
+        "B001LNOEH0": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Agrumes",
+            "product_group": "Pre De Provence"
+        },
+        "B07MFPGBH5": {
+            "product_title": "Via Mercato Primavera Spring Collection, Petite Reed Diffuser, Fresh Herbs, 40 ML",
+            "product_group": "Via Mercato"
+        },
+        "B0F1JMX6JV": {
+            "product_title": "Via Mercato Natale 8.4 Fl Oz Italian Liquid Hand Soap, Subtle Fragrance, Spiced Whiskey",
+            "product_group": "Via Mercato"
+        },
+        "B001LNOEPM": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Peony",
+            "product_group": "Pre De Provence"
+        },
+        "B09NCP28HQ": {
+            "product_title": "Via Mercato Bella Collection, Hydrates & Invigorates, Shower Gel, 500 ML, No. 6 - Coconut, Goji Berry & Black Currant",
+            "product_group": "Via Mercato"
+        },
+        "B00MQASAOK": {
+            "product_title": "Pre de Provence No.63 Men's Collection, Soap Cube",
+            "product_group": "Pre De Provence"
+        },
+        "B01KMQQ3PM": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Amande, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B084YXJRZT": {
+            "product_title": "Via Mercato Primavera Spring Collection, Petite Reed Diffuser, Plum Blossom, 50 Gram",
+            "product_group": "Via Mercato"
+        },
+        "B09FQZF8D6": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Vanilla Cognac, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B07Q5BXCQP": {
+            "product_title": "Via Mercato Bella Collection, Hydrates & Invigorates, Glycerin Soap, 100 Gram, No. 3 - Black Currant & Orange Blossoms",
+            "product_group": "Via Mercato"
+        },
+        "B08Q7DWL4Z": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Jade Vine",
+            "product_group": "Pre De Provence"
+        },
+        "B000IQU2EU": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Peony, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B084S8XF5M": {
+            "product_title": "Pre de Provence Collection Shea Butter Enriched Silky Smooth Emollient Hand Lotion, Lavender, 11 Fl Oz",
+            "product_group": "Pre De Provence"
+        },
+        "B0CRSTJDXX": {
+            "product_title": "Pre de Provence Le Jardin Collection Scented Candle & Tin, Soy Blend, 21+ Burn Time, 3.5 oz, Iris & Peppercorn",
+            "product_group": "Pre De Provence"
+        },
+        "B0CS4QQJZJ": {
+            "product_title": "Pre de Provence Le Jardin Collection Scented Foaming Hand Soap, Gentle & Moisturizing, Infused with Jojoba & Cotton Seed Oils, 250 ml, Lotus Flower & Anise",
+            "product_group": "Pre De Provence"
+        },
+        "B0CS4ZHVPS": {
+            "product_title": "Pre de Provence Collection Shea Butter Enriched Body Butter Soothing & Hydrating Emollient Cream Body Moisturizer for Women, 6.7 Fl Oz, Honey Almond",
+            "product_group": "Pre De Provence"
+        },
+        "B07VWKNB4R": {
+            "product_title": "Pre de Provence Luxury Box of Guest Gift Soap (Set of 9) - Assorted,9 Count (Pack of 1)",
+            "product_group": "Pre De Provence"
+        },
+        "B0CKY876T4": {
+            "product_title": "Via Mercato Scented Shimmering Bubble Bath, Moisturizing and Restorative, Ornament Gift Bottle is Beautifully Packaged with Gift-Giving in Mind, 250 ml, Winter Waterlily",
+            "product_group": "Via Mercato"
+        },
+        "B001LNOEM0": {
+            "product_title": "Pre de Provence Artisanal French Soap Bar Enriched with Shea Butter, Honey Almond, 8.8 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B07NTR5MBG": {
+            "product_title": "Via Mercato Bella Collection, Hydrates & Invigorates, Glycerin Soap, 100 Gram, No. 6 - Coconut, Goji Berry & Black Currant",
+            "product_group": "Via Mercato"
+        },
+        "B09NCNZ77B": {
+            "product_title": "Joia Winter/Spring Scented Moisturizing Gift Set, Bar Soap and Shea Butter Hand Cream, Kiwi & Lime, 2.4 Fl Oz",
+            "product_group": ""
+        },
+        "B06WD46C3S": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Sea Salt, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B084SBDLVX": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Tiger Lily, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B003C5DMKA": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, White Gardenia, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B00T0RMQI8": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Rosemary Mint",
+            "product_group": "Pre De Provence"
+        },
+        "B07Y8G5VBC": {
+            "product_title": "Urbana Face toner- tea + tonic, Colorless",
+            "product_group": "Urbana"
+        },
+        "B00HVNYIFW": {
+            "product_title": "Pre de Provence Rose de Mai Collection Nourishing, Hydrating & Cleansing Soap Bar, 150 Grams",
+            "product_group": "Pre De Provence"
+        },
+        "B019FWRG3C": {
+            "product_title": "Pre de Provence Maison French Lavender Collection, Soothing & Fresh Scent, Bath & Shower Gel, 300 ML",
+            "product_group": "Pre De Provence"
+        },
+        "B00LCXS80S": {
+            "product_title": "PRE DE PROVENCE No.63 Men's Collection, Shower Gel",
+            "product_group": "Pre De Provence"
+        },
+        "B00LCXSF9W": {
+            "product_title": "Pre de Provence Luxury Box of Guest Gift Soap (Set of 7) - Assorted",
+            "product_group": "Pre De Provence"
+        },
+        "B01KJAKYP6": {
+            "product_title": "Via Mercato Italian Soap Bar (200 g), No. 3 - Pepe Rose, Lavender & Vanilla Bean",
+            "product_group": "Via Mercato"
+        },
+        "B07DG453MH": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Spiced Rum, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B07DFRZNFM": {
+            "product_title": "Via Mercato Natale Single Wick 3oz Fragrant Candle - Frosted Forest",
+            "product_group": "Via Mercato"
+        },
+        "B0CL5GYMXM": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Black Currant, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B07DG44FSQ": {
+            "product_title": "Via Mercato Natale Shea Butter Soap Boutique Luxury Gift Box (Set of 4, 50g Each) - Autunno",
+            "product_group": "Via Mercato"
+        },
+        "B001LNOEMU": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Lemongrass",
+            "product_group": "Pre De Provence"
+        },
+        "B019FWRFZG": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Juicy Pomegranate",
+            "product_group": "Pre De Provence"
+        },
+        "B019FWRFNS": {
+            "product_title": "Pre de Provence Moroccan Argan Oil & Shea Butter Quad Milled Soap Bar (150 g) - Lavender",
+            "product_group": "Pre De Provence"
+        },
+        "B0CRK15FHX": {
+            "product_title": "Pre de Provence Heritage Home Fragrance Collection Three Wick Candle Tins, 10.5 oz, Verbena",
+            "product_group": "Pre De Provence"
+        },
+        "B09M7TNKPC": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Lemon Mojito, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B00BW5ZNDG": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Starflower",
+            "product_group": "Pre De Provence"
+        },
+        "B0013EF3J0": {
+            "product_title": "Urbana Exfoliating Gloves for Shower, Bath, and Cleansing \u2013 Assorted Colors, 1 Pair",
+            "product_group": "Urbana"
+        },
+        "B0CTRTZCYL": {
+            "product_title": "Via Mercato Primavera Amore Soap Shea Butter Gift Soap Bar with Gift Box, 100 Gram",
+            "product_group": "Via Mercato"
+        },
+        "B08Q7H5WFT": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Jade Vine, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B07Q5BXCQ8": {
+            "product_title": "Urbana Spa Prive Home Spa Collection, Bath & Shower Pouf",
+            "product_group": "Urbana"
+        },
+        "B0013EGV1O": {
+            "product_title": "Urban Spa Wooden Foot File for Calluses, Pedicures, Heels and Toes",
+            "product_group": ""
+        },
+        "B00BWNH2DC": {
+            "product_title": "Via Mercato Natale Christmas HolidayGift Collection, Joy, Candle",
+            "product_group": "Via Mercato"
+        },
+        "B09LGH6BHC": {
+            "product_title": "Via Mercato Natale Winter Woods Holiday Collection, Candle, 3.5 oz, Noble Fir & Cedarwood",
+            "product_group": "Via Mercato"
+        },
+        "B09M982RTV": {
+            "product_title": "Urbana Spa Prive Men's Bamboo Charcoal Collection, Body Brush",
+            "product_group": "Urbana"
+        },
+        "B001LNOCWW": {
+            "product_title": "Pre de Provence Beurre De Karit\u00e9 Moisturizing Collection, Shea Butter Enriched Nourishing, Hand Cream, 75ML, Original",
+            "product_group": "Pre De Provence"
+        },
+        "B0DHQWFGJ9": {
+            "product_title": "Via Mercato Natale Reed Diffuser Home Air Freshener, Orange Gingersnap",
+            "product_group": "Via Mercato"
+        },
+        "B00LCXS7PY": {
+            "product_title": "Pre de Provence No.63 Men's Collection, After Shave Balm",
+            "product_group": "Pre De Provence"
+        },
+        "B07652JXBQ": {
+            "product_title": "Via Mercato Travel Sized Italian Soap Bar (50g) - No. 8 Clove, Vanilla Flower and Orange",
+            "product_group": "Via Mercato"
+        },
+        "B09NCPN3LP": {
+            "product_title": "Pre de Provence Honey Collection Deeply Nourishing Hand Cream, 1.69 Fl Oz",
+            "product_group": "Pre De Provence"
+        },
+        "B074QWY7CG": {
+            "product_title": "Pre de Provence Soap On a Rope, Sandalwood, 200 Gram",
+            "product_group": "Pre De Provence"
+        },
+        "B07Q7LL41M": {
+            "product_title": "Urbana Spa Prive Home Spa Collection, Pumice Stone with Nail Brush",
+            "product_group": "Urbana"
+        },
+        "B07Q38NV7W": {
+            "product_title": "Via Mercato Bella Collection, Hydrates & Invigorates, Glycerin Soap, 100 Gram, No. 2 - Sour Cherries & Pomegranate",
+            "product_group": "Via Mercato"
+        },
+        "B01MTA9RMP": {
+            "product_title": "Pre de Provence Hearts Collection Shea Butter Enriched Gift Soap, Tea Rose, 0.5 Pound",
+            "product_group": "Pre De Provence"
+        },
+        "B01KJAKYHY": {
+            "product_title": "Via Mercato Italian Soap Bar (200 g), No. 2 - Green Tea & White Musk",
+            "product_group": "Via Mercato"
+        },
+        "B07BZQWGPV": {
+            "product_title": "Urbana Home Collection Fragrance, Mineral Bath Salt (2 x 2.1oz/60g Sachets), Sun + Sky",
+            "product_group": "Urbana"
+        },
+        "B0B69V8WGH": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Noble Fir, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B08PG6SS52": {
+            "product_title": "Pre de Provence Riche Collection Moisturizing, Bar Soap, 150 Gram, Mirabelle",
+            "product_group": "Pre De Provence"
+        },
+        "B074R35KBF": {
+            "product_title": "Pre de Provence Soap On a Rope, Mirabelle, 200 Gram",
+            "product_group": "Pre De Provence"
+        },
+        "B0DTVVJZ4V": {
+            "product_title": "Urbana Spa Prive Bamboo Soap Mitt, Natural Fibers Gentle Exfoliation",
+            "product_group": "Urbana"
+        },
+        "B01MFGGVQ3": {
+            "product_title": "Pre de Provence Argan and Shea Butter Exfoliating Soap, 1 Count(Pack of 1)",
+            "product_group": "Pre De Provence"
+        },
+        "B01N124IX9": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Sea Salt",
+            "product_group": "Pre De Provence"
+        },
+        "B08QRNQ6HD": {
+            "product_title": "Pre de Provence Gift Set Collection 150 Gram Soap Bar & 1 fl oz Hand Cream, Sea Salt",
+            "product_group": "Pre De Provence"
+        },
+        "B001LNOEN4": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Linden",
+            "product_group": "Pre De Provence"
+        },
+        "B001LNOE2U": {
+            "product_title": "Pre de Provence Les Fleurs Body Lotion, Tuberose, 8.4 -Ounce Bottle",
+            "product_group": "Pre De Provence"
+        },
+        "B0026DWB7Y": {
+            "product_title": "Pre de Provence Bergamot & Thyme Men's Fragrance Collection, Shave Soap in Tin, 150 G",
+            "product_group": "Pre De Provence"
+        },
+        "B09M7SLCN8": {
+            "product_title": "Via Mercato Natale Winter Woods Holiday Collection, Hand Cream Gift Set, Assorted Scents",
+            "product_group": "Via Mercato"
+        },
+        "B0F1JQ536N": {
+            "product_title": "Via Mercato Natale 8.4 Fl Oz Body Lotion, Moisturizing, Non-Greasy Formula, White Spruce",
+            "product_group": "Via Mercato"
+        },
+        "B0F1J9LPXT": {
+            "product_title": "Via Mercato Natale 3.3 fl oz Room Spray for Home, Car or Office Air Freshener, Spiced Whiskey",
+            "product_group": "Via Mercato"
+        },
+        "B00TBJVIDE": {
+            "product_title": "Pre de Provence Marseille Olive Oil Soap Cube, Traditional French Clean Scent Multi-Purpose use on Hands, Body, Laundry or Dishes, Natural, 300 Gram",
+            "product_group": "Pre De Provence"
+        },
+        "B000IQVV72": {
+            "product_title": "Pre de Provence Artisanal French Soap Bar Enriched with Shea Butter, Milk, 150 Gram",
+            "product_group": "Pre De Provence"
+        },
+        "B00778AZOY": {
+            "product_title": "Pre De Provence Shea Butter Soap Bar, La Mer, 150 Grams",
+            "product_group": "Pre De Provence"
+        },
+        "B00LCXS7MC": {
+            "product_title": "Pre de Provence No.63 Men's Collection, Lotion",
+            "product_group": "Pre De Provence"
+        },
+        "B001LNOCOK": {
+            "product_title": "Pre de Provence Beurre De Karit\u00e9 Moisturizing Collection, Shea Butter Enriched Nourishing, Body Butter, 500 ML, Lavender",
+            "product_group": "Pre De Provence"
+        },
+        "B0B6GN9GKJ": {
+            "product_title": "Joia Winter/Spring Scented Moisturizing Gift Set, Bar Soap and Shea Butter Hand Cream, Frasier Forest, 2.4 Fl Oz",
+            "product_group": ""
+        },
+        "B07652BDD1": {
+            "product_title": "Via Mercato Travel Sized Italian Soap Bar (50g) - No. 2 Green Tea and White Musk",
+            "product_group": "Via Mercato"
+        },
+        "B001463X8A": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Olive Oil",
+            "product_group": "Pre De Provence"
+        },
+        "B001LNOENE": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Milk",
+            "product_group": "Pre De Provence"
+        },
+        "B0DTVXCZQ9": {
+            "product_title": "Urbana Spa Prive Pumice Stone/Nail Brush, Dual Sided Natural Boar Bristle for Manicure and Pedicure",
+            "product_group": "Urbana"
+        },
+        "B01LX3Y51F": {
+            "product_title": "Pre de Provence Moroccan Argan Oil Nourishing, Cleansing Oil - Citrus",
+            "product_group": "Pre De Provence"
+        },
+        "B084SVZLQ5": {
+            "product_title": "Pre de Provence Collection Shea Butter Enriched Rich & Nourishing Hand Cream, 30 ML, Honey Almond",
+            "product_group": "Pre De Provence"
+        },
+        "B0006O4POW": {
+            "product_title": "Pre de Provence Soap, Calendula, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B074QWY7CF": {
+            "product_title": "Pre de Provence Soap On a Rope, Sea Salt, 200 Gram",
+            "product_group": "Pre De Provence"
+        },
+        "B0BF7Y2NNJ": {
+            "product_title": "Pre de Provence Beurre De Karit\u00e9 Moisturizing Collection, Shea Butter Enriched Nourishing, Soap Bar, 150 Gram, Original",
+            "product_group": "Pre De Provence"
+        },
+        "B0CS4WTHP2": {
+            "product_title": "Pre de Provence Le Jardin Collection Scented Foaming Hand Soap, Gentle & Moisturizing, Infused with Jojoba & Cotton Seed Oils, 250 ml, Lavender & Cassis",
+            "product_group": "Pre De Provence"
+        },
+        "B08QRMKJN3": {
+            "product_title": "Pre de Provence Soap Dish Large Capacity for Kitchen or Bathroom, 5.75x2.6x3.5, Le Bain, White Ceramic",
+            "product_group": "Pre De Provence"
+        },
+        "B01KJAKYV0": {
+            "product_title": "Via Mercato Italian Soap Bar (200 g), No. 7 - Peach, Fig Blossom & Rose",
+            "product_group": "Via Mercato"
+        },
+        "B001TYMJ96": {
+            "product_title": "Pre de Provence Soothing & Moisturizing 20% Pure Shea Butter Soap Bar (150 g) - Lavender",
+            "product_group": "Pre De Provence"
+        },
+        "B000IQXON6": {
+            "product_title": "Pre de Provence Artisanal French Moisturizing Soap Bar, Shea Butter Enriched, Quad Milled for Long Lasting Rich Smooth Lather, 5.3 Ounce, Verbena",
+            "product_group": "Pre De Provence"
+        },
+        "B09FR3566N": {
+            "product_title": "Pre de Provence Heart Shaped Gift Soap, 200 Gram, Lavender, (6282)",
+            "product_group": "Pre De Provence"
+        },
+        "B0B6CWNCSL": {
+            "product_title": "Pre de Provence Provincial Lavender Collection Soft Calming Scent for Your Home, Dried Blossoms, 4.2 oz",
+            "product_group": "Pre De Provence"
+        },
+        "B07DG5WH2T": {
+            "product_title": "Pre de Provence Riche Collection Moisturizing, Body Butter, 200 Gram, Coconut",
+            "product_group": "Pre De Provence"
+        },
+        "B01CKHZ8BQ": {
+            "product_title": "Pre de Provence French Gift Soap Decorative Unique Shapes Traditionally Crafted in France | Long-Lasting, Rich & Creamy Lather | Moisturizing for Hands and Body, 100 Gram, Citrus Scented Starfish",
+            "product_group": "Pre De Provence"
+        },
+        "B001LNOE5C": {
+            "product_title": "Pre de Provence Maison French Lavender Collection, Soothing & Fresh Scent, Linen Water Refill, 1000 ML",
+            "product_group": "Pre De Provence"
+        },
+        "B0CS4WTHNT": {
+            "product_title": "Pre de Provence Le Jardin Collection Scented Foaming Hand Soap, Gentle & Moisturizing, Infused with Jojoba & Cotton Seed Oils, 250 ml, Iris & Peppercorn",
+            "product_group": "Pre De Provence"
+        },
+        "B07Q8MVVX1": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Lily of the Valley, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B07BWQYKK1": {
+            "product_title": "Organic Aloe Collection Hydrating Face and Body Spray (5oz), Fresh Cucumber Scent",
+            "product_group": ""
+        },
+        "B0CS4VZ7L7": {
+            "product_title": "Pre de Provence Le Jardin Collection Scented Foaming Hand Soap, Gentle & Moisturizing, Infused with Jojoba & Cotton Seed Oils, 250 ml, Crane Flower & Orange",
+            "product_group": "Pre De Provence"
+        },
+        "B0F1J9CFWQ": {
+            "product_title": "Via Mercato Natale 3.3 fl oz Room Spray for Home, Car or Office Air Freshener, White Spruce",
+            "product_group": "Via Mercato"
+        },
+        "B001LNOCTA": {
+            "product_title": "Pre de Provence Beurre De Karit\u00e9 Moisturizing Collection, Shea Butter Enriched Nourishing, Pure Shea Butter, 30 ML, Unscented",
+            "product_group": "Pre De Provence"
+        },
+        "B07RDJ24WY": {
+            "product_title": "Pre de Provence Marseille Olive Oil Ceramic Soap Dish, Keeps Bar Dry and Protects Countertops, 4.3\" Square",
+            "product_group": "Pre De Provence"
+        },
+        "B00159HFWG": {
+            "product_title": "Urban Spa Nail Brush for the Ultimate Manicure and Pedicure, Clean and Remove Calluses",
+            "product_group": ""
+        },
+        "B084Z2BWHS": {
+            "product_title": "Via Mercato Soaps 25114PE Peach Blossom 50 Grams Petite Reed Diffuser",
+            "product_group": "Via Mercato"
+        },
+        "B01LYJCB3M": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Patchouli",
+            "product_group": "Pre De Provence"
+        },
+        "B00ZKOR388": {
+            "product_title": "Pre de Provence with a White-Washed Terracotta Finish Soap Dish, 8.8 Ounce (Pack of 1)",
+            "product_group": "Pre De Provence"
+        },
+        "B00CM0EZIY": {
+            "product_title": "Pre de Provence Moroccan Argan Oil Balm for Dry Skin, Moisturize & Hydrates With A Fresh, Juicy scent",
+            "product_group": "Pre De Provence"
+        },
+        "B0F1JTGG2F": {
+            "product_title": "Via Mercato Autunno 8.4 Fl Oz Italian Liquid Hand Soap, Subtle Fragrance, Warm Caramel",
+            "product_group": "Via Mercato"
+        },
+        "B0DHQX7678": {
+            "product_title": "Via Mercato Natale Reed Diffuser Home Air Freshener, White Spruce",
+            "product_group": "Via Mercato"
+        },
+        "B074QW89BG": {
+            "product_title": "Via Mercato Liquid Soap, Shea Butter Enriched (12 oz), No. 1 - Bergamot, Patchouli & Rosewood",
+            "product_group": "Via Mercato"
+        },
+        "B000IQU2HW": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Sage, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B00W259T7G": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Raspberry, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B0CS1WGX3D": {
+            "product_title": "Pre de Provence Artisanal French Soap Bar Enriched with Shea Butter, Quad-Milled For A Smooth & Rich Lather, 25 Gram, Mangosteen",
+            "product_group": "Pre De Provence"
+        },
+        "B003CYKOXO": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Lime Zest",
+            "product_group": "Pre De Provence"
+        },
+        "B09NCQ8JDL": {
+            "product_title": "Pre de Provence Honey Collection Deeply Nourishing Body Butter, 6.7 Fl Oz",
+            "product_group": "Pre De Provence"
+        },
+        "B01LX7WNJR": {
+            "product_title": "Pre de Provence Ultra-Hydrating Moroccan Argan Oil Hand Cream - Citrus",
+            "product_group": "Pre De Provence"
+        },
+        "B0BW4YGY8X": {
+            "product_title": "Pre de Provence Boutanique Small Batch Hand Cream Enriched with Shea Butter, Sweet Almond Oil, Minerals & Antioxidants, 50 Gram, Rooibos & Hyaluronic Acid",
+            "product_group": "Pre De Provence"
+        },
+        "B0BTN2N1GK": {
+            "product_title": "Pre de Provence Wrapped Artisanal Soap Bar, Organic Shea Butter Enriched, Natural French Skincare, Quad Milled for a Rich Smooth Lather, Lotus Flower & Anise, 150 Gram",
+            "product_group": "Pre De Provence"
+        },
+        "B09M95FKFM": {
+            "product_title": "Urbana Spa Prive Home Spa Collection, Round Body Brush",
+            "product_group": "Urbana"
+        },
+        "B07BZPRB5W": {
+            "product_title": "Urbana 5986 Home Collection Fragrance Bar Soap Citrus + Seed",
+            "product_group": "Urbana"
+        },
+        "B08PG4SLND": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Persimmon, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B01LWSBXOZ": {
+            "product_title": "Pre De Provence Ultra-Hydrating Moroccan Argan Oil Body Butter - Citrus 6.7 fl Oz(Pack of 1)",
+            "product_group": "Pre De Provence"
+        },
+        "B09NCP2DPB": {
+            "product_title": "Pre de Provence Honey Collection Deeply Nourishing Bar Soap, 150 Gram",
+            "product_group": "Pre De Provence"
+        },
+        "B00ZKOQ1H2": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Mirabelle, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B0CS4WRCJY": {
+            "product_title": "Pre de Provence Collection Shea Butter Enriched Silky Smooth Emollient Hand Lotion, Ocean Air, 11 Fl Oz",
+            "product_group": "Pre De Provence"
+        },
+        "B07DX8GL4N": {
+            "product_title": "Via Mercato Liquid Soap, Shea Butter Enriched (12 oz), No. 4 - Violets, Magnolia & Amber",
+            "product_group": "Via Mercato"
+        },
+        "B001LNOEKW": {
+            "product_title": "Pre de Provence Luxury Gift Box (Set of 9) - Assorted Scented Herb Scented Herb, 7.9 Ounce, 0.88 Ounce (Pack of 9)",
+            "product_group": "Pre De Provence"
+        },
+        "B001IDEKNQ": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Lemongrass, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B0CS1KWSNT": {
+            "product_title": "Pre de Provence Le Jardin Collection Hand Cream Enriched with Shea Butter, Aloe and Seed Oils, Moisturize & Nourish Hands, Gift or Travel Size, 30 ml, Crane Flower & Orange",
+            "product_group": "Pre De Provence"
+        },
+        "B001LNOEMK": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, Lavender, 8.8 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B0CS1PNVS2": {
+            "product_title": "Pre de Provence Le Jardin Collection Hand Cream Enriched with Shea Butter, Aloe and Seed Oils, Moisturize & Nourish Hands, Gift or Travel Size, 30 ml, Rhubarb & Lychee",
+            "product_group": "Pre De Provence"
+        },
+        "B001LNOE52": {
+            "product_title": "Pre de Provence Maison French Lavender Collection, Soothing & Fresh Scent, Linen Water with Sprayer, 500 ML",
+            "product_group": "Pre De Provence"
+        },
+        "B07VKHKBTB": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Spiced Balsam, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B0CS4Q8TKP": {
+            "product_title": "Pre de Provence Collection Shea Butter Enriched Rich & Nourishing Hand Cream, 30 ML, Ocean Air",
+            "product_group": "Pre De Provence"
+        },
+        "B0CS4MFS66": {
+            "product_title": "Pre de Provence Collection Shea Butter Enriched Body Butter Soothing & Hydrating Emollient Cream Body Moisturizer for Women, 6.7 Fl Oz, Ocean Air",
+            "product_group": "Pre De Provence"
+        },
+        "B0F1JN1YMG": {
+            "product_title": "Via Mercato Natale 8.4 Fl Oz Italian Liquid Hand Soap, Subtle Fragrance, Orange Gingersnap",
+            "product_group": "Via Mercato"
+        },
+        "B0071GFU1U": {
+            "product_title": "Pre de Provence Artisanal French Moisturizing Soap Bar, Shea Butter Enriched, Quad Milled for Long Lasting Rich Smooth Lather, 5.3 Ounce, Lavender",
+            "product_group": "Pre De Provence"
+        },
+        "B08Z7JZQXP": {
+            "product_title": "Via Mercato Bella Collection, Hydrates & Invigorates, Shimmer Moisturizer, 200 ML, No. 2 - Sour Cherries & Pomegranate",
+            "product_group": "Via Mercato"
+        },
+        "B0CRSN8W8D": {
+            "product_title": "Pre de Provence Le Jardin Collection Scented Candle & Tin, Soy Blend, 21+ Burn Time, 3.5 oz, Lotus Flower & Anise",
+            "product_group": "Pre De Provence"
+        },
+        "B07M7CH4D4": {
+            "product_title": "Via Mercato Primavera Spring Collection, Petite Reed Diffuser, Spring Flowers, 50 Gram",
+            "product_group": "Via Mercato"
+        },
+        "B0764Y6WPG": {
+            "product_title": "Via Mercato Travel Sized Italian Soap Bar (50g) - No. 5 Waterlily and Sandalwood",
+            "product_group": "Via Mercato"
+        },
+        "B00LCXS7KY": {
+            "product_title": "PRE DE PROVENCE No.63 Men's Collection, Shave Cream",
+            "product_group": "Pre De Provence"
+        },
+        "B07Y8GMTT5": {
+            "product_title": "Via Mercato Natale Christmas HolidayGift Collection, Love, Candle",
+            "product_group": "Via Mercato"
+        },
+        "B07P62MM2F": {
+            "product_title": "Via Mercato Travel Sized Italian Soap Bar (50g) - No. 9 Grape, Black Current & Musk",
+            "product_group": "Via Mercato"
+        },
+        "B07Q7LK9PL": {
+            "product_title": "Urbana Spa Prive Home Spa Collection, Moisturizing Gloves",
+            "product_group": "Urbana"
+        },
+        "B001LNOELQ": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Green Tea",
+            "product_group": "Pre De Provence"
+        },
+        "B0CRSQMJCC": {
+            "product_title": "Pre de Provence Le Jardin Collection Scented Candle & Tin, Soy Blend, 21+ Burn Time, 3.5 oz, Kiwi & Waterlily",
+            "product_group": "Pre De Provence"
+        },
+        "B019FWRGT6": {
+            "product_title": "Pre de Provence Beurre De Karit\u00e9 Moisturizing Collection, Shea Butter Enriched Nourishing, Body Butter, 500 ML, Unscented",
+            "product_group": "Pre De Provence"
+        },
+        "B001LNOESY": {
+            "product_title": "Pre de Provence Soap, Set Of 5, Lemongrass, 125 Gram Cello Wrap",
+            "product_group": "Pre De Provence"
+        },
+        "B00LCXSAE2": {
+            "product_title": "Pre de Provence Rose De Mai Collection Nourishing & Hydrating, Hand Cream, 75 ML",
+            "product_group": "Pre De Provence"
+        },
+        "B01KM88XOY": {
+            "product_title": "PRE DE PROVENCE No.63 Men's Collection, Beard Oil",
+            "product_group": "Pre De Provence"
+        },
+        "B0DTW7BPKR": {
+            "product_title": "Urbana Spa Prive Boucle Bath & Shower Mitt, Exfoliating Gloves, Clean Healthy Skin",
+            "product_group": "Urbana"
+        },
+        "B084SRSWC3": {
+            "product_title": "Pre de Provence Collection Liquid Hand Soap, Sooths & Softens while Cleansing, Enriched with Shea Butter, Vitamin E & Glycerin, Soft & Soothing, 11 fl oz, Lavender",
+            "product_group": "Pre De Provence"
+        },
+        "B01JPVO1ZO": {
+            "product_title": "Via Mercato Italian Soap Bar (200 g), No. 6 - Fig, Orange Blossom & Cedarwood",
+            "product_group": "Via Mercato"
+        },
+        "B074R3GT5L": {
+            "product_title": "Via Mercato Liquid Soap, Shea Butter Enriched (12 oz), No. 3 - Pepe Rose, Lavender & Vanilla Bean",
+            "product_group": "Via Mercato"
+        },
+        "B09FR68L84": {
+            "product_title": "Pre de Provence Collection Shea Butter Enriched Body Butter Soothing & Hydrating Emollient Cream Body Moisturizer for Women, 6.7 Fl Oz, Sea Salt",
+            "product_group": "Pre De Provence"
+        },
+        "B07F15VVD9": {
+            "product_title": "Via Mercato Liquid Soap, Shea Butter Enriched (12 oz), No. 8 - Clove, Vanilla Flower & Orange",
+            "product_group": "Via Mercato"
+        },
+        "B09NCNZMMX": {
+            "product_title": "Pre de Provence Honey Collection Deeply Nourishing Lip Balm",
+            "product_group": "Pre De Provence"
+        },
+        "B001LNOEWK": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Verbena",
+            "product_group": "Pre De Provence"
+        },
+        "B0BTN1TBMJ": {
+            "product_title": "Pre de Provence Wrapped Artisanal Soap Bar, Organic Shea Butter Enriched, Natural French Skincare, Quad Milled for a Rich Smooth Lather, Kiwi & Waterlily, 150 Gram",
+            "product_group": "Pre De Provence"
+        },
+        "B084S44XN2": {
+            "product_title": "Pre de Provence French Gift Soap Decorative Unique Shapes Traditionally Crafted in France | Long-Lasting, Rich & Creamy Lather | Moisturizing for Hands and Body, 150 Gram, Pineapple Scent",
+            "product_group": "Pre De Provence"
+        },
+        "B00BWNGLS4": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 12.3 Ounce, Olive Oil & Lavender",
+            "product_group": "Pre De Provence"
+        },
+        "B01MCYXK4D": {
+            "product_title": "Aix en Provence Triple Milled Shea Butter Artisanal French Soap, Almond, 1 Count (Pack of 1)",
+            "product_group": "Pre De Provence"
+        },
+        "B0B69VQH6Z": {
+            "product_title": "Pre de Provence Provincial Collection Lavender Oil Infused, Luxurious & Soothing, Soap Bar, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B001LNOCP4": {
+            "product_title": "Pre de Provence Enriched, Soothing & Moisturizing 20% Pure Shea Butter Soap Bar",
+            "product_group": "Pre De Provence"
+        },
+        "B0CS1X11BW": {
+            "product_title": "Pre de Provence Le Jardin Collection Hand Cream Enriched with Shea Butter, Aloe and Seed Oils, Moisturize & Nourish Hands, Gift or Travel Size, 30 ml, Lotus Flower & Anise",
+            "product_group": "Pre De Provence"
+        },
+        "B07DP1DSV4": {
+            "product_title": "Pre de Provence CAMZ10926 Natural Dish Lift Holder Accessory, Drains Water, Circulates Air, Extends Life, and Prevents Mushy, 4.5 x 3 x 0.25, Soap Saver",
+            "product_group": "Pre De Provence"
+        },
+        "B000IQSTMC": {
+            "product_title": "Pre de Provence Artisanal French Moisturizing Soap Bar, Shea Butter Enriched, Quad Milled for Long Lasting Rich Smooth Lather, 5.3 Ounce, Honey Almond",
+            "product_group": "Pre De Provence"
+        },
+        "B0BTN1KH2J": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Grapefruit",
+            "product_group": "Pre De Provence"
+        },
+        "B00T72RDWA": {
+            "product_title": "Pre de Provence No.63 Men's Collection, Shave Soap",
+            "product_group": "Pre De Provence"
+        },
+        "B08QR8YRMX": {
+            "product_title": "Pre de Provence Collection Liquid Hand Soap, Sooths & Softens while Cleansing, Enriched with Shea Butter, Vitamin E & Glycerin, Soft & Soothing, 11 fl oz, Lily of the Valley",
+            "product_group": "Pre De Provence"
+        },
+        "B07DFC7JY8": {
+            "product_title": "Via Mercato Natale Single Wick 3oz Fragrant Candle - Winter Berry",
+            "product_group": "Via Mercato"
+        },
+        "B09LGGHJ91": {
+            "product_title": "Via Mercato Natale Winter Woods Holiday Collection, Candle, 3.5 oz, Gingerbread & Tangerine",
+            "product_group": "Via Mercato"
+        },
+        "B09M96H1H3": {
+            "product_title": "Urbana Spa Prive Men's Bamboo Charcoal Collection, Shower Pouf, Brown (6338)",
+            "product_group": "Urbana"
+        },
+        "B09FRBQWG4": {
+            "product_title": "Pre de Provence Heart Shaped Gift Soap, 200 Gram, Camelia (6282)",
+            "product_group": "Pre De Provence"
+        },
+        "B0CS22KZ44": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Mangosteen",
+            "product_group": "Pre De Provence"
+        },
+        "B001LNOCV8": {
+            "product_title": "Pre de Provence Enriched, Soothing & Moisturizing 20% Pure Shea Butter Soap Bar",
+            "product_group": "Pre De Provence"
+        },
+        "B001LNODCG": {
+            "product_title": "Pre de Provence Blanc Hand & Body Lotion, Lavender/Orange, 13.4 -Ounce Bottle",
+            "product_group": "Pre De Provence"
+        },
+        "B07NWSWCKS": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Ocean Air",
+            "product_group": "Pre De Provence"
+        },
+        "B003CYKOX4": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Mint Leaf",
+            "product_group": "Pre De Provence"
+        },
+        "B01JPVO21M": {
+            "product_title": "Via Mercato Italian Soap Bar (200 g), No. 4 - Violets, Magnolia & Amber",
+            "product_group": "Via Mercato"
+        },
+        "B000IQSTLS": {
+            "product_title": "Pre de Provence Artisanal French Moisturizing Soap Bar, Shea Butter Enriched, Quad Milled for Long Lasting Rich Smooth Lather, 5.3 Ounce, Rose Petal",
+            "product_group": "Pre De Provence"
+        },
+        "B09M96H8LV": {
+            "product_title": "Urbana Spa Prive Home Spa Collection, Face Brush",
+            "product_group": "Urbana"
+        },
+        "B07Q6GQTLW": {
+            "product_title": "Urbana Spa Prive Stimulating Body Buffer for Clean, Smooth Skin(colors may vary) (Pack Of 1)",
+            "product_group": "Urbana"
+        },
+        "B01KMP0BKQ": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Amande",
+            "product_group": "Pre De Provence"
+        },
+        "B09FR569S8": {
+            "product_title": "Urbana Spa Prive Collection Facial Soap Bar, 70 Gram, Pink Clay",
+            "product_group": "Urbana"
+        },
+        "B000IQSTV8": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Green Tea, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B000YZ5G46": {
+            "product_title": "Pre de Provence Shea Butter Enriched Men's After Shave Balm, 2.5 Ounce - Bergamot & Thyme (Packaging may vary)",
+            "product_group": "Pre De Provence"
+        },
+        "B07DG5SLHY": {
+            "product_title": "Via Mercato Natale Shea Butter Soap Boutique Luxury Gift Box (Set of 4, 50g Each) - Natale",
+            "product_group": "Via Mercato"
+        },
+        "B011J4L89M": {
+            "product_title": "Pre' De Provence Artisanal French Soap Bar Enriched With Shea Butter",
+            "product_group": "Pre De Provence"
+        },
+        "B07MQ4NHC5": {
+            "product_title": "Via Mercato Primavera Spring Collection Mini Candle, 3 oz, Fresh Herbs, 85 Gram",
+            "product_group": "Via Mercato"
+        },
+        "B0CL5KGBQR": {
+            "product_title": "Pre de Provence Bergamot & Thyme Men's Fragrance Collection, Cube Soap, 200 G",
+            "product_group": "Pre De Provence"
+        },
+        "B07DG8NBZG": {
+            "product_title": "Pre de Provence No.63 Men's Collection, Hand Cream",
+            "product_group": "Pre De Provence"
+        },
+        "B004FV1FPE": {
+            "product_title": "Urban Spa Bamboo Foot Paddle For Exfoliating in the Shower or Bath",
+            "product_group": ""
+        },
+        "B084TCRLSZ": {
+            "product_title": "Pre de Provence Bergamot & Thyme Men's Fragrance Collection, Soap Gift Box, 200 Grams",
+            "product_group": "Pre De Provence"
+        },
+        "B07PMLFRLM": {
+            "product_title": "Pre de Provence Bergamot & Thyme Men's Fragrance Collection, Hair & Body Wash, 250 ML",
+            "product_group": "Pre De Provence"
+        },
+        "B00BWNGLO8": {
+            "product_title": "Pre de Provence No.63 Men's Collection, Shave Brush",
+            "product_group": "Pre De Provence"
+        },
+        "B084SRGG9W": {
+            "product_title": "Pre de Provence Collection Shea Butter Enriched Silky Smooth Emollient Hand Lotion, Sea Salt, 11 Fl Oz",
+            "product_group": "Pre De Provence"
+        },
+        "B0CTS9TPFB": {
+            "product_title": "Pre de Provence Gift Set Includes 150 Gram Soap Bar & 1 fl oz Hand Cream |Made in France | Infused with Shea Butter, Persimmon",
+            "product_group": "Pre De Provence"
+        },
+        "B00I06ZR7C": {
+            "product_title": "Pre de Provence Rose De Mai Collection Nourishing & Hydrating, Body Lotion, 300 ML",
+            "product_group": "Pre De Provence"
+        },
+        "B08Y2VZLK8": {
+            "product_title": "Via Mercato Primavera Spring Collection, Petite Reed Diffuser, Red Currant Blossom, 50 Gram (25114RC)",
+            "product_group": "Via Mercato"
+        },
+        "B0054R5ONW": {
+            "product_title": "Pre de Provence Black Cherry Soap, 250g.",
+            "product_group": "Pre De Provence"
+        },
+        "B09FR6Z5H3": {
+            "product_title": "Pre de Provence Collection Shea Butter Enriched Body Butter Soothing & Hydrating Emollient Cream Body Moisturizer for Women, 6.7 Fl Oz, Milk",
+            "product_group": "Pre De Provence"
+        },
+        "B07BWTLC8D": {
+            "product_title": "Organic Aloe Collection Hydrating Shower Gel (6.7oz), Fresh Cucumber Scent",
+            "product_group": ""
+        },
+        "B01M21LBQN": {
+            "product_title": "Pre de Provence, Moroccan Argan Oil Dry Body Mist - Citrus",
+            "product_group": "Pre De Provence"
+        },
+        "B0BTN2DB2R": {
+            "product_title": "Pre de Provence Wrapped Artisanal Soap Bar, Organic Shea Butter Enriched, Natural French Skincare, Quad Milled for a Rich Smooth Lather, Crane Flower & Orange, 150 Gram",
+            "product_group": "Pre De Provence"
+        },
+        "B00XOBIS88": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Natural French Skincare, Enriched with Organic Shea Butter, Quad Milled for Rich, Smooth & Moisturizing Lather, Starflower, 5.3 Ounce",
+            "product_group": "Pre De Provence"
+        },
+        "B001LNOEKC": {
+            "product_title": "Pre de Provence Artisanal Soap Bar, Enriched with Organic Shea Butter, Natural French Skincare, Quad Milled for Rich Smooth Lather, 8.8 Ounce, Coconut",
+            "product_group": "Pre De Provence"
+        }
+    },
+    "campaign_tags_data": {
+        "SP | Non | ES | Via Mercato | Soaps | Auto | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Via Mercato"
+        },
+        "SP | Non | ES | Pre de Provence | Research | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Pre De Provence"
+        },
+        "SP | Non | ES | Pre de Provence | Auto | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Pre De Provence"
+        },
+        "SP | Non | ES | Via Mercato | Soaps | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Via Mercato"
+        },
+        "SP | Non | ES | Urbana | Face Care | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Urbana"
+        },
+        "SP | Non | ES | Urbana | Face Care | Auto | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Urbana"
+        },
+        "SP | Non | ES | Pre de Provence | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Pre De Provence"
+        },
+        "SP | Non | ES | Via Mercato | Candles | Research | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Via Mercato"
+        },
+        "SP | Non | ES | Via Mercato | Candles | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Via Mercato"
+        },
+        "SP | Non | Via Marcato | Catch All | Auto | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Via Mercato"
+        },
+        "SP | Non | Urbana | Catch All | Auto | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Urbana"
+        },
+        "SP | Brand | Via Marcato | Catch All | Research | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Via Mercato"
+        },
+        "SP | Non | ES | Urbana | Home Fragrance | Performance | BWM": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Urbana"
+        },
+        "SP | Brand | Urbana | Catch All | Research | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Urbana"
+        },
+        "SP | Brand | Via Marcato | Catch All | Performance | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Via Mercato"
+        },
+        "SP | Brand | Urbana | Catch All | Performance | BW": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": "Urbana"
+        },
+        "SBA | Brand | ES | Via Mercato | Soaps | Performance | BWM": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Via Mercato"
+        },
+        "SBA | Brand | ES | Urbana | Face Care | Performance | BWM": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": "Urbana"
+        },
+        "SBA | Brand | ES | For Him | Performance | BWM": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SBA | Brand | ES | For Her | Performance | BWM": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        }
+    },
+    "asin_title_tag_rules": [
+        {
+            "conditions": [
+                {
+                    "operator": "contains",
+                    "value": "Via Mercato"
+                }
+            ],
+            "combine": "AND",
+            "tag": "Via Mercato"
+        },
+        {
+            "conditions": [
+                {
+                    "operator": "contains",
+                    "value": "Provence"
+                }
+            ],
+            "combine": "AND",
+            "tag": "Pre De Provence"
+        },
+        {
+            "conditions": [
+                {
+                    "operator": "contains",
+                    "value": "Urbana"
+                }
+            ],
+            "combine": "AND",
+            "tag": "Urbana"
+        }
+    ]
+}

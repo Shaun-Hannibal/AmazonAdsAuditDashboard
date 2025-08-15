@@ -1,0 +1,466 @@
+{
+    "client_name": "MO Japan",
+    "branded_keywords": [
+        "\u30e2\u30ed\u30c3",
+        "MOROCCANOIL",
+        "morroccan oil",
+        "moroccan oil",
+        "morocan oil",
+        "morocanoil"
+    ],
+    "branded_asins": [],
+    "product_groups": {},
+    "goals": {
+        "account_wide_acos": null,
+        "branded_acos": null,
+        "non_branded_acos": null
+    },
+    "branded_asins_data": {
+        "B00C2U7Z5E": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30b7\u30de\u30ea\u30f3\u30b0 \u30aa\u30a4\u30eb 50ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb\u914d\u5408 \u30dc\u30c7\u30a3\u30aa\u30a4\u30eb) \u30e9\u30e1 \u30d1\u30fc\u30eb\u5149\u6ca2/\u4fdd\u6e7f",
+            "product_group": ""
+        },
+        "B0B9CK5TCJ": {
+            "product_title": "\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb\uff08MOROCCANOIL\uff09\u30cf\u30f3\u30c9\u30af\u30ea\u30fc\u30e0 #\u30d5\u30ec\u30b0\u30e9\u30f3\u30b9 \u30aa\u30ea\u30b8\u30ca\u30eb 100ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb&\u30d2\u30a2\u30eb\u30ed\u30f3\u9178\u914d\u5408/\u30cf\u30f3\u30c9\u30b1\u30a2) \u306a\u3081\u3089\u304b \u3046\u308b\u304a\u3044",
+            "product_group": ""
+        },
+        "B09KNMZ1XJ": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb)\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30a4\u30f3\u30c6\u30f3\u30b9\u30e2\u30a4\u30b9\u30c1\u30e3\u30fc\u30b7\u30e3\u30f3\u30d7\u30fc 65ml\u30b7\u30e3\u30f3\u30d7\u30fc\u672c\u4f53",
+            "product_group": ""
+        },
+        "B0F82PP5FD": {
+            "product_title": "MOROCCANOIL (\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30b9\u30ab\u30eb\u30d7\u30b1\u30a2\u30c8\u30ea\u30aa (\u30b7\u30e3\u30f3\u30d7\u30fc \uff06 \u30b3\u30f3\u30c7\u30a3\u30b7\u30e7\u30ca\u30fc \u30bb\u30c3\u30c8/\u5404 70ml) \u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb\u914d\u5408 (\u30e9\u30d9\u30f3\u30c0\u30fc \u3001 \u30c6\u30a3\u2015\u30c4\u30ea\u30fc \u3001 \u30d9\u30eb\u30ac\u30e2\u30c3\u30c8) \u304a\u8a66\u3057\u30bb\u30c3\u30c8 \u65c5\u884c \u30c8\u30e9\u30d9\u30eb",
+            "product_group": ""
+        },
+        "B01HU3PTYQ": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30d6\u30ed\u30fc\u30c9\u30e9\u30a4 \u30b3\u30f3\u30bb\u30f3\u30c8\u30ec\u30fc\u30c8 50ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb\u914d\u5408 \u30d8\u30a2\u7f8e\u5bb9\u6db2) \u30d8\u30a2\u30aa\u30a4\u30eb \u6d17\u3044\u6d41\u3055\u306a\u3044",
+            "product_group": ""
+        },
+        "B09KNLL2F2": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb)\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30a8\u30a2\u30ea\u30fc\u30e2\u30a4\u30b9\u30c1\u30e3\u30fc\u30b7\u30e3\u30f3\u30d7\u30fc 250ml\u30b7\u30e3\u30f3\u30d7\u30fc\u672c\u4f53",
+            "product_group": ""
+        },
+        "B0BMVMCP6R": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8 125ml\uff0825\uff05\u5897\u91cf \u6570\u91cf\u9650\u5b9a\u30c7\u30b6\u30a4\u30f3\u30dc\u30c8\u30eb\uff09",
+            "product_group": ""
+        },
+        "B00OQW86PO": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30bb\u30e9\u30df\u30c3\u30af \u30ed\u30fc\u30eb\u30d6\u30e9\u30b7 45\u339c (\u30d8\u30a2\u30d6\u30e9\u30b7 \u304f\u3057)",
+            "product_group": ""
+        },
+        "B00NQBI4L2": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8 100ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb\u914d\u5408 \u30d8\u30a2\u30aa\u30a4\u30eb) \u6d17\u3044\u6d41\u3055\u306a\u3044\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8 \u30b9\u30bf\u30a4\u30ea\u30f3\u30b0/\u30e1\u30f3\u30ba \u30ec\u30c7\u30a3\u30fc\u30b9",
+            "product_group": ""
+        },
+        "B09KNLB3ZT": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb)\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30a8\u30a2\u30ea\u30fc\u30e2\u30a4\u30b9\u30c1\u30e3\u30fc\u30b3\u30f3\u30c7\u30a3\u30b7\u30e7\u30cb\u30f3\u30b0\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8 65ml\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8\u672c\u4f53",
+            "product_group": ""
+        },
+        "B0D35XYVZR": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8 \u30d1\u30fc\u30d7\u30eb 25ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb, \u7d2b\u8272\u7d20\u914d\u5408/\u30b9\u30bf\u30a4\u30ea\u30f3\u30b0\u5264) \u30ab\u30e9\u30fc\u30b1\u30a2 \u306a\u3081\u3089\u304b \u30c4\u30e4\u9aea/\u6d17\u3044\u6d41\u3055\u306a\u3044\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8",
+            "product_group": ""
+        },
+        "B07MB2F8HS": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30d7\u30ed\u30c6\u30af\u30c8&\u30d7\u30ea\u30d9\u30f3\u30c8\u30b9\u30d7\u30ec\u30fc 50ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb\u914d\u5408 \u30b3\u30f3\u30c7\u30a3\u30b7\u30e7\u30ca\u30fc) \u6d17\u3044\u6d41\u3055\u306a\u3044\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8/\u30b9\u30bf\u30a4\u30ea\u30f3\u30b0",
+            "product_group": ""
+        },
+        "B004J1MNII": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30cf\u30a4\u30c9\u30ec\u30fc\u30c6\u30a3\u30f3\u30b0 \u30b9\u30bf\u30a4\u30ea\u30f3\u30b0\u30af\u30ea\u30fc\u30e0 75ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb\u914d\u5408 \u30b9\u30bf\u30a4\u30ea\u30f3\u30b0\u30af\u30ea\u30fc\u30e0) \u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8/\u30d8\u30a2\u30af\u30ea\u30fc\u30e0",
+            "product_group": ""
+        },
+        "B00H0F6R4Q": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30bb\u30e9\u30df\u30c3\u30af \u30ed\u30fc\u30eb\u30d6\u30e9\u30b7 25\u339c (\u30d8\u30a2\u30d6\u30e9\u30b7 \u304f\u3057)",
+            "product_group": ""
+        },
+        "B09KNLKYFW": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb)\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30a8\u30a2\u30ea\u30fc\u30e2\u30a4\u30b9\u30c1\u30e3\u30fc\u30b3\u30f3\u30c7\u30a3\u30b7\u30e7\u30cb\u30f3\u30b0\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8 200ml\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8\u672c\u4f53",
+            "product_group": ""
+        },
+        "B084PYPMWZ": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30d1\u30fc\u30d7\u30eb\u30b7\u30e3\u30f3\u30d7\u30fc70ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb\u914d\u5408 \u30ab\u30e9\u30fc\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8) shampoo \u30e0\u30e9\u30b5\u30ad\u30b7\u30e3\u30f3\u30d7\u30fc",
+            "product_group": ""
+        },
+        "B01CQ2S4Y8": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30bb\u30e9\u30df\u30c3\u30af \u30ed\u30fc\u30eb\u30d6\u30e9\u30b7 35\u339c (\u30d8\u30a2\u30d6\u30e9\u30b7 \u304f\u3057)",
+            "product_group": ""
+        },
+        "B095DWHZVS": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30d6\u30ea\u30e5\u30e0 \u30c9\u30a5 \u30de\u30ed\u30c3\u30af \u30d8\u30a2 & \u30dc\u30c7\u30a3\u30d5\u30ec\u30b0\u30e9\u30f3\u30b9\u30df\u30b9\u30c8 100ml (\u30d8\u30a2\u30b9\u30d7\u30ec\u30fc \u30dc\u30c7\u30a3\u30df\u30b9\u30c8) \u30d5\u30ec\u30b0\u30e9\u30f3\u30b9\u30a6\u30a9\u30fc\u30bf\u30fc/\u30d8\u30a2\u30df\u30b9\u30c8 \u30ea\u30d5\u30ec\u30c3\u30b7\u30e3\u30fc",
+            "product_group": ""
+        },
+        "B003JKFEL8": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8 25ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb\u914d\u5408 \u30d8\u30a2\u30aa\u30a4\u30eb) \u6d17\u3044\u6d41\u3055\u306a\u3044\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8 \u30b9\u30bf\u30a4\u30ea\u30f3\u30b0/\u30e1\u30f3\u30ba \u30ec\u30c7\u30a3\u30fc\u30b9",
+            "product_group": ""
+        },
+        "B072KCY8NS": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8 \u30e9\u30a4\u30c8 50ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb\u914d\u5408 \u30d8\u30a2\u30aa\u30a4\u30eb) \u6d17\u3044\u6d41\u3055\u306a\u3044\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8 \u30b9\u30bf\u30a4\u30ea\u30f3\u30b0/\u30e1\u30f3\u30ba \u30ec\u30c7\u30a3\u30fc\u30b9",
+            "product_group": ""
+        },
+        "B0B9D75FPB": {
+            "product_title": "\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb\uff08MOROCCANOIL\uff09\u30cf\u30f3\u30c9\u30af\u30ea\u30fc\u30e0 #\u30d5\u30ec\u30b0\u30e9\u30f3\u30b9 \u30aa\u30ea\u30b8\u30ca\u30eb 40ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb&\u30d2\u30a2\u30eb\u30ed\u30f3\u9178\u914d\u5408/\u30cf\u30f3\u30c9\u30b1\u30a2) \u306a\u3081\u3089\u304b \u3046\u308b\u304a\u3044",
+            "product_group": ""
+        },
+        "B09KNMY9FH": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30a4\u30f3\u30c6\u30f3\u30b9\u30e2\u30a4\u30b9\u30c1\u30e3\u30fc\u30b3\u30f3\u30c7\u30a3\u30b7\u30e7\u30cb\u30f3\u30b0 \u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8 65ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb\u914d\u5408 \u30b3\u30f3\u30c7\u30a3\u30b7\u30e7\u30ca\u30fc) \u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8 \u6d17\u3044\u6d41\u3059 (\u3057\u3063\u3068\u308a\u4ed5\u4e0a\u304c\u308a \u30d2\u30a2\u30eb\u30ed\u30f3\u9178\u914d\u5408)",
+            "product_group": ""
+        },
+        "B003C1ETD8": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30bb\u30e9\u30df\u30c3\u30af \u30ed\u30fc\u30eb\u30d6\u30e9\u30b7 55\u339c (\u30d8\u30a2\u30d6\u30e9\u30b7 \u304f\u3057)",
+            "product_group": ""
+        },
+        "B0B9XQQSM7": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30a4\u30f3\u30c6\u30f3\u30b9\u30e2\u30a4\u30b9\u30c1\u30e3\u30fc \u30b7\u30e3\u30f3\u30d7\u30fc & \u30b3\u30f3\u30c7\u30a3\u30b7\u30e7\u30cb\u30f3\u30b0\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8 \u304a\u8a66\u3057\u30bb\u30c3\u30c8 (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb\u914d\u5408 \u30d8\u30a2\u30b7\u30e3\u30f3\u30d7\u30fc \u30b3\u30f3\u30c7\u30a3\u30b7\u30e7\u30ca\u30fc) \u65c5\u884c \u30c8\u30e9\u30d9\u30eb",
+            "product_group": ""
+        },
+        "B07MS8QNMN": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30ca\u30a4\u30c8\u30dc\u30c7\u30a3\u30bb\u30e9\u30e0 100ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb\u914d\u5408 \u30dc\u30c7\u30a3\u7f8e\u5bb9\u6db2) \u30dc\u30c7\u30a3\u30aa\u30a4\u30eb \u4fdd\u6e7f",
+            "product_group": ""
+        },
+        "B07D3HP4WZ": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30d7\u30ed\u30c6\u30af\u30c8&\u30d7\u30ea\u30d9\u30f3\u30c8\u30b9\u30d7\u30ec\u30fc 160ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb\u914d\u5408 \u30b3\u30f3\u30c7\u30a3\u30b7\u30e7\u30ca\u30fc) \u6d17\u3044\u6d41\u3055\u306a\u3044\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8/\u30b9\u30bf\u30a4\u30ea\u30f3\u30b0",
+            "product_group": ""
+        },
+        "B0CZ7DJCC3": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8 \u30d1\u30fc\u30d7\u30eb 50ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb, \u7d2b\u8272\u7d20\u914d\u5408/\u30b9\u30bf\u30a4\u30ea\u30f3\u30b0\u5264) \u30ab\u30e9\u30fc\u30b1\u30a2 \u306a\u3081\u3089\u304b \u30c4\u30e4\u9aea/\u6d17\u3044\u6d41\u3055\u306a\u3044\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8",
+            "product_group": ""
+        },
+        "B0D8LGD46T": {
+            "product_title": "MOROCCANOIL (\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30d4\u30e5\u30ea\u30d5\u30a1\u30a4\u30f3\u30b0 \u30b9\u30af\u30e9\u30d6 (\u30c1\u30e5\u30fc\u30d6\u30bf\u30a4\u30d7 / 125ml) \u30d8\u30c3\u30c9\u30b9\u30af\u30e9\u30d6 \u30b9\u30ab\u30eb\u30d7\u30b1\u30a2 \u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb\u914d\u5408 (\u30e9\u30d9\u30f3\u30c0\u30fc \u3001 \u30c6\u30a3\u2015\u30c4\u30ea\u30fc \u3001 \u30d9\u30eb\u30ac\u30e2\u30c3\u30c8)",
+            "product_group": ""
+        },
+        "B09KNKWGN3": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb)\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30a4\u30f3\u30c6\u30f3\u30b9\u30e2\u30a4\u30b9\u30c1\u30e3\u30fc\u30b7\u30e3\u30f3\u30d7\u30fc 250ml\u30b7\u30e3\u30f3\u30d7\u30fc\u672c\u4f53",
+            "product_group": ""
+        },
+        "B09Q5VV13T": {
+            "product_title": "\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb\uff08MOROCCANOIL\uff09\u30cf\u30f3\u30c9\u30a6\u30a9\u30c3\u30b7\u30e5 #\u30d5\u30ec\u30b0\u30e9\u30f3\u30b9 \u30aa\u30ea\u30b8\u30ca\u30eb 360ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb&\u30d2\u30a2\u30eb\u30ed\u30f3\u9178\u914d\u5408/\u30cf\u30f3\u30c9\u30bd\u30fc\u30d7) \u306a\u3081\u3089\u304b \u3046\u308b\u304a\u3044",
+            "product_group": ""
+        },
+        "B00J6E3SU0": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30d4\u30e5\u30a2\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb 50ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb 100% \u914d\u5408 \u30dc\u30c7\u30a3\u30aa\u30a4\u30eb) \u5168\u8eab \u4fdd\u6e7f",
+            "product_group": ""
+        },
+        "B09KNK3VXJ": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30a4\u30f3\u30c6\u30f3\u30b9\u30e2\u30a4\u30b9\u30c1\u30e3\u30fc\u30b3\u30f3\u30c7\u30a3\u30b7\u30e7\u30cb\u30f3\u30b0 \u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8 200ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb\u914d\u5408 \u30b3\u30f3\u30c7\u30a3\u30b7\u30e7\u30ca\u30fc) \u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8 \u6d17\u3044\u6d41\u3059 (\u3057\u3063\u3068\u308a\u4ed5\u4e0a\u304c\u308a \u30d2\u30a2\u30eb\u30ed\u30f3\u9178\u914d\u5408)",
+            "product_group": ""
+        },
+        "B0CSMJ98XM": {
+            "product_title": "\u30d5\u30ea\u30c3\u30ba\u30b7\u30fc\u30eb\u30c9\u30b9\u30d7\u30ec\u30fc 50ml",
+            "product_group": ""
+        },
+        "B019RV84C8": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8 50ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb\u914d\u5408 \u30d8\u30a2\u30aa\u30a4\u30eb) \u6d17\u3044\u6d41\u3055\u306a\u3044\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8 \u30b9\u30bf\u30a4\u30ea\u30f3\u30b0/\u30e1\u30f3\u30ba \u30ec\u30c7\u30a3\u30fc\u30b9",
+            "product_group": ""
+        },
+        "B08DPMXJ1M": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30aa\u30fc\u30eb\u30a4\u30f3\u30ef\u30f3 \u30ea\u30fc\u30d6\u30a4\u30f3\u30b3\u30f3\u30c7\u30a3\u30b7\u30e7\u30ca\u30fc 50ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb\u914d\u5408 \u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8) \u6d17\u3044\u6d41\u3055\u306a\u3044 \u30b9\u30d7\u30ec\u30fc",
+            "product_group": ""
+        },
+        "B09KNPG2HB": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb)\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30a8\u30a2\u30ea\u30fc\u30e2\u30a4\u30b9\u30c1\u30e3\u30fc\u30b7\u30e3\u30f3\u30d7\u30fc 65ml\u30b7\u30e3\u30f3\u30d7\u30fc\u672c\u4f53",
+            "product_group": ""
+        },
+        "B0CSN9TZJ7": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30d5\u30ea\u30c3\u30ba\u30b7\u30fc\u30eb\u30c9\u30b9\u30d7\u30ec\u30fc 160ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb\u914d\u5408/\u30b9\u30bf\u30a4\u30ea\u30f3\u30b0\u5264) \u304f\u305b\u6bdb \u3046\u306d\u308a \u6e7f\u6c17\u5bfe\u7b56/\u6d17\u3044\u6d41\u3055\u306a\u3044\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8",
+            "product_group": ""
+        },
+        "B084Q2QSFW": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30d1\u30fc\u30d7\u30eb\u30b7\u30e3\u30f3\u30d7\u30fc200ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb\u914d\u5408 \u30ab\u30e9\u30fc\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8) shampoo \u30e0\u30e9\u30b5\u30ad\u30b7\u30e3\u30f3\u30d7\u30fc",
+            "product_group": ""
+        },
+        "B0CQPJ9MDR": {
+            "product_title": "\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb\uff08MOROCCANOIL\uff09\u30cf\u30f3\u30c9\u30af\u30ea\u30fc\u30e0 #\u30c0\u30ea\u30a2 \u30eb\u30fc\u30b8\u30e5 100ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb&\u30d2\u30a2\u30eb\u30ed\u30f3\u9178\u914d\u5408/\u30cf\u30f3\u30c9\u30b1\u30a2) \u306a\u3081\u3089\u304b \u3046\u308b\u304a\u3044",
+            "product_group": ""
+        },
+        "B0CQPJ3S6P": {
+            "product_title": "\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb\uff08MOROCCANOIL\uff09\u30cf\u30f3\u30c9\u30af\u30ea\u30fc\u30e0 #\u30c0\u30ea\u30a2 \u30eb\u30fc\u30b8\u30e5 40ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb&\u30d2\u30a2\u30eb\u30ed\u30f3\u9178\u914d\u5408/\u30cf\u30f3\u30c9\u30b1\u30a2) \u306a\u3081\u3089\u304b \u3046\u308b\u304a\u3044",
+            "product_group": ""
+        },
+        "B002CMLS50": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30cf\u30a4\u30c9\u30ec\u30fc\u30c6\u30a3\u30f3\u30b0 \u30b9\u30bf\u30a4\u30ea\u30f3\u30b0\u30af\u30ea\u30fc\u30e0 300ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb\u914d\u5408 \u30b9\u30bf\u30a4\u30ea\u30f3\u30b0\u30af\u30ea\u30fc\u30e0) \u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8/\u30d8\u30a2\u30af\u30ea\u30fc\u30e0",
+            "product_group": ""
+        },
+        "B08DPLN32V": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30aa\u30fc\u30eb\u30a4\u30f3\u30ef\u30f3 \u30ea\u30fc\u30d6\u30a4\u30f3\u30b3\u30f3\u30c7\u30a3\u30b7\u30e7\u30ca\u30fc 160ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb\u914d\u5408 \u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8) \u6d17\u3044\u6d41\u3055\u306a\u3044 \u30b9\u30d7\u30ec\u30fc",
+            "product_group": ""
+        },
+        "B003C1CWWI": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30bb\u30e9\u30df\u30c3\u30af \u30d1\u30c9\u30eb\u30d6\u30e9\u30b7 (\u30d8\u30a2\u30d6\u30e9\u30b7 \u304f\u3057)",
+            "product_group": ""
+        },
+        "B003AY949G": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8 \u30e9\u30a4\u30c8 100ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb\u914d\u5408 \u30d8\u30a2\u30aa\u30a4\u30eb) \u6d17\u3044\u6d41\u3055\u306a\u3044\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8 \u30b9\u30bf\u30a4\u30ea\u30f3\u30b0/\u30e1\u30f3\u30ba \u30ec\u30c7\u30a3\u30fc\u30b9",
+            "product_group": ""
+        },
+        "B0D8LH8799": {
+            "product_title": "MOROCCANOIL (\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30b9\u30ab\u30eb\u30d7 \u30c8\u30cb\u30c3\u30af (\u30b9\u30ab\u30eb\u30d7\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8\u672c\u4f53 / 100ml) \u30b9\u30ab\u30eb\u30d7\u30b1\u30a2 (\u30e9\u30d9\u30f3\u30c0\u30fc \u3001 \u30c6\u30a3\u2015\u30c4\u30ea\u30fc \u3001 \u30d9\u30eb\u30ac\u30e2\u30c3\u30c8) \u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb\u914d\u5408",
+            "product_group": ""
+        },
+        "B007B3T47Y": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30eb\u30df\u30ce\u30fc\u30b5 \u30d8\u30a2\u30b9\u30d7\u30ec\u30fc \u30b9\u30c8\u30ed\u30f3\u30b0 330ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb\u914d\u5408 \u30b9\u30bf\u30a4\u30ea\u30f3\u30b0\u5264) \u30cf\u30fc\u30c9/\u30e1\u30f3\u30ba \u30ec\u30c7\u30a3\u30fc\u30b9",
+            "product_group": ""
+        },
+        "B0CQPLF46W": {
+            "product_title": "\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb\uff08MOROCCANOIL\uff09\u30cf\u30f3\u30c9\u30a6\u30a9\u30c3\u30b7\u30e5 #\u30c0\u30ea\u30a2 \u30eb\u30fc\u30b8\u30e5 360ml (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb&\u30d2\u30a2\u30eb\u30ed\u30f3\u9178\u914d\u5408/\u30cf\u30f3\u30c9\u30bd\u30fc\u30d7) \u306a\u3081\u3089\u304b \u3046\u308b\u304a\u3044",
+            "product_group": ""
+        },
+        "B0B9XJ3F74": {
+            "product_title": "MOROCCANOIL(\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb) \u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb \u30a8\u30a2\u30ea\u30fc\u30e2\u30a4\u30b9\u30c1\u30e3\u30fc \u30b7\u30e3\u30f3\u30d7\u30fc & \u30b3\u30f3\u30c7\u30a3\u30b7\u30e7\u30cb\u30f3\u30b0\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8 \u304a\u8a66\u3057\u30bb\u30c3\u30c8 (\u30a2\u30eb\u30ac\u30f3\u30aa\u30a4\u30eb\u914d\u5408 \u30d8\u30a2\u30b7\u30e3\u30f3\u30d7\u30fc \u30b3\u30f3\u30c7\u30a3\u30b7\u30e7\u30ca\u30fc) \u65c5\u884c \u30c8\u30e9\u30d9\u30eb",
+            "product_group": ""
+        }
+    },
+    "campaign_tags_data": {
+        "\u4e00\u822c_\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8\u30aa\u30a4\u30eb_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "\u4e00\u822c_\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8\u30aa\u30a4\u30eb \u30e9\u30a4\u30c8_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "\u30aa\u30fc\u30c8_\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8\u30aa\u30a4\u30eb_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "\u6307\u540d_\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8\u30aa\u30a4\u30eb_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "\u7af6\u5408_\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8\u30aa\u30a4\u30eb_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "\u6307\u540d_\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8\u30aa\u30a4\u30eb \u30e9\u30a4\u30c8_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "\u6307\u540d_\u30b7\u30e3\u30f3\u30d7\u30fc_itsumo#m0agulvu496": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "\u6307\u540d_\u30b3\u30f3\u30c7\u30a3\u30b7\u30e7\u30cb\u30f3\u30b0\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8_itsumo#m0agujxx288": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "PT\u81ea\u793e_\u30d1\u30fc\u30d7\u30eb\u30aa\u30a4\u30eb_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "\u30aa\u30fc\u30c8_\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8\u30aa\u30a4\u30eb \u30e9\u30a4\u30c8_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "PT\u4ed6\u793e_\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8\u30aa\u30a4\u30eb_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "PT\u81ea\u793e_\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8\u30aa\u30a4\u30eb \u30e9\u30a4\u30c8_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "\u4e00\u822c_\u30b3\u30f3\u30c7\u30a3\u30b7\u30e7\u30cb\u30f3\u30b0\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8_itsumo#m0aguj5g480": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "PT\u81ea\u793e_\u30b9\u30bf\u30a4\u30ea\u30f3\u30b0\u30af\u30ea\u30fc\u30e0_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "PT\u4ed6\u793e_\u30b9\u30bf\u30a4\u30ea\u30f3\u30b0\u30af\u30ea\u30fc\u30e0_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "PT\u81ea\u793e_\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8\u30aa\u30a4\u30eb_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "\u6307\u540d_\u30d5\u30ea\u30c3\u30ba\u30b7\u30fc\u30eb\u30c9\u30b9\u30d7\u30ec\u30fc_itsumo#m0agugo6155": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "\u4e00\u822c_\u30b9\u30bf\u30a4\u30ea\u30f3\u30b0\u30af\u30ea\u30fc\u30e0_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "\u30aa\u30fc\u30c8_\u30b9\u30bf\u30a4\u30ea\u30f3\u30b0\u30af\u30ea\u30fc\u30e0_itsumo#knjmu91l864#m0agujke632": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "PT\u81ea\u793e_\u30b3\u30f3\u30c7\u30a3\u30b7\u30e7\u30cb\u30f3\u30b0\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "\u6307\u540d_\u30b9\u30bf\u30a4\u30ea\u30f3\u30b0\u30af\u30ea\u30fc\u30e0_itsumo#m0agui9f317": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "\u30aa\u30fc\u30c8_\u30d1\u30fc\u30d7\u30eb\u30aa\u30a4\u30eb_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "\u6307\u540d_\u30b7\u30e3\u30f3\u30d7\u30fc\uff06\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8\u30bb\u30c3\u30c8_itsumo#m0agukxr693": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "\u4e00\u822c_\u30b7\u30e3\u30f3\u30d7\u30fc\uff06\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8\u30bb\u30c3\u30c8_itsumo#m0aguoeu079": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "PT\u81ea\u793e_\u30b7\u30e3\u30f3\u30d7\u30fc_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "PT\u4ed6\u793e_\u30b7\u30e3\u30f3\u30d7\u30fc_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "PT\u4ed6\u793e_\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8\u30aa\u30a4\u30eb \u30e9\u30a4\u30c8_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "\u4e00\u822c_\u30d5\u30ea\u30c3\u30ba\u30b7\u30fc\u30eb\u30c9\u30b9\u30d7\u30ec\u30fc_itsumo#m0aguflz241": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "PT\u81ea\u793e_\u30b7\u30e3\u30f3\u30d7\u30fc\uff06\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8\u30bb\u30c3\u30c8_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "PT\u4ed6\u793e_\u30d1\u30fc\u30d7\u30eb\u30aa\u30a4\u30eb_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "\u4e00\u822c_\u30d1\u30fc\u30d7\u30eb\u30aa\u30a4\u30eb_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "\u30aa\u30fc\u30c8_\u30b7\u30e3\u30f3\u30d7\u30fc\uff06\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8\u30bb\u30c3\u30c8_itsumo#l7foa6qv236#m0agumqj997": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "PT\u4ed6\u793e_\u30b3\u30f3\u30c7\u30a3\u30b7\u30e7\u30cb\u30f3\u30b0\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "\u6307\u540d_\u30d1\u30fc\u30d7\u30eb\u30aa\u30a4\u30eb_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "\u4e00\u822c_\u30b7\u30e3\u30f3\u30d7\u30fc_itsumo#m0agulgn138": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "\u7af6\u5408_\u30b7\u30e3\u30f3\u30b3\u30f3_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "\u30aa\u30fc\u30c8_\u30b7\u30e3\u30f3\u30d7\u30fc_itsumo#m0agukdh935": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "PT\u4ed6\u793e_\u30b7\u30e3\u30f3\u30d7\u30fc\uff06\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "PT\u81ea\u793e_\u30d5\u30ea\u30c3\u30ba\u30b7\u30fc\u30eb\u30c9\u30b9\u30d7\u30ec\u30fc_itsumo#m0agug7b082": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "\u30aa\u30fc\u30c8_\u30d5\u30ea\u30c3\u30ba\u30b7\u30fc\u30eb\u30c9\u30b9\u30d7\u30ec\u30fc_itsumo#m0aguh2b116": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "\u30aa\u30fc\u30c8_\u30b3\u30f3\u30c7\u30a3\u30b7\u30e7\u30cb\u30f3\u30b0\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8_itsumo#m0aguhhr884": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "PT\u4ed6\u793e_\u30d5\u30ea\u30c3\u30ba\u30b7\u30fc\u30eb\u30c9\u30b9\u30d7\u30ec\u30fc_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "\u505c\u6b62_PT\u4ed6\u793e_\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8\u30aa\u30a4\u30eb_itsumo": {
+            "campaign_type": "Sponsored Products",
+            "tag_1": ""
+        },
+        "SD_\u8cfc\u5165\u30ea\u30de\u30b1_\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8_itsumo2": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD_PT\u81ea\u793e_\u30d5\u30ea\u30c3\u30ba\u30b7\u30fc\u30eb\u30c9\u30b9\u30d7\u30ec\u30fc_itsumo": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD_\u30ab\u30c6\u30b4\u30ea_\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8_itsumo": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD_PT\u81ea\u793e_\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8_itsumo": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD_\u95b2\u89a7\u30ea\u30de\u30b1_\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8 100ml_itsumo": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SD_\u30ea\u30de\u30b1_\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8 \u30e9\u30a4\u30c8 100ml_itsumo": {
+            "campaign_type": "Sponsored Display",
+            "tag_1": ""
+        },
+        "SBV_\u6307\u540d_\u30d8\u30a2\u30aa\u30a4\u30eb(B00NQBI4L2)_itsumo": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SB_\u7af6\u5408_\u30b7\u30e3\u30f3\u30d7\u30fc\uff06\u30b3\u30f3\u30c7\u30a3\u30b7\u30e7\u30ca\u30fc_itsumo": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SBV_PT\u81ea\u793e_\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8\u30aa\u30a4\u30eb_\u30d1\u30fc\u30d7\u30eb\u30aa\u30a4\u30eb_itsumo": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SBV_\u6307\u540d_\u30d8\u30a2\u30aa\u30a4\u30eb\u30e9\u30a4\u30c8(B003AY949G)_itsumo": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SB_\u7af6\u5408_\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb_itsumo": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SB_\u6307\u540d_\u30b7\u30e3\u30f3\u30d7\u30fc\uff06\u30b3\u30f3\u30c7\u30a3\u30b7\u30e7\u30ca\u30fc_itsumo": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SB_PT\u4ed6\u793e_\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8\u30aa\u30a4\u30eb_itsumo": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SBV_\u7af6\u5408_\u30d8\u30a2\u30aa\u30a4\u30eb(B00NQBI4L2)_itsumo": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SB_PT\u81ea\u793e_\u30b7\u30e3\u30f3\u30d7\u30fc\uff06\u30b3\u30f3\u30c7\u30a3\u30b7\u30e7\u30ca\u30fc_itsumo": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SB_\u6307\u540d_\u30e2\u30ed\u30c3\u30ab\u30f3\u30aa\u30a4\u30eb_itsumo": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SBV_\u4e00\u822c_\u30d8\u30a2\u30aa\u30a4\u30eb(B00NQBI4L2)_itsumo": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SB_PT\u81ea\u793e_\u30c8\u30ea\u30fc\u30c8\u30e1\u30f3\u30c8\u30aa\u30a4\u30eb_itsumo": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SB_PT\u4ed6\u793e_\u30b7\u30e3\u30f3\u30d7\u30fc\uff06\u30b3\u30f3\u30c7\u30a3\u30b7\u30e7\u30ca\u30fc_itsumo": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        },
+        "SB_\u4e00\u822c_\u30b7\u30e3\u30f3\u30d7\u30fc\uff06\u30b3\u30f3\u30c7\u30a3\u30b7\u30e7\u30ca\u30fc_itsumo": {
+            "campaign_type": "Sponsored Brands",
+            "tag_1": ""
+        }
+    }
+}

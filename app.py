@@ -331,6 +331,18 @@ def color_gradient_green(val, min_val, max_val, scale_max=75):
     b = int(47 + (61-47)*norm)    # 47 to 61
     return f'background-color: rgb({r},{g},{b}); color: #fff;'
 
+def color_gradient_orange(val, min_val, max_val, scale_max=75):
+    # Orange gradient: from dark gray (#23272f) to orange (#ea580c)
+    if pd.isnull(val):
+        return ''
+    # Scale from 0% to scale_max% (default: 75%)
+    norm = min(max(val, 0), scale_max) / scale_max
+    norm = norm ** 0.5  # sqrt scaling for more visual spread
+    r = int(35 + (234-35)*norm)   # 35 to 234
+    g = int(39 + (88-39)*norm)    # 39 to 88
+    b = int(47 + (12-47)*norm)    # 47 to 12
+    return f'background-color: rgb({r},{g},{b}); color: #fff;'
+
 # Helper function to apply ACoS styling to a specific column
 # This function was removed as part of removing ACoS coloring based on user goals
 def apply_acos_styling(styled_df, numeric_df, acos_column, target, use_avg_fallback=False):
@@ -1533,6 +1545,109 @@ def process_sales_report(uploaded_file):
 
 
 @st.cache_data(ttl=3600)  # Cache for 1 hour
+def detect_and_persist_sku_asin_mappings(bulk_data):
+    """
+    Detect SKU-ASIN mappings from bulk file data and persist them to Branded ASINs.
+    This allows us to maintain SKU mappings over time for Seller Central clients.
+    """
+    if not bulk_data or 'client_config' not in st.session_state:
+        return
+    
+    # Initialize branded_asins_data if not present
+    if 'branded_asins_data' not in st.session_state.client_config:
+        st.session_state.client_config['branded_asins_data'] = {}
+    
+    sku_asin_mappings = {}
+    
+    # Look for SKU-ASIN mappings in all bulk file sheets using same logic as Performance by ASIN
+    for sheet_name, df in bulk_data.items():
+        if not isinstance(df, pd.DataFrame) or df.empty:
+            continue
+            
+        # Find SKU and ASIN columns (case-insensitive, same logic as Performance by ASIN)
+        sku_col = None
+        asin_col = None
+        entity_col = None
+        
+        # Find SKU column (exact case-insensitive match)
+        for col in df.columns:
+            if col.upper() == 'SKU':
+                sku_col = col
+                break
+        
+        # Find ASIN column (prioritize ASIN (INFORMATIONAL ONLY))
+        for col in df.columns:
+            if col.upper() == 'ASIN (INFORMATIONAL ONLY)':
+                asin_col = col
+                break
+            elif col.upper() == 'ASIN':
+                asin_col = col
+        
+        # Find Entity column
+        for col in df.columns:
+            if col.upper() == 'ENTITY':
+                entity_col = col
+                break
+        
+        # Extract SKU-ASIN mappings if both columns found
+        if sku_col and asin_col:
+            # Use same filtering logic as Performance by ASIN
+            if entity_col:
+                # Try the strict Entity filter first (case insensitive)
+                product_ad_rows = df[
+                    (df[entity_col].astype(str).str.strip().str.lower().isin(['product ad', 'product ads', 'productad', 'productads'])) &
+                    (df[sku_col].notna()) &
+                    (df[asin_col].notna())
+                ]
+                
+                # If no results with Entity filter, try without it
+                if product_ad_rows.empty:
+                    product_ad_rows = df[
+                        (df[sku_col].notna()) &
+                        (df[asin_col].notna())
+                    ]
+            else:
+                # No Entity column, just filter by SKU and ASIN presence
+                product_ad_rows = df[
+                    (df[sku_col].notna()) &
+                    (df[asin_col].notna())
+                ]
+            
+            # Extract mappings from filtered rows
+            for _, row in product_ad_rows.iterrows():
+                sku = str(row[sku_col]).strip()
+                asin = str(row[asin_col]).strip().upper()
+                
+                if sku and asin and sku != 'nan' and asin != 'NAN':
+                    sku_asin_mappings[asin] = sku
+                    
+            if len(product_ad_rows) > 0:
+                st.session_state.debug_messages.append(f"Found {len(product_ad_rows)} rows with SKU data in sheet '{sheet_name}'")
+    
+    # Persist new SKU mappings to Branded ASINs data
+    if sku_asin_mappings:
+        updated_count = 0
+        for asin, sku in sku_asin_mappings.items():
+            # Update existing ASIN entries with SKU data
+            if asin in st.session_state.client_config['branded_asins_data']:
+                current_sku = st.session_state.client_config['branded_asins_data'][asin].get('sku', '')
+                if not current_sku or current_sku != sku:
+                    st.session_state.client_config['branded_asins_data'][asin]['sku'] = sku
+                    updated_count += 1
+            # Create new ASIN entry if it doesn't exist (for Seller Central clients)
+            else:
+                st.session_state.client_config['branded_asins_data'][asin] = {
+                    'product_title': 'Title not available',
+                    'product_group': '',
+                    'sku': sku
+                }
+                updated_count += 1
+        
+        if updated_count > 0:
+            # Save the updated config
+            save_client_config(st.session_state.selected_client_name, st.session_state.client_config)
+            st.session_state.debug_messages.append(f"Persisted {updated_count} SKU-ASIN mappings to Branded ASINs data")
+
 def process_bulk_data(uploaded_file):
     """
     Reads all sheets from the bulk advertising file, cleans data,
@@ -1757,6 +1872,9 @@ def process_bulk_data(uploaded_file):
         if not bulk_data:
             st.warning("No data could be processed from any sheets.")
             return None
+        
+        # Detect and persist SKU-ASIN mappings for Seller Central clients
+        detect_and_persist_sku_asin_mappings(bulk_data)
         
         # Cache the processed data
         db_manager.cache_bulk_data(client_name, file_content, bulk_data)
@@ -6963,9 +7081,10 @@ if st.session_state.client_config:
                 data = []
                 for asin, info in st.session_state.client_config['branded_asins_data'].items():
                     data.append({
-                        'Product Group': info.get('product_group', ''),
+                        'SKU': info.get('sku', ''),  # Add SKU column (left of ASIN)
                         'ASIN': asin,
                         'Product Title': info.get('product_title', 'Title not available'),
+                        'Product Group': info.get('product_group', ''),
                         'Delete': False  # Add Delete column with default value False
                     })
                 
@@ -7460,8 +7579,8 @@ if st.session_state.client_config:
                         existing_product_groups.add(product_group.strip())
                 
                 # Always use fresh filtered data for edits to prevent stale state bugs
-                # Ensure desired column arrangement
-                desired_cols = ['ASIN', 'Product Title', 'Product Group', 'Delete']
+                # Ensure desired column arrangement with SKU column positioned left of ASIN
+                desired_cols = ['SKU', 'ASIN', 'Product Title', 'Product Group', 'Delete']
                 existing_cols = [c for c in desired_cols if c in filtered_df.columns]
                 remaining_cols = [c for c in filtered_df.columns if c not in existing_cols]
                 filtered_df = filtered_df[existing_cols + remaining_cols]
@@ -7479,6 +7598,7 @@ if st.session_state.client_config:
                     use_container_width=True,
                     hide_index=True,
                     column_config={
+                        'SKU': st.column_config.TextColumn('SKU', help="SKU for this ASIN (auto-populated from bulk files)"),
                         'ASIN': st.column_config.TextColumn('ASIN', disabled=True),
                         'Product Title': st.column_config.TextColumn('Product Title', disabled=True),
                         'Product Group': st.column_config.TextColumn('Product Group'),
@@ -7495,8 +7615,10 @@ if st.session_state.client_config:
                         for _, row in st.session_state.branded_asins_editor_temp.iterrows():
                             asin = row['ASIN']
                             product_group = row['Product Group']
+                            sku = row.get('SKU', '')  # Get SKU value
                             if asin in st.session_state.client_config['branded_asins_data']:
                                 st.session_state.client_config['branded_asins_data'][asin]['product_group'] = product_group
+                                st.session_state.client_config['branded_asins_data'][asin]['sku'] = sku  # Save SKU
                         save_client_config(st.session_state.selected_client_name, st.session_state.client_config)
                         st.success("Branded ASINs updated.")
                 with col_delete_sel:
@@ -12252,6 +12374,225 @@ if st.session_state.client_config:
                         matched_campaigns = filtered_df['Campaign'].astype(str).apply(lambda x: phrase_match(x, campaign_search))
                         filtered_df = filtered_df[matched_campaigns]
                     
+                    # Advanced Filters Section
+                    st.markdown("---")
+                    with st.expander("🔧 Advanced Filters", expanded=False):
+                        # Initialize advanced filter state
+                        if 'campaign_filter_groups' not in st.session_state:
+                            st.session_state.campaign_filter_groups = []
+                        st.markdown("**Advanced Filtering with Filter Groups**")
+                        st.caption("Create multiple filter groups and combine them with AND/OR logic for complex filtering.")
+                        
+                        # Get numeric columns for filtering
+                        numeric_columns = []
+                        for col in filtered_df.columns:
+                            if col not in ['Ad Type', 'Product Group', 'Campaign'] and filtered_df[col].dtype in ['float64', 'int64', 'object']:
+                                # Try to convert to numeric to check if it's actually numeric
+                                try:
+                                    test_series = pd.to_numeric(filtered_df[col].astype(str).str.replace('$', '').str.replace('%', '').str.replace(',', ''), errors='coerce')
+                                    if not test_series.isna().all():
+                                        numeric_columns.append(col)
+                                except:
+                                    pass
+                        
+                        # Control buttons
+                        col_btn1, col_btn2, col_btn3, col_spacer = st.columns([1.5, 1.5, 1.5, 5.5])
+                        
+                        with col_btn1:
+                            add_group = st.button("➕ Add Filter Group", key="add_filter_group")
+                        
+                        with col_btn2:
+                            clear_all = False
+                            if st.session_state.campaign_filter_groups:
+                                clear_all = st.button("🗑️ Clear All", key="clear_all_filter_groups")
+                        
+                        # Handle button actions without immediate rerun
+                        if add_group:
+                            st.session_state.campaign_filter_groups.append({
+                                'filters': [{
+                                    'column': numeric_columns[0] if numeric_columns else 'Spend',
+                                    'operator': '>',
+                                    'value': '',
+                                    'logic': 'AND'
+                                }],
+                                'group_logic': 'AND'
+                            })
+                        
+                        if clear_all:
+                            st.session_state.campaign_filter_groups = []
+                        
+                        # Display filter groups
+                        groups_to_remove = []
+                        for group_idx, group in enumerate(st.session_state.campaign_filter_groups):
+                            with st.container():
+                                # Group header
+                                group_col1, group_col2, group_col3 = st.columns([6, 2, 1])
+                                
+                                with group_col1:
+                                    st.markdown(f"**Filter Group {group_idx + 1}**")
+                                
+                                with group_col2:
+                                    if group_idx > 0:  # Only show group logic for groups after the first
+                                        group['group_logic'] = st.selectbox(
+                                            "Group Logic",
+                                            options=['AND', 'OR'],
+                                            index=['AND', 'OR'].index(group['group_logic']),
+                                            key=f"group_logic_{group_idx}",
+                                            help="How this group combines with previous groups"
+                                        )
+                                
+                                with group_col3:
+                                    if st.button("🗑️", key=f"remove_group_{group_idx}", help="Remove entire group"):
+                                        groups_to_remove.append(group_idx)
+                                
+                                # Display filters within this group
+                                filters_to_remove = []
+                                for filter_idx, filter_config in enumerate(group['filters']):
+                                    col1, col2, col3, col4, col5, col6 = st.columns([2, 1.2, 1.2, 1, 0.8, 0.8])
+                                    
+                                    with col1:
+                                        filter_config['column'] = st.selectbox(
+                                            "Column" if filter_idx == 0 else "",
+                                            options=numeric_columns,
+                                            index=numeric_columns.index(filter_config['column']) if filter_config['column'] in numeric_columns else 0,
+                                            key=f"filter_column_{group_idx}_{filter_idx}",
+                                            label_visibility="visible" if filter_idx == 0 else "collapsed"
+                                        )
+                                    
+                                    with col2:
+                                        filter_config['operator'] = st.selectbox(
+                                            "Operator" if filter_idx == 0 else "",
+                                            options=['>', '>=', '=', '<=', '<'],
+                                            index=['>', '>=', '=', '<=', '<'].index(filter_config['operator']),
+                                            key=f"filter_operator_{group_idx}_{filter_idx}",
+                                            label_visibility="visible" if filter_idx == 0 else "collapsed"
+                                        )
+                                    
+                                    with col3:
+                                        filter_config['value'] = st.text_input(
+                                            "Value" if filter_idx == 0 else "",
+                                            value=str(filter_config['value']),
+                                            key=f"filter_value_{group_idx}_{filter_idx}",
+                                            label_visibility="visible" if filter_idx == 0 else "collapsed"
+                                        )
+                                    
+                                    with col4:
+                                        if filter_idx > 0:  # Only show logic for filters after the first in each group
+                                            filter_config['logic'] = st.selectbox(
+                                                "Logic" if filter_idx == 1 else "",
+                                                options=['AND', 'OR'],
+                                                index=['AND', 'OR'].index(filter_config['logic']),
+                                                key=f"filter_logic_{group_idx}_{filter_idx}",
+                                                label_visibility="visible" if filter_idx == 1 else "collapsed"
+                                            )
+                                        else:
+                                            st.write("")  # Empty space for first filter in group
+                                    
+                                    with col5:
+                                        if st.button("➕", key=f"add_filter_{group_idx}_{filter_idx}", help="Add filter to this group"):
+                                            group['filters'].append({
+                                                'column': numeric_columns[0] if numeric_columns else 'Spend',
+                                                'operator': '>',
+                                                'value': '',
+                                                'logic': 'AND'
+                                            })
+                                    
+                                    with col6:
+                                        if len(group['filters']) > 1:  # Don't allow removing the last filter in a group
+                                            if st.button("🗑️", key=f"remove_filter_{group_idx}_{filter_idx}", help="Remove filter"):
+                                                filters_to_remove.append(filter_idx)
+                                
+                                # Remove filters marked for removal (process after all buttons to avoid key conflicts)
+                                for filter_idx in reversed(filters_to_remove):
+                                    group['filters'].pop(filter_idx)
+                                
+                                st.markdown("---")
+                        
+                        # Remove groups marked for removal (process after all buttons to avoid key conflicts)  
+                        for group_idx in reversed(groups_to_remove):
+                            st.session_state.campaign_filter_groups.pop(group_idx)
+                        
+                        # Apply advanced filters
+                        if st.session_state.campaign_filter_groups:
+                            try:
+                                group_masks = []
+                                
+                                # Process each filter group
+                                for group in st.session_state.campaign_filter_groups:
+                                    group_mask = None
+                                    
+                                    # Process filters within the group
+                                    for filter_idx, filter_config in enumerate(group['filters']):
+                                        if filter_config['value'].strip():  # Only apply if value is provided
+                                            column = filter_config['column']
+                                            operator = filter_config['operator']
+                                            value_str = filter_config['value'].strip()
+                                            logic = filter_config['logic']
+                                            
+                                            # Convert column to numeric for comparison
+                                            if column in filtered_df.columns:
+                                                numeric_series = pd.to_numeric(
+                                                    filtered_df[column].astype(str).str.replace('$', '').str.replace('%', '').str.replace(',', ''), 
+                                                    errors='coerce'
+                                                )
+                                                
+                                                try:
+                                                    value = float(value_str.replace('$', '').replace('%', '').replace(',', ''))
+                                                    
+                                                    # Create condition mask based on operator
+                                                    if operator == '>':
+                                                        condition_mask = numeric_series > value
+                                                    elif operator == '>=':
+                                                        condition_mask = numeric_series >= value
+                                                    elif operator == '=':
+                                                        condition_mask = numeric_series == value
+                                                    elif operator == '<=':
+                                                        condition_mask = numeric_series <= value
+                                                    elif operator == '<':
+                                                        condition_mask = numeric_series < value
+                                                    
+                                                    # Handle NaN values (treat as False for conditions)
+                                                    condition_mask = condition_mask.fillna(False)
+                                                    
+                                                    # Combine with previous conditions in this group
+                                                    if filter_idx == 0:
+                                                        group_mask = condition_mask
+                                                    else:
+                                                        if logic == 'AND':
+                                                            group_mask = group_mask & condition_mask
+                                                        else:  # OR
+                                                            group_mask = group_mask | condition_mask
+                                                    
+                                                except ValueError:
+                                                    st.error(f"Invalid numeric value in Group {len(group_masks)+1}, Filter {filter_idx+1}: '{value_str}'")
+                                    
+                                    # Add this group's mask to the list
+                                    if group_mask is not None:
+                                        group_masks.append((group_mask, group.get('group_logic', 'AND')))
+                                
+                                # Combine all group masks
+                                if group_masks:
+                                    final_mask = group_masks[0][0]  # Start with first group
+                                    
+                                    for i in range(1, len(group_masks)):
+                                        mask, logic = group_masks[i]
+                                        if logic == 'AND':
+                                            final_mask = final_mask & mask
+                                        else:  # OR
+                                            final_mask = final_mask | mask
+                                    
+                                    # Apply the final combined mask
+                                    filtered_df = filtered_df[final_mask]
+                                    
+                            except Exception as e:
+                                st.error(f"Error applying advanced filters: {e}")
+                        
+                        # Show active filter summary
+                        if st.session_state.campaign_filter_groups:
+                            active_filters = sum(len([f for f in group['filters'] if f['value'].strip()]) for group in st.session_state.campaign_filter_groups)
+                            if active_filters > 0:
+                                st.info(f"🔍 {active_filters} active filter(s) across {len(st.session_state.campaign_filter_groups)} group(s)")
+                    
                     # Summary cards
                     if not filtered_df.empty:
                         # Calculate summary metrics
@@ -12427,12 +12768,19 @@ if st.session_state.client_config:
                 if 'targeting_performance_product_group_filter' not in st.session_state:
                     st.session_state.targeting_performance_product_group_filter = []
                 
-                # Add product group filter above the tabs
-                if product_groups:
-                    product_groups = sorted(list(product_groups))
-                    filter_col1, filter_col2 = st.columns([0.4, 0.6])
-                    with filter_col1:
-                        # Use the session state value as the default
+                # Basic Filters Section
+                st.markdown("**Basic Filters**")
+                
+                # First row of basic filters
+                basic_filter_cols = st.columns(3)
+                with basic_filter_cols[0]:
+                    campaign_search = st.text_input("Filter by Campaign", key="targeting_campaign_search", help="Search for campaigns containing this text")
+                with basic_filter_cols[1]:
+                    target_search = st.text_input("Filter by Target", key="targeting_target_search", help="Search for targets containing this text")
+                with basic_filter_cols[2]:
+                    # Add product group filter to the right of target filter
+                    if product_groups:
+                        product_groups = sorted(list(product_groups))
                         selected_product_groups = st.multiselect(
                             "Filter by Product Group(s):",
                             options=product_groups,
@@ -12440,9 +12788,182 @@ if st.session_state.client_config:
                         )
                         # Update the filter active state based on selection
                         st.session_state.targeting_performance_filter_active = len(selected_product_groups) > 0
+                    else:
+                        st.write("")  # Empty space if no product groups
                 
-
+                # Second row of basic filters
+                basic_filter_cols2 = st.columns(3)
+                with basic_filter_cols2[0]:
+                    # Get unique match types from all data
+                    all_match_types = set()
+                    for df in [st.session_state.all_targets_df, branded_targets_df, non_branded_targets_df]:
+                        if not df.empty and 'Match Type' in df.columns:
+                            all_match_types.update(df['Match Type'].dropna().unique())
+                    match_types = ['All'] + sorted(list(all_match_types))
+                    selected_match_types = st.multiselect("Filter by Match Type", match_types, default=['All'], key="targeting_match_type_filter")
+                    if 'All' in selected_match_types:
+                        selected_match_types = [mt for mt in match_types if mt != 'All']
                 
+                with basic_filter_cols2[1]:
+                    # Get unique target types from all data
+                    all_target_types = set()
+                    for df in [st.session_state.all_targets_df, branded_targets_df, non_branded_targets_df]:
+                        if not df.empty and 'Target Type' in df.columns:
+                            all_target_types.update(df['Target Type'].dropna().unique())
+                    target_types = ['All'] + sorted(list(all_target_types))
+                    selected_target_types = st.multiselect("Filter by Target Type", target_types, default=['All'], key="targeting_target_type_filter")
+                    if 'All' in selected_target_types:
+                        selected_target_types = [tt for tt in target_types if tt != 'All']
+                
+                with basic_filter_cols2[2]:
+                    # Get unique ad types from all data
+                    all_ad_types = set()
+                    for df in [st.session_state.all_targets_df, branded_targets_df, non_branded_targets_df]:
+                        temp_df = df.copy()
+                        if 'Sheet Source' in temp_df.columns and 'Ad Type' not in temp_df.columns:
+                            temp_df['Ad Type'] = temp_df['Sheet Source']
+                        if not temp_df.empty and 'Ad Type' in temp_df.columns:
+                            all_ad_types.update(temp_df['Ad Type'].dropna().unique())
+                    ad_types = ['All'] + sorted(list(all_ad_types))
+                    selected_ad_types = st.multiselect("Filter by Ad Type", ad_types, default=['All'], key="targeting_ad_type_filter")
+                    if 'All' in selected_ad_types:
+                        selected_ad_types = [at for at in ad_types if at != 'All']
+                
+                # Advanced Filters Section
+                st.markdown("---")
+                with st.expander("🔧 Advanced Filters", expanded=False):
+                    # Initialize advanced filter state
+                    if 'targeting_filter_groups' not in st.session_state:
+                        st.session_state.targeting_filter_groups = []
+                    st.markdown("**Advanced Filtering with Filter Groups**")
+                    st.caption("Create multiple filter groups and combine them with AND/OR logic for complex filtering.")
+                    
+                    # Get numeric columns for filtering
+                    numeric_columns = []
+                    for col in st.session_state.all_targets_df.columns:
+                        if col not in ['Ad Type', 'Product Group', 'Campaign', 'Target', 'Match Type', 'Target Type'] and st.session_state.all_targets_df[col].dtype in ['float64', 'int64', 'object']:
+                            # Try to convert to numeric to check if it's actually numeric
+                            try:
+                                pd.to_numeric(st.session_state.all_targets_df[col].replace('[\$,]', '', regex=True), errors='raise')
+                                numeric_columns.append(col)
+                            except:
+                                pass
+                    
+                    if not numeric_columns:
+                        numeric_columns = ['Spend', 'Ad Sales', 'Orders', 'Clicks', 'Impressions', 'ACoS', 'CPC', 'CVR', 'ROAS']
+                    
+                    # Control buttons
+                    button_cols = st.columns([1, 1, 3])
+                    with button_cols[0]:
+                        add_group = st.button("➕ Add Filter Group", key="targeting_add_group")
+                    with button_cols[1]:
+                        clear_all = st.button("🗑️ Clear All Filters", key="targeting_clear_all")
+                    
+                    # Handle button actions
+                    if add_group:
+                        st.session_state.targeting_filter_groups.append({
+                            'filters': [{
+                                'column': numeric_columns[0] if numeric_columns else 'Spend',
+                                'operator': '>',
+                                'value': '',
+                                'logic': 'AND'
+                            }],
+                            'group_logic': 'AND'
+                        })
+                    
+                    if clear_all:
+                        st.session_state.targeting_filter_groups = []
+                    
+                    # Display filter groups
+                    groups_to_remove = []
+                    for group_idx, group in enumerate(st.session_state.targeting_filter_groups):
+                        st.markdown(f"**Filter Group {group_idx + 1}**")
+                        
+                        # Group controls
+                        group_col1, group_col2, group_col3 = st.columns([2, 1, 1])
+                        with group_col1:
+                            st.markdown(f"*Group {group_idx + 1} Logic*")
+                        with group_col2:
+                            group['group_logic'] = st.selectbox(
+                                "Group Logic",
+                                ["AND", "OR"],
+                                index=0 if group['group_logic'] == 'AND' else 1,
+                                key=f"targeting_group_logic_{group_idx}",
+                                label_visibility="collapsed"
+                            )
+                        with group_col3:
+                            if st.button("🗑️", key=f"targeting_remove_group_{group_idx}", help="Remove entire group"):
+                                groups_to_remove.append(group_idx)
+                        
+                        # Display filters within this group
+                        filters_to_remove = []
+                        for filter_idx, filter_item in enumerate(group['filters']):
+                            col1, col2, col3, col4, col5, col6 = st.columns([2, 1, 2, 1, 1, 1])
+                            
+                            with col1:
+                                filter_item['column'] = st.selectbox(
+                                    "Column",
+                                    numeric_columns,
+                                    index=numeric_columns.index(filter_item['column']) if filter_item['column'] in numeric_columns else 0,
+                                    key=f"targeting_filter_col_{group_idx}_{filter_idx}",
+                                    label_visibility="collapsed" if filter_idx > 0 else "visible"
+                                )
+                            
+                            with col2:
+                                filter_item['operator'] = st.selectbox(
+                                    "Operator",
+                                    [">", ">=", "<", "<=", "=", "!="],
+                                    index=[">", ">=", "<", "<=", "=", "!="].index(filter_item['operator']),
+                                    key=f"targeting_filter_op_{group_idx}_{filter_idx}",
+                                    label_visibility="collapsed" if filter_idx > 0 else "visible"
+                                )
+                            
+                            with col3:
+                                filter_item['value'] = st.text_input(
+                                    "Value",
+                                    value=str(filter_item['value']),
+                                    key=f"targeting_filter_val_{group_idx}_{filter_idx}",
+                                    label_visibility="collapsed" if filter_idx > 0 else "visible"
+                                )
+                            
+                            with col4:
+                                if filter_idx < len(group['filters']) - 1:  # Not the last filter in group
+                                    filter_item['logic'] = st.selectbox(
+                                        "Logic",
+                                        ["AND", "OR"],
+                                        index=0 if filter_item['logic'] == 'AND' else 1,
+                                        key=f"targeting_filter_logic_{group_idx}_{filter_idx}",
+                                        label_visibility="collapsed" if filter_idx > 0 else "visible"
+                                    )
+                                else:
+                                    st.write("")  # Empty space for last filter in group
+                            
+                            with col5:
+                                if st.button("➕", key=f"targeting_add_filter_{group_idx}_{filter_idx}", help="Add filter to this group"):
+                                    group['filters'].append({
+                                        'column': numeric_columns[0] if numeric_columns else 'Spend',
+                                        'operator': '>',
+                                        'value': '',
+                                        'logic': 'AND'
+                                    })
+                            
+                            with col6:
+                                if len(group['filters']) > 1:  # Don't allow removing the last filter in a group
+                                    if st.button("🗑️", key=f"targeting_remove_filter_{group_idx}_{filter_idx}", help="Remove filter"):
+                                        filters_to_remove.append(filter_idx)
+                        
+                        # Remove filters marked for removal
+                        for filter_idx in reversed(filters_to_remove):
+                            group['filters'].pop(filter_idx)
+                        
+                        st.markdown("---")
+                    
+                    # Remove groups marked for removal
+                    for group_idx in reversed(groups_to_remove):
+                        st.session_state.targeting_filter_groups.pop(group_idx)
+                
+                # Move tabs here - under filters and above scorecard
+                st.markdown("---")
                 tab_labels = ["All Targets", "Branded Targets", "Non-Branded Targets"]
                 tabs = st.tabs(tab_labels)
                 target_dfs = [st.session_state.all_targets_df, branded_targets_df, non_branded_targets_df]
@@ -12461,7 +12982,7 @@ if st.session_state.client_config:
                                     st.error(f"Error displaying {subkey}: {e}")
                             continue
 
-                        # Apply product group filtering if active
+                        # Apply all filters to the data
                         filtered_df = df.copy()
                         
                         # --- Patch: Ensure Product Group is always campaign-level ---
@@ -12479,14 +13000,141 @@ if st.session_state.client_config:
                             else:
                                 filtered_df['Product Group'] = 'Untagged Group'  # Use 'Untagged Group' if no product groups defined
                         
-                        # Apply product group filter if active
+                        # Apply basic filters
+                        # Campaign search filter
+                        if campaign_search and 'Campaign' in filtered_df.columns:
+                            def phrase_match(value, filter_value):
+                                if not isinstance(value, str):
+                                    return False
+                                import re
+                                pattern = re.escape(filter_value)
+                                regex = rf"(^|[|\s]){pattern}([|\s]|$)"
+                                return re.search(regex, value, re.IGNORECASE) is not None or value.strip().lower() == filter_value.strip().lower()
+                            
+                            matched_campaigns = filtered_df['Campaign'].astype(str).apply(lambda x: phrase_match(x, campaign_search))
+                            filtered_df = filtered_df[matched_campaigns]
+                        
+                        # Target search filter
+                        if target_search and 'Target' in filtered_df.columns:
+                            import re
+                            search_terms = [term.strip().lower() for term in target_search.split('|') if term.strip()]
+                            mask = pd.Series(False, index=filtered_df.index)
+                            for term in search_terms:
+                                if '|' in term:
+                                    sub_terms = [t.strip() for t in term.split('|') if t.strip()]
+                                    for sub_term in sub_terms:
+                                        mask = mask | filtered_df['Target'].astype(str).str.lower().str.contains(re.escape(sub_term), regex=True, na=False)
+                                else:
+                                    mask = mask | filtered_df['Target'].astype(str).str.lower().str.contains(re.escape(term), regex=True, na=False)
+                            filtered_df = filtered_df[mask]
+                        
+                        # Product group filter
                         if st.session_state.get('targeting_performance_filter_active', False) and len(st.session_state.targeting_performance_product_group_filter) > 0:
                             if 'Product Group' in filtered_df.columns:
                                 filtered_df = filtered_df[filtered_df['Product Group'].isin(st.session_state.targeting_performance_product_group_filter)]
-                                st.caption(f"Filtered by Product Group(s): {', '.join(st.session_state.targeting_performance_product_group_filter)}")
-                            else:
-                                st.warning("Product Group column not found in data. Cannot apply filter.")
-                                st.session_state.debug_messages.append("[Targeting Performance] Product Group column not found in data.")
+                        
+                        # Match type filter
+                        if selected_match_types and 'Match Type' in filtered_df.columns:
+                            filtered_df = filtered_df[filtered_df['Match Type'].isin(selected_match_types)]
+                        
+                        # Target type filter
+                        if selected_target_types and 'Target Type' in filtered_df.columns:
+                            filtered_df = filtered_df[filtered_df['Target Type'].isin(selected_target_types)]
+                        
+                        # Ad type filter
+                        if selected_ad_types and 'Ad Type' in filtered_df.columns:
+                            filtered_df = filtered_df[filtered_df['Ad Type'].isin(selected_ad_types)]
+                        
+                        # Apply advanced filters
+                        if st.session_state.targeting_filter_groups:
+                            try:
+                                # Build the complete filter condition
+                                group_conditions = []
+                                
+                                for group in st.session_state.targeting_filter_groups:
+                                    if not group['filters']:
+                                        continue
+                                    
+                                    filter_conditions = []
+                                    for filter_item in group['filters']:
+                                        if not filter_item['value'].strip():
+                                            continue
+                                        
+                                        column = filter_item['column']
+                                        operator = filter_item['operator']
+                                        value = filter_item['value'].strip()
+                                        
+                                        if column not in filtered_df.columns:
+                                            continue
+                                        
+                                        try:
+                                            # Convert value to appropriate type
+                                            if column in ['Spend', 'Ad Sales', 'CPC', 'AOV', 'CPA', 'Bid']:
+                                                # Currency columns - remove $ and commas
+                                                clean_series = filtered_df[column].replace('[\$,]', '', regex=True)
+                                                numeric_value = float(value.replace('$', '').replace(',', ''))
+                                            elif column in ['ACoS', 'CVR', 'CTR', 'TACoS']:
+                                                # Percentage columns - remove %
+                                                clean_series = filtered_df[column].replace('%', '', regex=True)
+                                                numeric_value = float(value.replace('%', ''))
+                                            else:
+                                                # Regular numeric columns
+                                                clean_series = filtered_df[column].replace(',', '', regex=True)
+                                                numeric_value = float(value.replace(',', ''))
+                                            
+                                            # Convert series to numeric
+                                            clean_series = pd.to_numeric(clean_series, errors='coerce')
+                                            
+                                            # Apply operator
+                                            if operator == '>':
+                                                condition = clean_series > numeric_value
+                                            elif operator == '>=':
+                                                condition = clean_series >= numeric_value
+                                            elif operator == '<':
+                                                condition = clean_series < numeric_value
+                                            elif operator == '<=':
+                                                condition = clean_series <= numeric_value
+                                            elif operator == '=':
+                                                condition = clean_series == numeric_value
+                                            elif operator == '!=':
+                                                condition = clean_series != numeric_value
+                                            else:
+                                                continue
+                                            
+                                            filter_conditions.append(condition)
+                                        
+                                        except (ValueError, TypeError):
+                                            st.warning(f"Invalid value '{value}' for column '{column}'. Skipping this filter.")
+                                            continue
+                                    
+                                    if filter_conditions:
+                                        # Combine conditions within the group using the filter logic
+                                        group_condition = filter_conditions[0]
+                                        for i, condition in enumerate(filter_conditions[1:], 1):
+                                            filter_logic = group['filters'][i-1]['logic']
+                                            if filter_logic == 'AND':
+                                                group_condition = group_condition & condition
+                                            else:  # OR
+                                                group_condition = group_condition | condition
+                                        
+                                        group_conditions.append(group_condition)
+                                
+                                if group_conditions:
+                                    # Combine group conditions using group logic
+                                    final_condition = group_conditions[0]
+                                    for i, condition in enumerate(group_conditions[1:], 1):
+                                        group_logic = st.session_state.targeting_filter_groups[i-1]['group_logic']
+                                        if group_logic == 'AND':
+                                            final_condition = final_condition & condition
+                                        else:  # OR
+                                            final_condition = final_condition | condition
+                                    
+                                    # Apply the final condition
+                                    filtered_df = filtered_df[final_condition]
+                            
+                            except Exception as e:
+                                st.error(f"Error applying advanced filters: {str(e)}")
+                                st.code(traceback.format_exc())
                         
                             
                         # Sort by Ad Sales if the column exists
@@ -12505,103 +13153,7 @@ if st.session_state.client_config:
                             st.session_state.debug_messages.append(f"Targeting Performance Summary - Using sales column: {sales_col}")
                             st.session_state.debug_messages.append(f"Available columns: {filtered_df.columns.tolist()}")
 
-                        # --- Table Filters: Text Input (Contains) and Dropdowns ---
-                        campaign_filter, target_filter, match_type_filter, target_type_filter = '', '', '', ''
-                        
-                        # First row of filters
-                        row1_cols = st.columns(2)
-                        with row1_cols[0]:
-                            campaign_filter = st.text_input("Filter by Campaign", key=f"filter_{label}_campaign")
-                        with row1_cols[1]:
-                            target_filter = st.text_input("Filter by Target", key=f"filter_{label}_target")
-                        
-                        # Second row of filters (dropdowns)
-                        row2_cols = st.columns(3)
-                        with row2_cols[0]:
-                            # Get unique match types from the data
-                            if 'Match Type' in filtered_df.columns:
-                                match_types = ['All'] + sorted(filtered_df['Match Type'].dropna().unique().tolist())
-                            else:
-                                match_types = ['All']
-                            match_type_filter = st.selectbox("Filter by Match Type", match_types, key=f"filter_{label}_match_type")
-                        with row2_cols[1]:
-                            # Get unique target types from the data
-                            if 'Target Type' in filtered_df.columns:
-                                target_types = ['All'] + sorted(filtered_df['Target Type'].dropna().unique().tolist())
-                            else:
-                                target_types = ['All']
-                            target_type_filter = st.selectbox("Filter by Target Type", target_types, key=f"filter_{label}_target_type")
-                        with row2_cols[2]:
-                            # Get unique ad types from the data
-                            # First ensure 'Ad Type' column exists by renaming 'Sheet Source' if needed
-                            temp_df = filtered_df.copy()
-                            if 'Sheet Source' in temp_df.columns and 'Ad Type' not in temp_df.columns:
-                                temp_df['Ad Type'] = temp_df['Sheet Source']
-                            ad_types = ['All']
-                            if 'Ad Type' in temp_df.columns:
-                                ad_types += sorted(temp_df['Ad Type'].dropna().unique().tolist())
-                            ad_type_filter = st.selectbox("Filter by Ad Type", ad_types, key=f"filter_{label}_ad_type")
-                        
-                        filtered_df_original = filtered_df.copy()
-                        filter_changed = False
-                        if campaign_filter:
-                            import re
 
-                            def phrase_match(value, filter_value):
-                                if not isinstance(value, str):
-                                    return False
-                                pattern = re.escape(filter_value)
-                                # Match as a whole phrase (preceded/followed by |, start/end, or whitespace)
-                                regex = rf"(^|[|\s]){pattern}([|\s]|$)"
-                                return re.search(regex, value, re.IGNORECASE) is not None or value.strip().lower() == filter_value.strip().lower()
-
-                            if campaign_filter:
-                                matched_campaigns = filtered_df['Campaign'].astype(str).apply(lambda x: phrase_match(x, campaign_filter))
-                                filtered_df = filtered_df[matched_campaigns]
-                                st.session_state.debug_messages.append(f"Campaign filter '{campaign_filter}' matched: {filtered_df['Campaign'].unique().tolist()}")
-                                filter_changed = True
-                        if target_filter:
-                            # Clean and normalize the search term and target values
-                            search_terms = [term.strip().lower() for term in target_filter.split('|') if term.strip()]
-                            
-                            # Debug logging
-                            st.session_state.debug_messages.append(f"[Target Search] Looking for terms: {search_terms}")
-                            
-                            # Create a mask for matching any of the search terms (OR condition)
-                            mask = pd.Series(False, index=filtered_df.index)
-                            for term in search_terms:
-                                # Check if the search term contains a pipe (indicating multiple targets)
-                                if '|' in term:
-                                    # If it's a pipe-separated list, split and check for any match
-                                    sub_terms = [t.strip() for t in term.split('|') if t.strip()]
-                                    for sub_term in sub_terms:
-                                        mask = mask | filtered_df['Target'].astype(str).str.lower().str.contains(re.escape(sub_term), regex=True, na=False)
-                                else:
-                                    # Single term search
-                                    mask = mask | filtered_df['Target'].astype(str).str.lower().str.contains(re.escape(term), regex=True, na=False)
-                            
-                            # Apply the combined mask
-                            filtered_df = filtered_df[mask]
-                            filter_changed = True
-                            
-                            # Log the results
-                            st.session_state.debug_messages.append(f"[Target Search] Found {len(filtered_df)} matches for terms: {search_terms}")
-                        if match_type_filter and match_type_filter != 'All' and 'Match Type' in filtered_df.columns:
-                            filtered_df = filtered_df[filtered_df['Match Type'] == match_type_filter]
-                            filter_changed = True
-                        if target_type_filter and target_type_filter != 'All' and 'Target Type' in filtered_df.columns:
-                            filtered_df = filtered_df[filtered_df['Target Type'] == target_type_filter]
-                            filter_changed = True
-                        if ad_type_filter and ad_type_filter != 'All':
-                            # Ensure we have an Ad Type column
-                            if 'Ad Type' not in filtered_df.columns and 'Sheet Source' in filtered_df.columns:
-                                filtered_df['Ad Type'] = filtered_df['Sheet Source']
-                            if 'Ad Type' in filtered_df.columns:
-                                filtered_df = filtered_df[filtered_df['Ad Type'] == ad_type_filter]
-                                filter_changed = True
-                        # Reset to page 1 if filters changed
-                        if filter_changed:
-                            st.session_state[f"{label}_page_number"] = 1
 
                         # --- Summary Metrics from Filtered Data ---
                         if not filtered_df.empty:
@@ -12800,52 +13352,381 @@ if st.session_state.client_config:
                     
                     # No descriptions needed
                     
-                    # Initialize session state variables for search term product group filter if they don't exist
+                    # Initialize session state variables for search term filters if they don't exist
                     if 'search_term_product_group_filter' not in st.session_state:
                         st.session_state.search_term_product_group_filter = []
                     if 'search_term_filter_active' not in st.session_state:
                         st.session_state.search_term_filter_active = False
+                    if 'search_term_filter_groups' not in st.session_state:
+                        st.session_state.search_term_filter_groups = []
                     
-                    # Define a callback function to update the filter state
-                    def update_search_term_filter_state():
-                        st.session_state.search_term_filter_active = len(st.session_state.search_term_product_group_filter) > 0
+                    # Get search term data for filter setup
+                    search_term_df = pd.DataFrame()
+                    product_groups = []
+                    if 'bulk_data' in st.session_state:
+                        search_term_df = get_search_term_data(st.session_state.bulk_data, st.session_state.client_config)
+                        if not search_term_df.empty and 'Product Group' in search_term_df.columns:
+                            product_groups = sorted([str(g) for g in search_term_df['Product Group'].dropna().unique() if g])
                     
-                    # Add product group filter above the tabs
-                    filter_col1, filter_col2 = st.columns([0.4, 0.6])
-                    with filter_col1:
-                        # Get unique product groups from the data if available
-                        product_groups = []
-                        if 'bulk_data' in st.session_state:
-                            search_term_df = get_search_term_data(st.session_state.bulk_data, st.session_state.client_config)
-                            if not search_term_df.empty and 'Product Group' in search_term_df.columns:
-                                product_groups = sorted([str(g) for g in search_term_df['Product Group'].dropna().unique() if g])
-                        
+                    # Basic Filters Section
+                    st.markdown("**Basic Filters**")
+                    
+                    # First row of basic filters
+                    basic_filter_cols = st.columns(3)
+                    with basic_filter_cols[0]:
+                        campaign_search = st.text_input("Filter by Campaign", key="search_term_campaign_search", help="Search for campaigns containing this text")
+                    with basic_filter_cols[1]:
+                        search_term_search = st.text_input("Filter by Search Term", key="search_term_search", help="Search for search terms containing this text")
+                    with basic_filter_cols[2]:
+                        # Add product group filter to the right of search term filter
                         if product_groups:
-                            st.multiselect(
+                            selected_product_groups = st.multiselect(
                                 "Filter by Product Group(s):",
                                 options=product_groups,
-                                key="search_term_product_group_filter",
-                                on_change=update_search_term_filter_state
+                                key="search_term_product_group_filter"
                             )
+                            # Update the filter active state based on selection
+                            st.session_state.search_term_filter_active = len(selected_product_groups) > 0
                         else:
-                            # Show disabled multiselect with informative label if no product groups found
-                            st.multiselect(
-                                "Filter by Product Group(s) (Add in Client Settings):",
-                                options=[],
-                                disabled=True,
-                                key="search_term_product_group_filter_disabled"
-                            )
-                            # Reset filter state if no product groups
-                            if st.session_state.search_term_product_group_filter:
-                                st.session_state.search_term_product_group_filter = []
-                                st.session_state.search_term_filter_active = False
+                            st.write("")  # Empty space if no product groups
                     
-                    # Create tabs for All Terms, Branded Terms, and Non-Branded Terms
-                    st.markdown("<div style='margin-top:0.5rem;'></div>", unsafe_allow_html=True)
+                    # Second row of basic filters
+                    basic_filter_cols2 = st.columns(3)
+                    with basic_filter_cols2[0]:
+                        # Get unique match types from search term data
+                        all_match_types = set()
+                        if not search_term_df.empty and 'Match Type' in search_term_df.columns:
+                            all_match_types.update(search_term_df['Match Type'].dropna().unique())
+                        match_types = ['All'] + sorted(list(all_match_types))
+                        selected_match_types = st.multiselect("Filter by Match Type", match_types, default=['All'], key="search_term_match_type_filter")
+                        if 'All' in selected_match_types:
+                            selected_match_types = [mt for mt in match_types if mt != 'All']
+                    
+                    with basic_filter_cols2[1]:
+                        # Get unique target types from search term data
+                        all_target_types = set()
+                        if not search_term_df.empty and 'Target Type' in search_term_df.columns:
+                            all_target_types.update(search_term_df['Target Type'].dropna().unique())
+                        target_types = ['All'] + sorted(list(all_target_types))
+                        selected_target_types = st.multiselect("Filter by Target Type", target_types, default=['All'], key="search_term_target_type_filter")
+                        if 'All' in selected_target_types:
+                            selected_target_types = [tt for tt in target_types if tt != 'All']
+                    
+                    with basic_filter_cols2[2]:
+                        # Get unique ad types from search term data
+                        all_ad_types = set()
+                        if not search_term_df.empty:
+                            temp_df = search_term_df.copy()
+                            if 'Sheet Source' in temp_df.columns and 'Ad Type' not in temp_df.columns:
+                                temp_df['Ad Type'] = temp_df['Sheet Source']
+                            if 'Ad Type' in temp_df.columns:
+                                all_ad_types.update(temp_df['Ad Type'].dropna().unique())
+                        ad_types = ['All'] + sorted(list(all_ad_types))
+                        selected_ad_types = st.multiselect("Filter by Ad Type", ad_types, default=['All'], key="search_term_ad_type_filter")
+                        if 'All' in selected_ad_types:
+                            selected_ad_types = [at for at in ad_types if at != 'All']
+                    
+                    # Advanced Filters Section
+                    st.markdown("---")
+                    with st.expander("🔧 Advanced Filters", expanded=False):
+                        st.markdown("**Advanced Filtering with Filter Groups**")
+                        st.caption("Create multiple filter groups and combine them with AND/OR logic for complex filtering.")
+                        
+                        # Get numeric columns for filtering
+                        numeric_columns = []
+                        if not search_term_df.empty:
+                            for col in search_term_df.columns:
+                                if col not in ['Ad Type', 'Product Group', 'Campaign', 'Target', 'Search Term', 'Match Type', 'Target Type'] and search_term_df[col].dtype in ['float64', 'int64', 'object']:
+                                    # Try to convert to numeric to check if it's actually numeric
+                                    try:
+                                        pd.to_numeric(search_term_df[col].replace('[\$,]', '', regex=True), errors='raise')
+                                        numeric_columns.append(col)
+                                    except:
+                                        pass
+                        
+                        if not numeric_columns:
+                            numeric_columns = ['Spend', 'Ad Sales', 'Orders', 'Clicks', 'Impressions', 'ACoS', 'CPC', 'CVR', 'ROAS']
+                        
+                        # Control buttons
+                        button_cols = st.columns([1, 1, 3])
+                        with button_cols[0]:
+                            add_group = st.button("➕ Add Filter Group", key="search_term_add_group")
+                        with button_cols[1]:
+                            clear_all = st.button("🗑️ Clear All Filters", key="search_term_clear_all")
+                        
+                        # Handle button actions
+                        if add_group:
+                            st.session_state.search_term_filter_groups.append({
+                                'filters': [{
+                                    'column': numeric_columns[0] if numeric_columns else 'Spend',
+                                    'operator': '>',
+                                    'value': '',
+                                    'logic': 'AND'
+                                }],
+                                'group_logic': 'AND'
+                            })
+                        
+                        if clear_all:
+                            st.session_state.search_term_filter_groups = []
+                        
+                        # Display filter groups
+                        groups_to_remove = []
+                        for group_idx, group in enumerate(st.session_state.search_term_filter_groups):
+                            st.markdown(f"**Filter Group {group_idx + 1}**")
+                            
+                            # Group controls
+                            group_col1, group_col2, group_col3 = st.columns([2, 1, 1])
+                            with group_col1:
+                                st.markdown(f"*Group {group_idx + 1} Logic*")
+                            with group_col2:
+                                group['group_logic'] = st.selectbox(
+                                    "Group Logic",
+                                    ["AND", "OR"],
+                                    index=0 if group['group_logic'] == 'AND' else 1,
+                                    key=f"search_term_group_logic_{group_idx}",
+                                    label_visibility="collapsed"
+                                )
+                            with group_col3:
+                                if st.button("🗑️", key=f"search_term_remove_group_{group_idx}", help="Remove entire group"):
+                                    groups_to_remove.append(group_idx)
+                            
+                            # Display filters within this group
+                            filters_to_remove = []
+                            for filter_idx, filter_item in enumerate(group['filters']):
+                                col1, col2, col3, col4, col5, col6 = st.columns([2, 1, 2, 1, 1, 1])
+                                
+                                with col1:
+                                    filter_item['column'] = st.selectbox(
+                                        "Column",
+                                        numeric_columns,
+                                        index=numeric_columns.index(filter_item['column']) if filter_item['column'] in numeric_columns else 0,
+                                        key=f"search_term_filter_col_{group_idx}_{filter_idx}",
+                                        label_visibility="collapsed" if filter_idx > 0 else "visible"
+                                    )
+                                
+                                with col2:
+                                    filter_item['operator'] = st.selectbox(
+                                        "Operator",
+                                        [">", ">=", "<", "<=", "=", "!="],
+                                        index=[">", ">=", "<", "<=", "=", "!="].index(filter_item['operator']),
+                                        key=f"search_term_filter_op_{group_idx}_{filter_idx}",
+                                        label_visibility="collapsed" if filter_idx > 0 else "visible"
+                                    )
+                                
+                                with col3:
+                                    filter_item['value'] = st.text_input(
+                                        "Value",
+                                        value=str(filter_item['value']),
+                                        key=f"search_term_filter_val_{group_idx}_{filter_idx}",
+                                        label_visibility="collapsed" if filter_idx > 0 else "visible"
+                                    )
+                                
+                                with col4:
+                                    if filter_idx < len(group['filters']) - 1:  # Not the last filter in group
+                                        filter_item['logic'] = st.selectbox(
+                                            "Logic",
+                                            ["AND", "OR"],
+                                            index=0 if filter_item['logic'] == 'AND' else 1,
+                                            key=f"search_term_filter_logic_{group_idx}_{filter_idx}",
+                                            label_visibility="collapsed" if filter_idx > 0 else "visible"
+                                        )
+                                    else:
+                                        st.write("")  # Empty space for last filter in group
+                                
+                                with col5:
+                                    if st.button("➕", key=f"search_term_add_filter_{group_idx}_{filter_idx}", help="Add filter to this group"):
+                                        group['filters'].append({
+                                            'column': numeric_columns[0] if numeric_columns else 'Spend',
+                                            'operator': '>',
+                                            'value': '',
+                                            'logic': 'AND'
+                                        })
+                                
+                                with col6:
+                                    if len(group['filters']) > 1:  # Don't allow removing the last filter in a group
+                                        if st.button("🗑️", key=f"search_term_remove_filter_{group_idx}_{filter_idx}", help="Remove filter"):
+                                            filters_to_remove.append(filter_idx)
+                            
+                            # Remove filters marked for removal
+                            for filter_idx in reversed(filters_to_remove):
+                                group['filters'].pop(filter_idx)
+                            
+                            st.markdown("---")
+                        
+                        # Remove groups marked for removal
+                        for group_idx in reversed(groups_to_remove):
+                            st.session_state.search_term_filter_groups.pop(group_idx)
+                    
+                    # Move tabs here - under filters and above scorecard
+                    st.markdown("---")
                     all_tab, branded_tab, non_branded_tab = st.tabs(["All Terms", "Branded Terms", "Non-Branded Terms"])
                     
                     # Function to display table with pagination for each tab
                     def display_search_term_table(df, tab_key, is_branded=None, show_metrics=False, show_filters=False):
+                        # Apply all filters to the data
+                        filtered_df = df.copy()
+                        
+                        # Apply basic filters
+                        # Campaign search filter
+                        if campaign_search and 'Campaign' in filtered_df.columns:
+                            def phrase_match(value, filter_value):
+                                if not isinstance(value, str):
+                                    return False
+                                import re
+                                pattern = re.escape(filter_value)
+                                regex = rf"(^|[|\s]){pattern}([|\s]|$)"
+                                return re.search(regex, value, re.IGNORECASE) is not None or value.strip().lower() == filter_value.strip().lower()
+                            
+                            matched_campaigns = filtered_df['Campaign'].astype(str).apply(lambda x: phrase_match(x, campaign_search))
+                            filtered_df = filtered_df[matched_campaigns]
+                        
+                        # Search term search filter
+                        if search_term_search and 'Search Term' in filtered_df.columns:
+                            import re
+                            search_terms = [term.strip().lower() for term in search_term_search.split('|') if term.strip()]
+                            mask = pd.Series(False, index=filtered_df.index)
+                            for term in search_terms:
+                                if '|' in term:
+                                    sub_terms = [t.strip() for t in term.split('|') if t.strip()]
+                                    for sub_term in sub_terms:
+                                        mask = mask | filtered_df['Search Term'].astype(str).str.lower().str.contains(re.escape(sub_term), regex=True, na=False)
+                                else:
+                                    mask = mask | filtered_df['Search Term'].astype(str).str.lower().str.contains(re.escape(term), regex=True, na=False)
+                            filtered_df = filtered_df[mask]
+                        
+                        # Product group filter
+                        if st.session_state.get('search_term_filter_active', False) and len(st.session_state.search_term_product_group_filter) > 0:
+                            if 'Product Group' in filtered_df.columns:
+                                filtered_df = filtered_df[filtered_df['Product Group'].isin(st.session_state.search_term_product_group_filter)]
+                        
+                        # Match type filter
+                        if selected_match_types and 'Match Type' in filtered_df.columns:
+                            filtered_df = filtered_df[filtered_df['Match Type'].isin(selected_match_types)]
+                        
+                        # Target type filter
+                        if selected_target_types and 'Target Type' in filtered_df.columns:
+                            filtered_df = filtered_df[filtered_df['Target Type'].isin(selected_target_types)]
+                        
+                        # Ad type filter
+                        if selected_ad_types and 'Ad Type' in filtered_df.columns:
+                            filtered_df = filtered_df[filtered_df['Ad Type'].isin(selected_ad_types)]
+                        
+                        # Apply advanced filters
+                        if st.session_state.search_term_filter_groups:
+                            try:
+                                # Build the complete filter condition
+                                group_conditions = []
+                                
+                                for group in st.session_state.search_term_filter_groups:
+                                    if not group['filters']:
+                                        continue
+                                    
+                                    filter_conditions = []
+                                    for filter_item in group['filters']:
+                                        if not filter_item['value'].strip():
+                                            continue
+                                        
+                                        column = filter_item['column']
+                                        operator = filter_item['operator']
+                                        value = filter_item['value'].strip()
+                                        
+                                        if column not in filtered_df.columns:
+                                            continue
+                                        
+                                        try:
+                                            # Convert value to appropriate type
+                                            if column in ['Spend', 'Ad Sales', 'CPC', 'AOV', 'CPA', 'Bid']:
+                                                # Currency columns - remove $ and commas
+                                                clean_series = filtered_df[column].replace('[\$,]', '', regex=True)
+                                                numeric_value = float(value.replace('$', '').replace(',', ''))
+                                            elif column in ['ACoS', 'CVR', 'CTR', 'TACoS']:
+                                                # Percentage columns - remove %
+                                                clean_series = filtered_df[column].replace('%', '', regex=True)
+                                                numeric_value = float(value.replace('%', ''))
+                                            else:
+                                                # Regular numeric columns
+                                                clean_series = filtered_df[column].replace(',', '', regex=True)
+                                                numeric_value = float(value.replace(',', ''))
+                                            
+                                            # Convert series to numeric
+                                            clean_series = pd.to_numeric(clean_series, errors='coerce')
+                                            
+                                            # Apply operator
+                                            if operator == '>':
+                                                condition = clean_series > numeric_value
+                                            elif operator == '>=':
+                                                condition = clean_series >= numeric_value
+                                            elif operator == '<':
+                                                condition = clean_series < numeric_value
+                                            elif operator == '<=':
+                                                condition = clean_series <= numeric_value
+                                            elif operator == '=':
+                                                condition = clean_series == numeric_value
+                                            elif operator == '!=':
+                                                condition = clean_series != numeric_value
+                                            else:
+                                                continue
+                                            
+                                            filter_conditions.append(condition)
+                                        
+                                        except (ValueError, TypeError):
+                                            st.warning(f"Invalid value '{value}' for column '{column}'. Skipping this filter.")
+                                            continue
+                                    
+                                    if filter_conditions:
+                                        # Combine conditions within the group using the filter logic
+                                        group_condition = filter_conditions[0]
+                                        for i, condition in enumerate(filter_conditions[1:], 1):
+                                            filter_logic = group['filters'][i-1]['logic']
+                                            if filter_logic == 'AND':
+                                                group_condition = group_condition & condition
+                                            else:  # OR
+                                                group_condition = group_condition | condition
+                                        
+                                        group_conditions.append(group_condition)
+                                
+                                if group_conditions:
+                                    # Combine group conditions using group logic
+                                    final_condition = group_conditions[0]
+                                    for i, condition in enumerate(group_conditions[1:], 1):
+                                        group_logic = st.session_state.search_term_filter_groups[i-1]['group_logic']
+                                        if group_logic == 'AND':
+                                            final_condition = final_condition & condition
+                                        else:  # OR
+                                            final_condition = final_condition | condition
+                                    
+                                    # Apply the final condition
+                                    filtered_df = filtered_df[final_condition]
+                            
+                            except Exception as e:
+                                st.error(f"Error applying advanced filters: {str(e)}")
+                                st.code(traceback.format_exc())
+                        
+                        # Use filtered_df instead of df for the rest of the function
+                        df = filtered_df
+                        
+                        # Display summary metrics from filtered data
+                        if not df.empty:
+                            spend = df['Spend'].replace('[\$,]', '', regex=True).astype(float).sum() if 'Spend' in df.columns else 0
+                            sales = df['Ad Sales'].replace('[\$,]', '', regex=True).astype(float).sum() if 'Ad Sales' in df.columns else 0
+                            acos = (spend / sales * 100) if sales > 0 else 0
+                            roas = (sales / spend) if spend > 0 else 0
+                            clicks = df['Clicks'].replace(',', '', regex=True).astype(float).sum() if 'Clicks' in df.columns else 0
+                            cpc = (spend / clicks) if clicks > 0 else 0
+                            cvr = (df['Orders'].replace(',', '', regex=True).astype(float).sum() / df['Clicks'].replace(',', '', regex=True).astype(float).sum() * 100) if 'Clicks' in df.columns and 'Orders' in df.columns and df['Clicks'].sum() > 0 else 0
+                            aov = (sales / df['Orders'].replace(',', '', regex=True).astype(float).sum()) if 'Orders' in df.columns and df['Orders'].sum() > 0 else 0
+                            
+                            # Display summary cards
+                            kpi_cols = st.columns(6)
+                            kpi_cols[0].metric("TOTAL SPEND", f"${spend:,.2f}")
+                            kpi_cols[1].metric("AD SALES", f"${sales:,.2f}")
+                            kpi_cols[2].metric("ACOS", f"{acos:.2f}%")
+                            kpi_cols[3].metric("CPC", f"${cpc:.2f}")
+                            kpi_cols[4].metric("CVR", f"{cvr:.2f}%")
+                            kpi_cols[5].metric("AOV", f"${aov:.2f}")
+                            
+                            st.markdown("---")
+                        
                         # Get ACoS targets from client config
                         goals = st.session_state.client_config.get('goals', {}) if 'client_config' in st.session_state else {}
                         branded_target = goals.get('branded_acos')
@@ -12925,65 +13806,7 @@ if st.session_state.client_config:
                                 "Campaign": st.column_config.TextColumn(label="Campaign"),
                             }
 
-                        # Only display filters if show_filters is True
-                        filter_prefix = f"filter_search_term_{tab_key}_"
-                        campaign_filter, target_filter, search_term_filter, match_type_filter = '', '', '', ''
-                        
-                        if show_filters:
-                            row1_cols = st.columns(2)
-                            with row1_cols[0]:
-                                campaign_filter = st.text_input("Filter by Campaign", key=filter_prefix + "campaign")
-                            with row1_cols[1]:
-                                target_filter = st.text_input("Filter by Target", key=filter_prefix + "target")
-                            row2_cols = st.columns(2)
-                            with row2_cols[0]:
-                                search_term_filter = st.text_input("Filter by Search Term", key=filter_prefix + "search_term")
-                            with row2_cols[1]:
-                                match_types = ['All'] + sorted(df['Match Type'].dropna().unique().tolist())
-                                match_type_filter = st.selectbox("Filter by Match Type", match_types, key=filter_prefix + "match_type")
 
-                        # Apply filters
-                        filtered_df = df.copy()
-                        
-                        # Clean numeric columns to fix weird characters
-                        for col in ['Spend', 'Ad Sales']:
-                            if col in filtered_df.columns:
-                                # Convert to numeric, removing any currency symbols or formatting
-                                filtered_df[col] = pd.to_numeric(filtered_df[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                        
-                        if campaign_filter:
-                            matched_campaigns = filtered_df['Campaign'].astype(str).apply(lambda x: phrase_match(x, campaign_filter))
-                            filtered_df = filtered_df[matched_campaigns]
-                        if target_filter:
-                            filtered_df = filtered_df[filtered_df['Target'].astype(str).str.contains(target_filter, case=False, na=False)]
-                        if search_term_filter:
-                            filtered_df = filtered_df[filtered_df['Search Term'].astype(str).str.contains(search_term_filter, case=False, na=False)]
-                        if match_type_filter and match_type_filter != 'All':
-                            filtered_df = filtered_df[filtered_df['Match Type'].astype(str) == match_type_filter]
-                            
-                        # Display summary metrics if requested
-                        if show_metrics and not filtered_df.empty:
-                            # Calculate summary metrics with proper numeric conversion
-                            spend = filtered_df['Spend'].sum() if 'Spend' in filtered_df.columns else 0
-                            sales = filtered_df['Ad Sales'].sum() if 'Ad Sales' in filtered_df.columns else 0
-                            acos = (spend / sales * 100) if sales > 0 else 0
-                            clicks = filtered_df['Clicks'].replace(',', '', regex=True).astype(float).sum() if 'Clicks' in filtered_df.columns else 0
-                            cpc = (spend / clicks) if clicks > 0 else 0
-                            orders_sum = filtered_df['Orders'].replace(',', '', regex=True).astype(float).sum() if 'Orders' in filtered_df.columns else 0
-                            clicks_sum = filtered_df['Clicks'].replace(',', '', regex=True).astype(float).sum() if 'Clicks' in filtered_df.columns else 0
-                            
-                            # Calculate CVR and AOV with simplified conditionals
-                            cvr = (orders_sum / clicks_sum * 100) if clicks_sum > 0 else 0
-                            aov = (sales / orders_sum) if orders_sum > 0 else 0
-                            
-                            # Display summary cards
-                            kpi_cols = st.columns(6)
-                            kpi_cols[0].metric("TOTAL SPEND", f"${spend:,.2f}")
-                            kpi_cols[1].metric("AD SALES", f"${sales:,.2f}")
-                            kpi_cols[2].metric("ACOS", f"{acos:.2f}%")
-                            kpi_cols[3].metric("CPC", f"${cpc:.2f}")
-                            kpi_cols[4].metric("CVR", f"{cvr:.2f}%")
-                            kpi_cols[5].metric("AOV", f"${aov:.2f}")
 
                         # Use style_acos for ACoS highlighting if available, otherwise st.dataframe
                         if 'ACoS' in filtered_df.columns and (target_acos is not None or use_avg_fallback):
@@ -15273,9 +16096,10 @@ if st.session_state.current_page == "advertising_audit":
             return df
         df = df.copy()
         # Replace 'Sponsored Brands Target' and 'Sponsored Display Target' with 'Product Target'
+        # Also normalize 'Category Targeting' to 'Category Target' for consistency
         df[match_type_col] = df[match_type_col].apply(lambda x: 'Product Target' 
                                                       if x in ['Sponsored Brands Target', 'Sponsored Display Target'] 
-                                                      else x)
+                                                      else ('Category Target' if x == 'Category Targeting' else x))
         return df
 
 
@@ -17748,6 +18572,448 @@ if st.session_state.current_page == "advertising_audit":
                 st.dataframe(styled_df, use_container_width=True, hide_index=True)
             else:
                 st.info("No Non-Branded targeting data by Ad Type & Match Type (missing 'Ad Type & Match Type' column).")
+        
+        # --- Product Group Focus: Ad Type × Match Type Matrix ---
+        
+        # Show only if product groups exist in Client Settings → Campaign Tagging
+        has_pg = False
+        ct_data = {}
+        if st.session_state.get('client_config') and 'campaign_tags_data' in st.session_state.client_config:
+            ct_data = st.session_state.client_config['campaign_tags_data'] or {}
+            has_pg = any((v or {}).get('tag_1', '').strip() for v in ct_data.values())
+        
+        # Always show this section, even if no product groups are set up
+        st.markdown("<hr style='height:2px;border-width:0;color:gold;background-color:gold;margin-top:25px;margin-bottom:15px;margin-left:10px;margin-right:10px'>", unsafe_allow_html=True)
+        st.markdown("<div style='margin-top:30px;'></div>", unsafe_allow_html=True)
+        st.markdown("#### Product Group Focus: Ad Type × Match Type")
+        st.caption("Select a few product groups to see investment distribution and gaps by Ad Type and Match Type.")
+
+        # Options sourced from Campaign Tagging product groups (tag_1)
+        pg_options = sorted({(v or {}).get('tag_1', '').strip() for v in ct_data.values() if (v or {}).get('tag_1', '').strip()})
+        
+        # Add "Select All" and "Remove All" functionality
+        col1a, col1b = st.columns([3, 1])
+        with col1b:
+            if st.button("Select All", key="pg_focus_select_all"):
+                st.session_state.pg_focus_select_all_clicked = True
+                st.rerun()
+            if st.button("Remove All", key="pg_focus_remove_all"):
+                st.session_state.pg_focus_remove_all_clicked = True
+                st.rerun()
+        
+        # Handle button clicks by setting appropriate default values
+        if st.session_state.get('pg_focus_select_all_clicked', False):
+            default_selection = pg_options
+            st.session_state.pg_focus_select_all_clicked = False  # Reset flag
+        elif st.session_state.get('pg_focus_remove_all_clicked', False):
+            default_selection = []
+            st.session_state.pg_focus_remove_all_clicked = False  # Reset flag
+        else:
+            # Default to empty selection (shows all data) on first load
+            default_selection = st.session_state.get('pg_focus_groups', [])
+        
+        with col1a:
+            sel_pgs = st.multiselect("Choose Product Group(s)", options=pg_options, default=default_selection, key="pg_focus_groups")
+        # Now showing both spend (background) and ROAS (text/border) together
+
+        # Get base data from session state (before any filtering)
+        b_src = st.session_state.get('branded_targets_df', pd.DataFrame())
+        nb_src = st.session_state.get('non_branded_targets_df', pd.DataFrame())
+
+        def _std_name(x):
+            return str(x).strip().lower()
+
+        def add_product_group(df: pd.DataFrame) -> pd.DataFrame:
+            if df is None or df.empty:
+                return pd.DataFrame()
+            df = df.copy()
+            if 'Campaign' in df.columns:
+                tag_map = { _std_name(k): (v or {}) for k, v in ct_data.items() }
+                df['Product Group'] = df['Campaign'].apply(lambda n: tag_map.get(_std_name(n), {}).get('tag_1', ''))
+            else:
+                df['Product Group'] = ''
+            return df
+
+        def tidy(df: pd.DataFrame) -> pd.DataFrame:
+            if df is None or df.empty:
+                return pd.DataFrame(columns=['Product Group','Ad Type','Match Cat','Spend','Ad Sales','ROAS','ACoS','Clicks','Orders'])
+            df = add_product_group(df)
+            if 'Product' not in df.columns:
+                df = infer_ad_type(df)
+            mt_col = 'Match Type' if 'Match Type' in df.columns else ('Target Type' if 'Target Type' in df.columns else None)
+            if mt_col is None:
+                df['Match Type'] = 'Unknown'
+                mt_col = 'Match Type'
+            df = normalize_match_types(df)
+
+            def map_cat(row):
+                ad = row.get('Product', 'Unknown')
+                mt = row.get(mt_col, 'Unknown')
+                if ad == 'Sponsored Products' and mt in ['Exact','Phrase','Broad','Auto','Product Target','Category Target']:
+                    return mt
+                if ad == 'Sponsored Brands' and mt in ['Exact','Phrase','Broad','Product Target','Category Target']:
+                    return mt
+                if ad == 'Sponsored Display' and mt in ['Product Target','Category Target','Remarketing - Branded','Remarketing - Competitor']:
+                    return mt
+                return 'Other'
+
+            out = df.copy()
+            out['Ad Type'] = out['Product']
+            out['Match Cat'] = out.apply(map_cat, axis=1)
+            out = out[out['Match Cat'] != 'Other']
+            
+            # Ensure required columns exist
+            if 'Spend' not in out.columns:
+                out['Spend'] = 0
+            if 'Ad Sales' not in out.columns:
+                out['Ad Sales'] = 0
+            if 'Clicks' not in out.columns:
+                out['Clicks'] = 0
+            if 'Orders' not in out.columns:
+                out['Orders'] = 0
+            
+            # Calculate ROAS and ACoS
+            out['ROAS'] = out.apply(lambda row: row['Ad Sales'] / row['Spend'] if row['Spend'] > 0 else 0, axis=1)
+            out['ACoS'] = out.apply(lambda row: (row['Spend'] / row['Ad Sales']) * 100 if row['Ad Sales'] > 0 else 0, axis=1)
+            
+            return out[['Product Group','Ad Type','Match Cat','Spend','Ad Sales','ROAS','ACoS','Clicks','Orders']]
+
+        b_tidy = tidy(b_src)
+        nb_tidy = tidy(nb_src)
+        all_tidy = pd.concat([b_tidy, nb_tidy], ignore_index=True) if (not b_tidy.empty or not nb_tidy.empty) else pd.DataFrame(columns=['Product Group','Ad Type','Match Cat','Spend','Ad Sales','ROAS','ACoS','Clicks','Orders'])
+        
+
+
+        # Always show the section, even if no product groups are configured
+        if True:  # Show regardless of product group configuration
+            tabs_pg = st.tabs(["Non-Branded", "Branded", "All"])
+            x_cats = ['Exact','Phrase','Broad','Auto','Product Target','Category Target','Remarketing - Branded','Remarketing - Competitor']
+            y_cats = ['Sponsored Products','Sponsored Brands','Sponsored Display']
+
+            def render(tab, label: str, data: pd.DataFrame):
+                with tab:
+                    if data is None or data.empty:
+                        st.info(f"No {label} data available.")
+                        return
+                    
+                    # Filter data for selected product groups and aggregate
+                    # If no product groups are selected, show all data
+                    if sel_pgs:
+                        filtered_data = data[data['Product Group'].isin(sel_pgs)]
+                        if filtered_data.empty:
+                            st.warning(f"No data for selected product groups in {label}.")
+                            return
+                    else:
+                        # Show all data when no product groups are selected
+                        filtered_data = data
+                    
+                    # Check if we have any data to work with
+                    if filtered_data.empty:
+                        st.info(f"No data available for {label}.")
+                        return
+                    
+                    # Aggregate across all selected product groups (or all data if none selected)
+                    agg_data = filtered_data.groupby(['Ad Type', 'Match Cat']).agg({
+                        'Spend': 'sum',
+                        'Ad Sales': 'sum',
+                        'Clicks': 'sum',
+                        'Orders': 'sum'
+                    }).reset_index()
+                    
+                    # Calculate ROAS and ACoS after aggregation
+                    agg_data['ROAS'] = agg_data.apply(lambda row: row['Ad Sales'] / row['Spend'] if row['Spend'] > 0 else 0, axis=1)
+                    agg_data['ACoS'] = agg_data.apply(lambda row: (row['Spend'] / row['Ad Sales']) * 100 if row['Ad Sales'] > 0 else 0, axis=1)
+                    
+
+                    # Check if we have any aggregated data
+                    if agg_data.empty or agg_data['Spend'].sum() == 0:
+                        st.info(f"No spend data available for {label} with current selection.")
+                        return
+                    
+                    # Calculate CPC and CVR
+                    agg_data['CPC'] = agg_data.apply(lambda row: row['Spend'] / row['Clicks'] if row['Clicks'] > 0 else 0, axis=1)
+                    agg_data['CVR'] = agg_data.apply(lambda row: (row['Orders'] / row['Clicks']) * 100 if row['Clicks'] > 0 else 0, axis=1)
+                    
+                    # Create pivot tables for spend (background) and ROAS (text/border)
+                    pv_spend = agg_data.pivot_table(index='Ad Type', columns='Match Cat', values='Spend', aggfunc='sum', fill_value=0)
+                    pv_spend = pv_spend.reindex(index=y_cats, columns=x_cats).fillna(0)
+                    
+                    pv_roas = agg_data.pivot_table(index='Ad Type', columns='Match Cat', values='ROAS', aggfunc='mean', fill_value=0)
+                    pv_roas = pv_roas.reindex(index=y_cats, columns=x_cats).fillna(0)
+                    
+                    # Calculate account average ROAS for the current tab using filtered_data (before grouping)
+                    total_spend = filtered_data['Spend'].sum()
+                    if total_spend > 0:
+                        account_avg_roas = (filtered_data['Ad Sales'].sum()) / total_spend
+                    else:
+                        account_avg_roas = 0
+                    
+                    # Spend color scale: black to royal blue (no white)
+                    spend_color_scale = [[0, '#000000'], [0.2, '#0a0a1a'], [0.4, '#1a1a3a'], [0.6, '#2a2a5a'], [0.8, '#3a3a7a'], [1, '#4169e1']]
+                    
+                    # ROAS color function based on account average
+                    def get_roas_color(roas_value):
+                        if roas_value == 0:
+                            return '#666666'  # Gray for no data
+                        elif roas_value < account_avg_roas * 0.7:  # Well below average
+                            return '#dc2626'  # Red
+                        elif roas_value < account_avg_roas * 0.9:  # Slightly below average
+                            return '#eab308'  # Yellow
+                        elif roas_value <= account_avg_roas * 1.1:  # Around average
+                            return '#84cc16'  # Green-yellow
+                        else:  # Above average
+                            return '#16a34a'  # Green
+                    
+                    # Ad type abbreviations
+                    ad_type_abbrev = {
+                        'Sponsored Products': 'SP',
+                        'Sponsored Brands': 'SB', 
+                        'Sponsored Display': 'SD'
+                    }
+                    
+                    # Match type full names (no abbreviations)
+                    match_type_names = {
+                        'Exact': 'Exact',
+                        'Phrase': 'Phrase',
+                        'Broad': 'Broad',
+                        'Auto': 'Auto',
+                        'Product Target': 'Product Target',
+                        'Category Target': 'Category Target',
+                        'Remarketing - Branded': 'Remarketing - Branded',
+                        'Remarketing - Competitor': 'Remarketing - Competitor'
+                    }
+                    
+                    # Create a blank figure and add custom rectangles for each cell
+                    fig = go.Figure()
+                    
+                    # Get min/max spend values for color scaling
+                    spend_values = pv_spend.values.flatten()
+                    spend_values = spend_values[spend_values > 0]  # Only non-zero values
+                    if len(spend_values) > 0:
+                        min_spend = spend_values.min()
+                        max_spend = spend_values.max()
+                    else:
+                        min_spend = max_spend = 0
+                    
+                    # Create custom rectangles and hover data for each cell with gaps
+                    gap = 0.08  # Reduced gap size for larger squares
+                    hover_data = []
+                    x_coords = []
+                    y_coords = []
+                    
+                    for i, ad_type in enumerate(pv_spend.index):
+                        for j, match_cat in enumerate(pv_spend.columns):
+                            spend_val = pv_spend.iloc[i, j]
+                            roas_val = pv_roas.iloc[i, j]
+                            
+                            if spend_val > 0:
+                                # Calculate spend color intensity (0-1 scale)
+                                if max_spend > min_spend:
+                                    intensity = (spend_val - min_spend) / (max_spend - min_spend)
+                                else:
+                                    intensity = 0.5
+                                
+                                # Create spend color (black to royal blue gradient)
+                                spend_color = f'rgba({int(65*intensity)}, {int(105*intensity)}, {int(225*intensity)}, 1)'
+                                
+                                # Add rectangle for this cell
+                                fig.add_shape(
+                                    type="rect",
+                                    x0=j-0.5+gap, y0=i-0.5+gap,
+                                    x1=j+0.5-gap, y1=i+0.5-gap,
+                                    fillcolor=spend_color,
+                                    line=dict(width=0),
+                                    xref="x", yref="y"
+                                )
+                                
+                                # Prepare hover data
+                                sales_val = agg_data[(agg_data['Ad Type'] == ad_type) & (agg_data['Match Cat'] == match_cat)]['Ad Sales'].iloc[0] if len(agg_data[(agg_data['Ad Type'] == ad_type) & (agg_data['Match Cat'] == match_cat)]) > 0 else 0
+                                cpc_val = agg_data[(agg_data['Ad Type'] == ad_type) & (agg_data['Match Cat'] == match_cat)]['CPC'].iloc[0] if len(agg_data[(agg_data['Ad Type'] == ad_type) & (agg_data['Match Cat'] == match_cat)]) > 0 else 0
+                                cvr_val = agg_data[(agg_data['Ad Type'] == ad_type) & (agg_data['Match Cat'] == match_cat)]['CVR'].iloc[0] if len(agg_data[(agg_data['Ad Type'] == ad_type) & (agg_data['Match Cat'] == match_cat)]) > 0 else 0
+                                
+                                roas_color = get_roas_color(roas_val)
+                                hover_text = f"Ad Type: {ad_type}<br>Match Type: {match_cat}<br>Spend: ${spend_val:,.2f}<br>Ad Sales: ${sales_val:,.2f}<br>ROAS: {roas_val:.2f} ({roas_color})<br>CPC: ${cpc_val:.2f}<br>CVR: {cvr_val:.1f}%<br>Account Avg ROAS: {account_avg_roas:.2f}"
+                                
+                                hover_data.append(hover_text)
+                                x_coords.append(j)
+                                y_coords.append(i)
+                    
+                    # Add invisible scatter trace for hover functionality
+                    if hover_data:
+                        fig.add_trace(go.Scatter(
+                            x=x_coords,
+                            y=y_coords,
+                            mode='markers',
+                            marker=dict(size=20, opacity=0),  # Invisible markers
+                            text=hover_data,
+                            hovertemplate='%{text}<extra></extra>',
+                            showlegend=False
+                        ))
+                    
+                    # Add a dummy heatmap trace for the spend colorbar (invisible)
+                    if max_spend > 0:  # Show colorbar if there's any spend data
+                        # Ensure we have a range for the colorbar even if all values are the same
+                        colorbar_min = min_spend if max_spend > min_spend else 0
+                        colorbar_max = max_spend if max_spend > min_spend else min_spend * 1.1 if min_spend > 0 else 1
+                        
+                        fig.add_trace(go.Heatmap(
+                            z=[[colorbar_min, colorbar_max]],
+                            x=[-10, -9],  # Position far off-screen so it's not visible
+                            y=[-10],
+                            colorscale=spend_color_scale,
+                            showscale=True,
+                            colorbar=dict(
+                                title=dict(text='Spend ($)', side="right", font=dict(color='white', size=12)),
+                                tickfont=dict(color='white', size=10),
+                                bgcolor='rgba(0,0,0,0.5)',
+                                bordercolor='rgba(255,255,255,0.3)',
+                                borderwidth=1,
+                                x=1.02,  # Position to the right of the chart
+                                len=0.7,  # Make it slightly shorter
+                                thickness=15,  # Make it thicker for better visibility
+                                tickmode='linear',
+                                tick0=colorbar_min,
+                                dtick=(colorbar_max - colorbar_min) / 4 if colorbar_max > colorbar_min else colorbar_max / 4
+                            ),
+                            hoverinfo='skip',
+                            showlegend=False
+                        ))
+                    
+                    # Set up the figure layout
+                    fig.update_layout(
+                        xaxis=dict(
+                            showgrid=False, 
+                            dtick=1,
+                            range=[-0.5, len(pv_spend.columns)-0.5],
+                            tickvals=list(range(len(pv_spend.columns))),
+                            ticktext=list(pv_spend.columns)
+                        ),
+                        yaxis=dict(
+                            showgrid=False, 
+                            dtick=1,
+                            range=[-0.5, len(pv_spend.index)-0.5],
+                            tickvals=list(range(len(pv_spend.index))),
+                            ticktext=list(pv_spend.index)
+                        )
+                    )
+                    
+                    # Add text annotations and ROAS-colored borders for cells with data
+                    for i, ad_type in enumerate(pv_spend.index):
+                        for j, match_cat in enumerate(pv_spend.columns):
+                            spend_val = pv_spend.iloc[i, j]
+                            roas_val = pv_roas.iloc[i, j]
+                            
+                            if spend_val > 0:
+                                # Get ROAS color for text and border
+                                roas_color = get_roas_color(roas_val)
+                                
+                                # Create multi-line text with spend and ROAS
+                                ad_abbrev = ad_type_abbrev.get(ad_type, ad_type)
+                                match_name = match_type_names.get(match_cat, match_cat)
+                                
+                                # Create text with descriptions at top, spend in middle, ROAS at bottom
+                                description_text = f"{ad_abbrev} - {match_name}"
+                                spend_text = f"Spend: ${spend_val:,.0f}"
+                                roas_text = f"ROAS: {roas_val:.2f}"
+                                
+                                # Add description at top (white text)
+                                fig.add_annotation(
+                                    x=j, y=i+0.25,  # Top of cell
+                                    text=description_text,
+                                    showarrow=False,
+                                    font=dict(size=11, color='white'),
+                                    bgcolor='rgba(0,0,0,0.3)',
+                                    borderwidth=0,
+                                    xref="x", yref="y"
+                                )
+                                
+                                # Add spend in middle (white text)
+                                fig.add_annotation(
+                                    x=j, y=i,  # Center of cell
+                                    text=spend_text,
+                                    showarrow=False,
+                                    font=dict(size=12, color='white'),
+                                    bgcolor='rgba(0,0,0,0.3)',
+                                    borderwidth=0,
+                                    xref="x", yref="y"
+                                )
+                                
+                                # Add ROAS-colored text annotation at bottom
+                                fig.add_annotation(
+                                    x=j, y=i-0.25,  # Bottom of cell
+                                    text=roas_text,
+                                    showarrow=False,
+                                    font=dict(size=12, color=roas_color, family="Arial Black"),
+                                    bgcolor='rgba(0,0,0,0.3)',
+                                    borderwidth=0,
+                                    xref="x", yref="y"
+                                )
+                                
+                                # Add ROAS-colored border around the smaller square
+                                fig.add_shape(
+                                    type="rect",
+                                    x0=j-0.5+gap, y0=i-0.5+gap,
+                                    x1=j+0.5-gap, y1=i+0.5-gap,
+                                    line=dict(color=roas_color, width=3),
+                                    fillcolor="rgba(0,0,0,0)",  # Transparent fill
+                                    xref="x", yref="y"
+                                )
+                    
+                    # Text annotations are already added above with ROAS-colored borders
+                    
+                    # Update title to show "All Product Groups" when none are selected
+                    if sel_pgs:
+                        title_text = f"{label} - {len(sel_pgs)} Product Group(s) Selected | Account Avg ROAS: {account_avg_roas:.2f}"
+                    else:
+                        title_text = f"{label} - All Product Groups | Account Avg ROAS: {account_avg_roas:.2f}"
+                    
+                    fig.update_layout(
+                        title=title_text,
+                        template='plotly_dark',
+                        paper_bgcolor='#0e1117',  # Match Streamlit dark theme
+                        plot_bgcolor='#0e1117',   # Match Streamlit dark theme
+                        margin=dict(l=10, r=10, t=80, b=10),
+                        height=450,
+                        font=dict(size=11, color='white'),
+                        xaxis=dict(
+                            side='top',
+                            tickfont=dict(color='white'),
+                            showgrid=False,  # Custom borders handle gaps
+                            dtick=1
+                        ),
+                        yaxis=dict(
+                            tickfont=dict(color='white'),
+                            showgrid=False,  # Custom borders handle gaps
+                            dtick=1
+                        ),
+                        coloraxis_colorbar=dict(
+                            title=dict(text='Spend ($)', side="right", font=dict(color='white')),
+                            tickfont=dict(color='white'),
+                            bgcolor='rgba(0,0,0,0.3)',
+                            bordercolor='rgba(255,255,255,0.2)',
+                            borderwidth=1
+                        )
+                    )
+                    
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # Show summary stats
+                    total_spend = agg_data['Spend'].sum()
+                    total_sales = agg_data['Ad Sales'].sum()
+                    overall_roas = total_sales / total_spend if total_spend > 0 else 0
+                    
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("Total Spend", f"${total_spend:,.2f}")
+                    with col2:
+                        st.metric("Total Ad Sales", f"${total_sales:,.2f}")
+                    with col3:
+                        st.metric("Overall ROAS", f"{overall_roas:.2f}x")
+
+            # Call render function for each tab
+            render(tabs_pg[0], 'Non-Branded', nb_tidy)
+            render(tabs_pg[1], 'Branded', b_tidy)
+            render(tabs_pg[2], 'All', all_tidy)
 
         # --- Ad Spend/Sales Flow Sankey Diagram ---
     
@@ -18254,13 +19520,6 @@ if st.session_state.current_page == "advertising_audit":
         st.markdown("<span class='main-section-header dashboard-section'>Product Analysis</span>", unsafe_allow_html=True)
         st.markdown("<div style='margin-bottom:1.2rem;'></div>", unsafe_allow_html=True)
 
-        # Create a row with a subtle help icon and tooltip
-        col1, col2 = st.columns([0.98, 0.02])
-        with col1:
-            st.markdown('#### Performance by ASIN')
-        with col2:
-            st.markdown("""<div title="Product-Level metrics do not include SB data due to ambiguous attribution. Some products may have higher Ad Sales than Total Sales if a click on the ad led to a Brand Halo purchase on a variated product.">ℹ️</div>""", unsafe_allow_html=True)
-    
         # Add a spinner while ASIN data is being processed
         with st.spinner("Processing data..."):
             # Prepare and cache column lookups
@@ -18289,6 +19548,75 @@ if st.session_state.current_page == "advertising_audit":
 
             # Initialize variables
             asin_perf_records = []
+            
+            # Create ASIN-to-SKU mapping for Seller Central accounts
+            asin_to_sku_mapping = {}
+            if isinstance(combined_bulk_df, pd.DataFrame):
+                # Check if we have SKU column (indicates Seller Central) - case insensitive
+                sku_col = None
+                asin_col = None
+                
+                # Find SKU column (case insensitive)
+                for col in combined_bulk_df.columns:
+                    if col.upper() == 'SKU':
+                        sku_col = col
+                        break
+                
+                # Find ASIN column (case insensitive)
+                for col in combined_bulk_df.columns:
+                    if col.upper() == 'ASIN (INFORMATIONAL ONLY)':
+                        asin_col = col
+                        break
+                    elif col.upper() == 'ASIN':
+                        asin_col = col
+                
+                if sku_col:
+                    
+                    if asin_col:
+                        # Find Entity column (case insensitive)
+                        entity_col = None
+                        for col in combined_bulk_df.columns:
+                            if col.upper() == 'ENTITY':
+                                entity_col = col
+                                break
+                        
+                        # More flexible Entity check - look for any rows with both SKU and ASIN data
+                        if entity_col:
+                            # Try the strict Entity filter first (case insensitive)
+                            product_ad_rows = combined_bulk_df[
+                                (combined_bulk_df[entity_col].astype(str).str.strip().str.lower().isin(['product ad', 'product ads', 'productad', 'productads'])) &
+                                (combined_bulk_df[sku_col].notna()) &
+                                (combined_bulk_df[asin_col].notna())
+                            ]
+                            
+                            # If no results with Entity filter, try without it
+                            if product_ad_rows.empty:
+                                product_ad_rows = combined_bulk_df[
+                                    (combined_bulk_df[sku_col].notna()) &
+                                    (combined_bulk_df[asin_col].notna())
+                                ]
+                        else:
+                            # No Entity column, just filter by SKU and ASIN presence
+                            product_ad_rows = combined_bulk_df[
+                                (combined_bulk_df[sku_col].notna()) &
+                                (combined_bulk_df[asin_col].notna())
+                            ]
+                    else:
+                        product_ad_rows = pd.DataFrame()
+                    
+                    # Create the mapping using the detected column names
+                    for _, row in product_ad_rows.iterrows():
+                        asin = str(row[asin_col]).strip() if asin_col else ''
+                        sku = str(row[sku_col]).strip() if sku_col else ''
+                        if asin and sku and asin != 'nan' and sku != 'nan':
+                            asin_to_sku_mapping[asin] = sku
+                    
+                    st.session_state.debug_messages.append(f"[Product Analysis] Found {len(product_ad_rows)} rows with SKU data")
+                    st.session_state.debug_messages.append(f"[Product Analysis] Created SKU mapping for {len(asin_to_sku_mapping)} ASINs")
+                    if len(asin_to_sku_mapping) > 0:
+                        sample_mappings = list(asin_to_sku_mapping.items())[:3]
+                        st.session_state.debug_messages.append(f"[Product Analysis] Sample SKU mappings: {sample_mappings}")
+            
             # Get bulk file data to extract ad metrics
             bulk_dfs = []
             for sheet_name, df in bulk_data.items():
@@ -18410,6 +19738,8 @@ if st.session_state.current_page == "advertising_audit":
                 asin_row['Product Group'] = info.get('product_group', '') or 'Untagged Group'
                 asin_row['ASIN'] = asin
                 asin_row['Product Title'] = info.get('product_title', '')
+                # Add SKU if available
+                asin_row['SKU'] = asin_to_sku_mapping.get(asin, '')
             
                 # Initialize metrics
                 asin_row['Spend'] = 0
@@ -18549,6 +19879,8 @@ if st.session_state.current_page == "advertising_audit":
                 asin_row['Product Group'] = 'Untagged Group'  # Default to untagged for ASINs not in client config
                 asin_row['ASIN'] = asin
                 asin_row['Product Title'] = ''  # Will be filled from sales report if available
+                # Add SKU if available
+                asin_row['SKU'] = asin_to_sku_mapping.get(asin, '')
                 
                 # Initialize metrics
                 asin_row['Spend'] = 0
@@ -18702,6 +20034,26 @@ if st.session_state.current_page == "advertising_audit":
             else:
                 st.session_state.debug_messages.append("[Product Analysis] No ASIN performance data created")
         
+            # Populate missing SKUs from Branded ASINs data for Seller Central clients
+            if not asin_perf_df.empty and 'SKU' in asin_perf_df.columns:
+                branded_asins_data = st.session_state.client_config.get('branded_asins_data', {})
+                if branded_asins_data:
+                    populated_count = 0
+                    for idx, row in asin_perf_df.iterrows():
+                        asin = row['ASIN']
+                        current_sku = str(row.get('SKU', '')).strip()
+                        
+                        # If SKU is missing or empty, try to populate from Branded ASINs data
+                        if not current_sku or current_sku in ['', 'nan', 'NaN']:
+                            if asin in branded_asins_data:
+                                persisted_sku = branded_asins_data[asin].get('sku', '')
+                                if persisted_sku and persisted_sku.strip():
+                                    asin_perf_df.at[idx, 'SKU'] = persisted_sku.strip()
+                                    populated_count += 1
+                    
+                    if populated_count > 0:
+                        st.session_state.debug_messages.append(f"[Product Analysis] Populated {populated_count} missing SKUs from Branded ASINs data")
+
             # Store the ASIN performance data in the session state so it can be accessed by other sections
             st.session_state.asin_perf_df = asin_perf_df
             
@@ -18736,14 +20088,36 @@ if st.session_state.current_page == "advertising_audit":
                     )
             
             if not asin_perf_df.empty:
-                # --- Filters ---
-                col1, col2, col3 = st.columns(3)
+                # Debug: Show SKU mapping status (only if debug mode is enabled)
+                if st.session_state.get('global_debug_mode', False):
+                    st.write(f"Debug: SKU mapping has {len(asin_to_sku_mapping)} entries")
+                    if len(asin_to_sku_mapping) > 0:
+                        sample_mappings = list(asin_to_sku_mapping.items())[:3]
+                        st.write(f"Debug: Sample mappings: {sample_mappings}")
+                
+                # --- SKU Column Option ---
+                show_sku_column = False
+                if asin_to_sku_mapping:  # Only show option if we have SKU data
+                    st.markdown("**Display Options**")
+                    show_sku_column = st.checkbox(
+                        "Include SKU column (Seller Central)", 
+                        value=False, 
+                        key="show_sku_column",
+                        help="Show SKU column with data from Seller Central bulk file"
+                    )
+                    st.markdown("---")
+                
+                # --- Basic Filters ---
+                if show_sku_column:
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col4:
+                        filter_sku = st.text_input("Filter by SKU", "", key="asin_filter_sku")
+                else:
+                    col1, col2, col3 = st.columns(3)
+                    filter_sku = ""
+                
                 with col1:
-                    filter_title = st.text_input("Filter by Product Title", "", key="asin_filter_title")
-                with col2:
-                    filter_asin = st.text_input("Filter by ASIN", "", key="asin_filter_asin")
-                with col3:
-                    # --- Product Group Multiselect ---
+                    # --- Product Group Multiselect (moved to leftmost position) ---
                     # Gather all unique product groups from the DataFrame
                     product_groups = sorted([g for g in asin_perf_df['Product Group'].dropna().unique() if g])
                 
@@ -18789,6 +20163,161 @@ if st.session_state.current_page == "advertising_audit":
                             st.session_state.asin_product_group_filter = []
                             st.session_state.asin_filter_active = False
                         filter_group = []
+                with col2:
+                    filter_title = st.text_input("Filter by Product Title", "", key="asin_filter_title")
+                with col3:
+                    filter_asin = st.text_input("Filter by ASIN", "", key="asin_filter_asin")
+                
+                # Advanced Filters Section
+                st.markdown("---")
+                with st.expander("🔧 Advanced Filters", expanded=False):
+                    # Initialize advanced filter state
+                    if 'asin_filter_groups' not in st.session_state:
+                        st.session_state.asin_filter_groups = []
+                    st.markdown("**Advanced Filtering with Filter Groups**")
+                    st.caption("Create multiple filter groups and combine them with AND/OR logic for complex filtering.")
+                    
+                    # Get numeric columns for filtering
+                    numeric_columns = []
+                    for col in asin_perf_df.columns:
+                        if col not in ['Product Group', 'ASIN', 'Product Title'] and asin_perf_df[col].dtype in ['float64', 'int64', 'object']:
+                            # Try to convert to numeric to check if it's actually numeric
+                            try:
+                                test_series = pd.to_numeric(asin_perf_df[col].astype(str).str.replace('$', '').str.replace('%', '').str.replace(',', ''), errors='coerce')
+                                if not test_series.isna().all():
+                                    numeric_columns.append(col)
+                            except:
+                                pass
+                    
+                    # Control buttons
+                    col_btn1, col_btn2, col_btn3, col_spacer = st.columns([1.5, 1.5, 1.5, 5.5])
+                    
+                    with col_btn1:
+                        add_group = st.button("➕ Add Filter Group", key="asin_add_filter_group")
+                    
+                    with col_btn2:
+                        clear_all = False
+                        if st.session_state.asin_filter_groups:
+                            clear_all = st.button("🗑️ Clear All", key="asin_clear_all_filter_groups")
+                    
+                    # Handle button actions without immediate rerun
+                    if add_group:
+                        st.session_state.asin_filter_groups.append({
+                            'filters': [{
+                                'column': numeric_columns[0] if numeric_columns else 'Spend',
+                                'operator': '>',
+                                'value': '',
+                                'logic': 'AND'
+                            }],
+                            'group_logic': 'AND'
+                        })
+                    
+                    if clear_all:
+                        st.session_state.asin_filter_groups = []
+                    
+                    # Display filter groups
+                    groups_to_remove = []
+                    for group_idx, group in enumerate(st.session_state.asin_filter_groups):
+                        with st.container():
+                            # Group header
+                            group_col1, group_col2, group_col3 = st.columns([6, 2, 1])
+                            
+                            with group_col1:
+                                st.markdown(f"**Filter Group {group_idx + 1}**")
+                            
+                            with group_col2:
+                                if group_idx > 0:  # Only show group logic for groups after the first
+                                    group['group_logic'] = st.selectbox(
+                                        "Group Logic",
+                                        options=['AND', 'OR'],
+                                        index=['AND', 'OR'].index(group['group_logic']),
+                                        key=f"asin_group_logic_{group_idx}",
+                                        help="How this group combines with previous groups"
+                                    )
+                            
+                            with group_col3:
+                                if st.button("🗑️", key=f"asin_remove_group_{group_idx}", help="Remove entire group"):
+                                    groups_to_remove.append(group_idx)
+                            
+                            # Display filters within this group
+                            filters_to_remove = []
+                            for filter_idx, filter_config in enumerate(group['filters']):
+                                col1, col2, col3, col4, col5, col6 = st.columns([2, 1.2, 1.2, 1, 0.8, 0.8])
+                                
+                                with col1:
+                                    filter_config['column'] = st.selectbox(
+                                        "Column" if filter_idx == 0 else "",
+                                        options=numeric_columns,
+                                        index=numeric_columns.index(filter_config['column']) if filter_config['column'] in numeric_columns else 0,
+                                        key=f"asin_filter_column_{group_idx}_{filter_idx}",
+                                        label_visibility="visible" if filter_idx == 0 else "collapsed"
+                                    )
+                                
+                                with col2:
+                                    filter_config['operator'] = st.selectbox(
+                                        "Operator" if filter_idx == 0 else "",
+                                        options=['>', '>=', '=', '<=', '<'],
+                                        index=['>', '>=', '=', '<=', '<'].index(filter_config['operator']),
+                                        key=f"asin_filter_operator_{group_idx}_{filter_idx}",
+                                        label_visibility="visible" if filter_idx == 0 else "collapsed"
+                                    )
+                                
+                                with col3:
+                                    filter_config['value'] = st.text_input(
+                                        "Value" if filter_idx == 0 else "",
+                                        value=str(filter_config['value']),
+                                        key=f"asin_filter_value_{group_idx}_{filter_idx}",
+                                        label_visibility="visible" if filter_idx == 0 else "collapsed"
+                                    )
+                                
+                                with col4:
+                                    if filter_idx > 0:  # Only show logic for filters after the first in each group
+                                        filter_config['logic'] = st.selectbox(
+                                            "Logic" if filter_idx == 1 else "",
+                                            options=['AND', 'OR'],
+                                            index=['AND', 'OR'].index(filter_config['logic']),
+                                            key=f"asin_filter_logic_{group_idx}_{filter_idx}",
+                                            label_visibility="visible" if filter_idx == 1 else "collapsed"
+                                        )
+                                    else:
+                                        st.write("")  # Empty space for first filter in group
+                                
+                                with col5:
+                                    if st.button("➕", key=f"asin_add_filter_{group_idx}_{filter_idx}", help="Add filter to this group"):
+                                        group['filters'].append({
+                                            'column': numeric_columns[0] if numeric_columns else 'Spend',
+                                            'operator': '>',
+                                            'value': '',
+                                            'logic': 'AND'
+                                        })
+                                
+                                with col6:
+                                    if len(group['filters']) > 1:  # Don't allow removing the last filter in a group
+                                        if st.button("🗑️", key=f"asin_remove_filter_{group_idx}_{filter_idx}", help="Remove filter"):
+                                            filters_to_remove.append(filter_idx)
+                            
+                            # Remove filters marked for removal (process after all buttons to avoid key conflicts)
+                            for filter_idx in reversed(filters_to_remove):
+                                group['filters'].pop(filter_idx)
+                            
+                            st.markdown("---")
+                    
+                    # Remove groups marked for removal (process after all buttons to avoid key conflicts)  
+                    for group_idx in reversed(groups_to_remove):
+                        st.session_state.asin_filter_groups.pop(group_idx)
+                    
+                    # Show active filter summary
+                    if st.session_state.asin_filter_groups:
+                        active_filters = sum(len([f for f in group['filters'] if f['value'].strip()]) for group in st.session_state.asin_filter_groups)
+                        if active_filters > 0:
+                            st.info(f"🎯 **{active_filters} advanced filter(s) active** - Results are filtered based on your criteria")
+                
+                # Create a row with a subtle help icon and tooltip for the header
+                col1, col2 = st.columns([0.98, 0.02])
+                with col1:
+                    st.markdown('#### Performance by ASIN')
+                with col2:
+                    st.markdown("""<div title="Product-Level metrics do not include SB data due to ambiguous attribution. Some products may have higher Ad Sales than Total Sales if a click on the ad led to a Brand Halo purchase on a variated product.">ℹ️</div>""", unsafe_allow_html=True)
             
                 filtered_df = asin_perf_df.copy()
                 if filter_title:
@@ -18797,6 +20326,83 @@ if st.session_state.current_page == "advertising_audit":
                     filtered_df = filtered_df[filtered_df['Product Group'].isin(filter_group)]
                 if filter_asin:
                     filtered_df = filtered_df[filtered_df['ASIN'].str.contains(filter_asin, case=False, na=False)]
+                if filter_sku:
+                    filtered_df = filtered_df[filtered_df['SKU'].str.contains(filter_sku, case=False, na=False)]
+                
+                # Apply advanced filters
+                if st.session_state.asin_filter_groups:
+                    try:
+                        group_masks = []
+                        
+                        # Process each filter group
+                        for group in st.session_state.asin_filter_groups:
+                            group_mask = None
+                            
+                            # Process filters within the group
+                            for filter_idx, filter_config in enumerate(group['filters']):
+                                if filter_config['value'].strip():  # Only apply if value is provided
+                                    column = filter_config['column']
+                                    operator = filter_config['operator']
+                                    value_str = filter_config['value'].strip()
+                                    logic = filter_config['logic']
+                                    
+                                    # Convert column to numeric for comparison
+                                    if column in filtered_df.columns:
+                                        numeric_series = pd.to_numeric(
+                                            filtered_df[column].astype(str).str.replace('$', '').str.replace('%', '').str.replace(',', ''), 
+                                            errors='coerce'
+                                        )
+                                        
+                                        try:
+                                            value = float(value_str.replace('$', '').replace('%', '').replace(',', ''))
+                                            
+                                            # Create condition mask based on operator
+                                            if operator == '>':
+                                                condition_mask = numeric_series > value
+                                            elif operator == '>=':
+                                                condition_mask = numeric_series >= value
+                                            elif operator == '=':
+                                                condition_mask = numeric_series == value
+                                            elif operator == '<=':
+                                                condition_mask = numeric_series <= value
+                                            elif operator == '<':
+                                                condition_mask = numeric_series < value
+                                            
+                                            # Handle NaN values (treat as False for conditions)
+                                            condition_mask = condition_mask.fillna(False)
+                                            
+                                            # Combine with previous conditions in this group
+                                            if filter_idx == 0:
+                                                group_mask = condition_mask
+                                            else:
+                                                if logic == 'AND':
+                                                    group_mask = group_mask & condition_mask
+                                                else:  # OR
+                                                    group_mask = group_mask | condition_mask
+                                            
+                                        except ValueError:
+                                            st.error(f"Invalid numeric value in Group {len(group_masks)+1}, Filter {filter_idx+1}: '{value_str}'")
+                            
+                            # Add this group's mask to the list
+                            if group_mask is not None:
+                                group_masks.append((group_mask, group.get('group_logic', 'AND')))
+                        
+                        # Combine all group masks
+                        if group_masks:
+                            final_mask = group_masks[0][0]  # Start with first group
+                            
+                            for i in range(1, len(group_masks)):
+                                mask, logic = group_masks[i]
+                                if logic == 'AND':
+                                    final_mask = final_mask & mask
+                                else:  # OR
+                                    final_mask = final_mask | mask
+                            
+                            # Apply the final combined mask
+                            filtered_df = filtered_df[final_mask]
+                            
+                    except Exception as e:
+                        st.error(f"Error applying advanced filters: {str(e)}")
             
                 # --- Totals Row ---
                 global_total_spend = asin_perf_df['Spend'].sum() if 'Spend' in asin_perf_df.columns else 0
@@ -18888,6 +20494,24 @@ if st.session_state.current_page == "advertising_audit":
                 
                     if not has_product_groups and 'Product Group' in display_df.columns:
                         display_df = display_df.drop(columns=['Product Group'])
+                    
+                    # Remove SKU column if not requested or no SKU data available
+                    if not show_sku_column and 'SKU' in display_df.columns:
+                        display_df = display_df.drop(columns=['SKU'])
+                    elif show_sku_column and 'SKU' not in display_df.columns:
+                        # Add empty SKU column if requested but not present
+                        display_df['SKU'] = ''
+
+                    # Reorder columns to put SKU before ASIN (if both exist)
+                    if show_sku_column and 'SKU' in display_df.columns and 'ASIN' in display_df.columns:
+                        cols = list(display_df.columns)
+                        # Remove SKU from its current position
+                        cols.remove('SKU')
+                        # Find ASIN position and insert SKU before it
+                        asin_idx = cols.index('ASIN')
+                        cols.insert(asin_idx, 'SKU')
+                        # Reorder the DataFrame
+                        display_df = display_df[cols]
 
                     # Ensure all columns are numeric for proper sorting
                     for col in money_cols:
@@ -18934,6 +20558,8 @@ if st.session_state.current_page == "advertising_audit":
                         'AOV': f"${global_aov:,.2f}",
                         'CPC': f"${filtered_cpc:.2f}"
                     }
+                    
+                    # SKU column is not included in totals row (only in data table)
                 
                 
                     # Create the total row as a separate DataFrame
@@ -20161,7 +21787,7 @@ if st.session_state.current_page == "advertising_audit":
                         break
             
             # Calculate percentage metrics after creating the full dataframe
-            col1, col2 = st.columns([0.5, 0.5])
+            col1, col2, col3 = st.columns([0.4, 0.3, 0.3])
             with col1:
                 sort_options = {
                     'Parent ASIN (A-Z)': ('Parent ASIN', True),
@@ -20184,11 +21810,27 @@ if st.session_state.current_page == "advertising_audit":
                 sort_column, ascending = sort_options[selected_sort]
             
             with col2:
-                show_detailed_columns = st.checkbox("Show detailed columns", value=False, key="parent_table_detailed")
+                show_detailed_columns = st.checkbox("Show detailed columns", value=True, key="parent_table_detailed")
+                show_only_parents = st.checkbox("Show only Parent ASIN", value=False, key="parent_table_parents_only")
+                
+            with col3:
+                # Conditional formatting scope toggle
+                conditional_scope = st.radio(
+                    "Conditional formatting scope:",
+                    options=["Account-wide", "Parent ASIN only"],
+                    index=0,
+                    key="parent_conditional_scope",
+                    help="Choose whether percentage conditional formatting is relative to the entire account or just the current Parent ASIN group"
+                )
             
-            # Calculate percentage metrics: Parents relative to all Parents, Children relative to all Children
+            # Calculate percentage metrics based on conditional formatting scope
             all_parents_df = parent_asin_df[parent_asin_df['Type'] == 'Parent']
             all_children_df = parent_asin_df[parent_asin_df['Type'] == 'Child']
+            
+            # Get account-wide totals from filtered_df for account-wide conditional formatting
+            account_total_spend = filtered_df['Spend'].sum() if 'Spend' in filtered_df.columns else 0
+            account_total_ad_sales = filtered_df['Ad Sales'].sum() if 'Ad Sales' in filtered_df.columns else 0
+            account_total_sales = filtered_df['Total Sales'].sum() if 'Total Sales' in filtered_df.columns else 0
             
             all_parents_spend = all_parents_df['Spend'].sum()
             all_parents_ad_sales = all_parents_df['Ad Sales'].sum()
@@ -20198,23 +21840,62 @@ if st.session_state.current_page == "advertising_audit":
             all_children_ad_sales = all_children_df['Ad Sales'].sum()
             all_children_total_sales = all_children_df['Total Sales'].sum()
             
+            # Determine which totals to use based on conditional scope and show_only_parents setting
+            use_account_wide = (conditional_scope == "Account-wide" or show_only_parents)
+            
             for idx, row in parent_asin_df.iterrows():
-                if row['Type'] == 'Parent':
-                    # Parents relative to all other parents
-                    if all_parents_spend > 0:
-                        parent_asin_df.at[idx, '% of Spend'] = (row['Spend'] / all_parents_spend * 100)
-                    if all_parents_ad_sales > 0:
-                        parent_asin_df.at[idx, '% of Ad Sales'] = (row['Ad Sales'] / all_parents_ad_sales * 100)
-                    if all_parents_total_sales > 0:
-                        parent_asin_df.at[idx, '% of Total Sales'] = (row['Total Sales'] / all_parents_total_sales * 100)
+                if use_account_wide:
+                    # Use account-wide totals for all calculations
+                    if account_total_spend > 0:
+                        parent_asin_df.at[idx, '% of Spend'] = (row['Spend'] / account_total_spend * 100)
+                    if account_total_ad_sales > 0:
+                        parent_asin_df.at[idx, '% of Ad Sales'] = (row['Ad Sales'] / account_total_ad_sales * 100)
+                    if account_total_sales > 0:
+                        parent_asin_df.at[idx, '% of Total Sales'] = (row['Total Sales'] / account_total_sales * 100)
+                elif conditional_scope == "Parent ASIN only":
+                    # Parent ASIN only scope: Children relative to their specific parent, Parents relative to all parents
+                    if row['Type'] == 'Parent':
+                        # Parents relative to all other parents
+                        if all_parents_spend > 0:
+                            parent_asin_df.at[idx, '% of Spend'] = (row['Spend'] / all_parents_spend * 100)
+                        if all_parents_ad_sales > 0:
+                            parent_asin_df.at[idx, '% of Ad Sales'] = (row['Ad Sales'] / all_parents_ad_sales * 100)
+                        if all_parents_total_sales > 0:
+                            parent_asin_df.at[idx, '% of Total Sales'] = (row['Total Sales'] / all_parents_total_sales * 100)
+                    else:
+                        # Children relative to their specific parent ASIN totals
+                        parent_asin = row['Parent ASIN']
+                        parent_data = parent_asin_df[(parent_asin_df['Parent ASIN'] == parent_asin) & (parent_asin_df['Type'] == 'Parent')]
+                        
+                        if not parent_data.empty:
+                            parent_spend = parent_data.iloc[0]['Spend']
+                            parent_ad_sales = parent_data.iloc[0]['Ad Sales']
+                            parent_total_sales = parent_data.iloc[0]['Total Sales']
+                            
+                            if parent_spend > 0:
+                                parent_asin_df.at[idx, '% of Spend'] = (row['Spend'] / parent_spend * 100)
+                            if parent_ad_sales > 0:
+                                parent_asin_df.at[idx, '% of Ad Sales'] = (row['Ad Sales'] / parent_ad_sales * 100)
+                            if parent_total_sales > 0:
+                                parent_asin_df.at[idx, '% of Total Sales'] = (row['Total Sales'] / parent_total_sales * 100)
                 else:
-                    # Children relative to all other children
-                    if all_children_spend > 0:
-                        parent_asin_df.at[idx, '% of Spend'] = (row['Spend'] / all_children_spend * 100)
-                    if all_children_ad_sales > 0:
-                        parent_asin_df.at[idx, '% of Ad Sales'] = (row['Ad Sales'] / all_children_ad_sales * 100)
-                    if all_children_total_sales > 0:
-                        parent_asin_df.at[idx, '% of Total Sales'] = (row['Total Sales'] / all_children_total_sales * 100)
+                    # Account-wide scope: Parents relative to Parents, Children relative to Children
+                    if row['Type'] == 'Parent':
+                        # Parents relative to all other parents
+                        if all_parents_spend > 0:
+                            parent_asin_df.at[idx, '% of Spend'] = (row['Spend'] / all_parents_spend * 100)
+                        if all_parents_ad_sales > 0:
+                            parent_asin_df.at[idx, '% of Ad Sales'] = (row['Ad Sales'] / all_parents_ad_sales * 100)
+                        if all_parents_total_sales > 0:
+                            parent_asin_df.at[idx, '% of Total Sales'] = (row['Total Sales'] / all_parents_total_sales * 100)
+                    else:
+                        # Children relative to all other children
+                        if all_children_spend > 0:
+                            parent_asin_df.at[idx, '% of Spend'] = (row['Spend'] / all_children_spend * 100)
+                        if all_children_ad_sales > 0:
+                            parent_asin_df.at[idx, '% of Ad Sales'] = (row['Ad Sales'] / all_children_ad_sales * 100)
+                        if all_children_total_sales > 0:
+                            parent_asin_df.at[idx, '% of Total Sales'] = (row['Total Sales'] / all_children_total_sales * 100)
             
             # Sort the dataframe while maintaining parent-child grouping
             if sort_column == 'Parent ASIN':
@@ -20227,6 +21908,13 @@ if st.session_state.current_page == "advertising_audit":
                 # Group by Parent ASIN
                 for parent_asin in parent_asin_df[parent_asin_df['Type'] == 'Parent']['Parent ASIN'].unique():
                     parent_group = parent_asin_df[parent_asin_df['Parent ASIN'] == parent_asin].copy()
+                    
+                    # Sort children within each parent group by Total Sales (descending)
+                    parent_row = parent_group[parent_group['Type'] == 'Parent']
+                    child_rows = parent_group[parent_group['Type'] == 'Child'].sort_values('Total Sales', ascending=False)
+                    
+                    # Recombine parent and sorted children
+                    parent_group = pd.concat([parent_row, child_rows], ignore_index=True)
                     parent_groups.append(parent_group)
                 
                 # Sort parent groups by the selected metric (using parent row values)
@@ -20241,16 +21929,20 @@ if st.session_state.current_page == "advertising_audit":
             # Display columns based on detailed view setting
             if show_detailed_columns:
                 if has_product_groups:
-                    display_columns = ['Type', 'ASIN', 'Product Group', 'Product Title', 'Child Count', 'Spend', 'Ad Sales', 'Total Sales', 
-                                     'ACoS', 'TACoS', '% of Spend', '% of Ad Sales', '% of Total Sales', 'CPC', 'CVR', 'AOV']
+                    display_columns = ['Type', 'ASIN', 'Product Group', 'Product Title', '% of Spend', '% of Ad Sales', '% of Total Sales', 
+                                     'Spend', 'Ad Sales', 'Total Sales', 'ACoS', 'TACoS', 'CPC', 'CVR', 'AOV', 'Child Count']
                 else:
-                    display_columns = ['Type', 'ASIN', 'Product Title', 'Child Count', 'Spend', 'Ad Sales', 'Total Sales', 
-                                     'ACoS', 'TACoS', '% of Spend', '% of Ad Sales', '% of Total Sales', 'CPC', 'CVR', 'AOV']
+                    display_columns = ['Type', 'ASIN', 'Product Title', '% of Spend', '% of Ad Sales', '% of Total Sales', 
+                                     'Spend', 'Ad Sales', 'Total Sales', 'ACoS', 'TACoS', 'CPC', 'CVR', 'AOV', 'Child Count']
             else:
                 if has_product_groups:
-                    display_columns = ['Type', 'ASIN', 'Product Group', 'Product Title', 'Child Count', 'Spend', 'Ad Sales', 'Total Sales', 'ACoS']
+                    display_columns = ['Type', 'ASIN', 'Product Group', 'Product Title', 'Spend', 'Ad Sales', 'Total Sales', 'ACoS', 'Child Count']
                 else:
-                    display_columns = ['Type', 'ASIN', 'Product Title', 'Child Count', 'Spend', 'Ad Sales', 'Total Sales', 'ACoS']
+                    display_columns = ['Type', 'ASIN', 'Product Title', 'Spend', 'Ad Sales', 'Total Sales', 'ACoS', 'Child Count']
+            
+            # Filter to show only parents if requested
+            if show_only_parents:
+                parent_asin_df_sorted = parent_asin_df_sorted[parent_asin_df_sorted['Type'] == 'Parent'].copy()
             
             # Format the display dataframe
             display_df = parent_asin_df_sorted[display_columns].copy()
@@ -20281,12 +21973,69 @@ if st.session_state.current_page == "advertising_audit":
             
             # Style the dataframe with conditional formatting
             def highlight_parent_child_rows(row):
-                if row['Type'] == 'Parent':
-                    # Parent rows - darker background, bold text
-                    return ['background-color: rgba(70, 70, 70, 0.8); font-weight: bold; color: white'] * len(row)
-                else:
-                    # Child rows - lighter background
-                    return ['background-color: rgba(40, 40, 40, 0.4); color: #e0e0e0'] * len(row)
+                styles = []
+                for i, col in enumerate(row.index):
+                    base_style = ''
+                    
+                    # Apply parent/child row styling
+                    if row['Type'] == 'Parent':
+                        base_style = 'background-color: rgba(70, 70, 70, 0.8); font-weight: bold; color: white'
+                    else:
+                        base_style = 'background-color: rgba(40, 40, 40, 0.4); color: #e0e0e0'
+                    
+                    # Apply conditional formatting for percentage columns
+                    # Determine the appropriate scale based on row type and conditional scope
+                    if col in ['% of Spend', '% of Ad Sales', '% of Total Sales'] and col in numeric_df.columns:
+                        val = numeric_df.loc[row.name, col] if not pd.isna(numeric_df.loc[row.name, col]) else 0
+                        
+                        # Determine max scale based on conditional scope and row type
+                        if use_account_wide or show_only_parents:
+                            # Use a fixed scale for account-wide or parent-only view
+                            max_scale = 100
+                        elif conditional_scope == "Parent ASIN only":
+                            # Parent ASIN only scope: Different scaling for parents vs children
+                            if row['Type'] == 'Parent':
+                                # Scale based on max percentage among parents
+                                parent_vals = numeric_df[numeric_df['Type'] == 'Parent'][col].dropna()
+                                max_scale = parent_vals.max() if len(parent_vals) > 0 else 100
+                            else:
+                                # For children in Parent ASIN only scope, scale to 100% since they're relative to their parent
+                                max_scale = 100
+                        else:
+                            # Account-wide scope: Use dynamic scale based on row type
+                            if row['Type'] == 'Parent':
+                                # Scale based on max percentage among parents
+                                parent_vals = numeric_df[numeric_df['Type'] == 'Parent'][col].dropna()
+                                max_scale = parent_vals.max() if len(parent_vals) > 0 else 100
+                            else:
+                                # Scale based on max percentage among children
+                                child_vals = numeric_df[numeric_df['Type'] == 'Child'][col].dropna()
+                                max_scale = child_vals.max() if len(child_vals) > 0 else 100
+                        
+                        # Apply appropriate color gradient
+                        if col == '% of Spend':
+                            gradient_style = color_gradient_blue(val, 0, max_scale)
+                            if gradient_style:
+                                base_style = gradient_style
+                        elif col == '% of Ad Sales':
+                            gradient_style = color_gradient_green(val, 0, max_scale)
+                            if gradient_style:
+                                base_style = gradient_style
+                        elif col == '% of Total Sales':
+                            gradient_style = color_gradient_green(val, 0, max_scale)  # Changed to green to match Ad Sales
+                            if gradient_style:
+                                base_style = gradient_style
+                    
+                    styles.append(base_style)
+                return styles
+            
+            # Create a numeric version for conditional formatting
+            numeric_df = parent_asin_df_sorted[display_columns].copy()
+            
+            # Convert percentage columns to numeric for conditional formatting
+            for col in ['% of Spend', '% of Ad Sales', '% of Total Sales']:
+                if col in numeric_df.columns:
+                    numeric_df[col] = pd.to_numeric(numeric_df[col], errors='coerce').fillna(0)
             
             # Apply styling and create the table
             styled_df = display_df.style.apply(highlight_parent_child_rows, axis=1)
@@ -20302,11 +22051,14 @@ if st.session_state.current_page == "advertising_audit":
                     "ASIN": st.column_config.TextColumn("ASIN", width="medium"),
                     "Product Group": st.column_config.TextColumn("Product Group", width="medium"),
                     "Product Title": st.column_config.TextColumn("Product Title", width="large"),
-                    "Child Count": st.column_config.TextColumn("Children", width="small"),
+                    "% of Spend": st.column_config.TextColumn("% of Spend", width="small"),
+                    "% of Ad Sales": st.column_config.TextColumn("% of Ad Sales", width="small"),
+                    "% of Total Sales": st.column_config.TextColumn("% of Total Sales", width="small"),
                     "Spend": st.column_config.TextColumn("Spend", width="small"),
                     "Ad Sales": st.column_config.TextColumn("Ad Sales", width="small"),
                     "Total Sales": st.column_config.TextColumn("Total Sales", width="small"),
                     "ACoS": st.column_config.TextColumn("ACoS", width="small"),
+                    "Child Count": st.column_config.TextColumn("Children", width="small"),
                 }
             )
             
@@ -23309,10 +25061,21 @@ with st.expander("Application Information", expanded=False):
         else:
             st.info("No performance data available")
             
-        # Legacy debug information for technical troubleshooting
-        st.markdown("##### 🔧 Legacy Debug Information")
-        st.markdown("**Product Group Filtering Debug:**")
-        st.markdown("#### Product Group Filtering Debug")
+        # Debug Mode Toggle
+        st.markdown("---")
+        st.markdown("##### 🐛 Debug Mode")
+        debug_mode = st.checkbox(
+            "Enable Debug Output", 
+            value=False, 
+            key="global_debug_mode",
+            help="Show detailed debug information throughout the application"
+        )
+        
+        if debug_mode:
+            # Legacy debug information for technical troubleshooting
+            st.markdown("##### 🔧 Legacy Debug Information")
+            st.markdown("**Product Group Filtering Debug:**")
+            st.markdown("#### Product Group Filtering Debug")
         
         # Add Performance by Placement filter debug information
         st.markdown("**Performance by Placement Filter Debug:**")
@@ -23479,42 +25242,40 @@ with st.expander("Application Information", expanded=False):
                 st.markdown(f"**Sheet: {sheet_name}** ({len(df)} rows, {len(df.columns)} columns)")
                 st.markdown("Sample columns: " + ", ".join(list(df.columns)[:10]) + (" ..." if len(df.columns) > 10 else ""))
                 
-                # Check specifically for Customer Search Term column
-                has_search_term = False
-                for col in df.columns:
-                    if col.lower() == 'search term' or col.lower() == 'customer search term':
-                        st.success(f"✅ Found search term column: '{col}' in sheet '{sheet_name}'")
-                        has_search_term = True
-                        
-                        # Show sample values from this column
-                        if len(df) > 0:
-                            sample_values = df[col].dropna().head(5).tolist()
-                            if sample_values:
-                                st.markdown("Sample values: " + ", ".join([f"\"{str(val)}\"" for val in sample_values]))
-                        break
-                
-
-                
-                # Check for Product column
-                if 'Product' in df.columns:
-                    product_values = df['Product'].dropna().astype(str).unique()
-                    if len(product_values) > 0:
-                        st.markdown(f"Product column values: {', '.join(product_values[:5])}" + 
-                                   (" ..." if len(product_values) > 5 else ""))
-                        
-                        # Check if any product values contain sponsored products, brands, or display
-                        has_sp = any('sponsored product' in val.lower() for val in product_values)
-                        has_sb = any('sponsored brand' in val.lower() for val in product_values)
-                        has_sd = any('sponsored display' in val.lower() for val in product_values)
-                        
-                        if has_sp:
-                            st.success("✅ Found 'Sponsored Products' in Product column")
-                        if has_sb:
-                            st.success("✅ Found 'Sponsored Brands' in Product column")
-                        if has_sd:
-                            st.success("✅ Found 'Sponsored Display' in Product column")
-                        if not has_sp and not has_sb and not has_sd:
-                            st.warning("⚠️ No campaign type indicators found in Product column")
+            # Check specifically for Customer Search Term column
+            has_search_term = False
+            for col in df.columns:
+                if col.lower() == 'search term' or col.lower() == 'customer search term':
+                    st.success(f"✅ Found search term column: '{col}' in sheet '{sheet_name}'")
+                    has_search_term = True
+                    
+                    # Show sample values from this column
+                    if len(df) > 0:
+                        sample_values = df[col].dropna().head(5).tolist()
+                        if sample_values:
+                            st.markdown("Sample values: " + ", ".join([f"\"{str(val)}\"" for val in sample_values]))
+                    break
+            
+            # Check for Product column
+            if 'Product' in df.columns:
+                product_values = df['Product'].dropna().astype(str).unique()
+                if len(product_values) > 0:
+                    st.markdown(f"Product column values: {', '.join(product_values[:5])}" + 
+                               (" ..." if len(product_values) > 5 else ""))
+                    
+                    # Check if any product values contain sponsored products, brands, or display
+                    has_sp = any('sponsored product' in val.lower() for val in product_values)
+                    has_sb = any('sponsored brand' in val.lower() for val in product_values)
+                    has_sd = any('sponsored display' in val.lower() for val in product_values)
+                    
+                    if has_sp:
+                        st.success("✅ Found 'Sponsored Products' in Product column")
+                    if has_sb:
+                        st.success("✅ Found 'Sponsored Brands' in Product column")
+                    if has_sd:
+                        st.success("✅ Found 'Sponsored Display' in Product column")
+                    if not has_sp and not has_sb and not has_sd:
+                        st.warning("⚠️ No campaign type indicators found in Product column")
     else:
         st.info("No bulk file data available yet. Upload a bulk file to see details.")
 
