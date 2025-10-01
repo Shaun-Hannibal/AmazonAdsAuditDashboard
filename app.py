@@ -11237,6 +11237,36 @@ if st.session_state.client_config:
                         }
                         candidate_rows.append(row)
                     st.caption("Using products from uploaded CSV. Category and Tags will drive campaign naming.")
+                    # Auto-seed Selected Products exactly once per uploaded file
+                    try:
+                        seeded_key = 'cc_csv_seeded_for'
+                        current_file_name = uploaded_cc_file.name if uploaded_cc_file is not None else None
+                        # Ensure session container exists
+                        if 'cc_products' not in st.session_state:
+                            st.session_state.cc_products = pd.DataFrame(columns=['ASIN','SKU','Product Title','Category','Tag 1','Tag 2','Tag 3','Product Group'])
+                        if current_file_name and st.session_state.get(seeded_key) != current_file_name:
+                            seed_df = pd.DataFrame(candidate_rows)
+                            # Keep consistent column order
+                            cols = ['ASIN','SKU','Product Title','Category','Tag 1','Tag 2','Tag 3','Product Group']
+                            for c in cols:
+                                if c not in seed_df.columns:
+                                    seed_df[c] = ''
+                            seed_df = seed_df[cols]
+                            # Merge and dedupe by chosen identifier
+                            tmp = pd.concat([st.session_state.cc_products, seed_df], ignore_index=True)
+                            id_col_for_dedupe = 'ASIN' if (csv_id_col and csv_id_col.lower() == 'asin') else 'SKU'
+                            if id_col_for_dedupe in tmp.columns:
+                                tmp[id_col_for_dedupe] = tmp[id_col_for_dedupe].astype(str).str.strip()
+                                tmp = tmp[tmp[id_col_for_dedupe] != '']
+                                tmp.drop_duplicates(subset=[id_col_for_dedupe], inplace=True)
+                            st.session_state.cc_products = tmp
+                            st.session_state[seeded_key] = current_file_name
+                            st.success(f"Added {len(seed_df)} product(s) from CSV to Selected Products")
+                    except Exception as e:
+                        try:
+                            st.session_state.debug_messages.append(f"[CC CSV Seed] Failed to auto-seed Selected Products: {e}")
+                        except Exception:
+                            pass
                     # Force ID choice to CSV identifier for downstream steps
                     id_choice = 'ASIN' if csv_id_col and csv_id_col.lower() == 'asin' else 'SKU'
                 else:
