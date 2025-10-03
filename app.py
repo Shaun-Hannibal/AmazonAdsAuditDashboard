@@ -1,12 +1,34 @@
 import streamlit as st
 import datetime
 import base64
+import os
+import sys
 
 # Version tracking
 APP_VERSION = "1.0.0"
 
+# Resolve page icon robustly for both dev and PyInstaller-frozen environments
+def _resolve_resource_path(rel_path: str) -> str:
+    try:
+        if getattr(sys, "frozen", False):  # PyInstaller
+            base_path = getattr(sys, "_MEIPASS", os.path.dirname(sys.executable))
+        else:
+            base_path = os.path.dirname(__file__)
+        return os.path.join(base_path, rel_path)
+    except Exception:
+        return rel_path
+
+_page_icon = "📊"  # safe default
+if not getattr(sys, "frozen", False):  # Only use image path in dev, not in packaged app
+    try:
+        _icon_path = _resolve_resource_path("assets/hand_logo.png")
+        if os.path.exists(_icon_path):
+            _page_icon = _icon_path
+    except Exception:
+        _page_icon = "📊"
+
 # Set page config must be the first Streamlit command
-st.set_page_config(layout="wide", page_title="Amazon Advertising Dashboard", page_icon="assets/hand_logo.png")
+st.set_page_config(layout="wide", page_title="Amazon Advertising Dashboard", page_icon=_page_icon)
 
 
 
@@ -35,10 +57,8 @@ from wordcloud import WordCloud, STOPWORDS
 import matplotlib.pyplot as plt
 import uuid
 import functools
-from insights import generate_insights
 from contextlib import contextmanager
 from database import db_manager
-from asin_helpers import compute_asin_performance
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Font, Alignment, NamedStyle
 from openpyxl.formatting.rule import ColorScaleRule
@@ -939,6 +959,20 @@ def migrate_old_data():
 USER_DATA_DIR = get_user_data_dir()
 CLIENT_CONFIG_DIR = os.path.join(USER_DATA_DIR, 'clients')
 
+# Lightweight file logger for packaged builds
+def log_app_event(message: str):
+    """Append a timestamped line to a log file in the user's data directory.
+    Never raises; safe to call anywhere.
+    """
+    try:
+        from datetime import datetime
+        log_path = os.path.join(USER_DATA_DIR, 'app.log')
+        ts = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        with open(log_path, 'a', encoding='utf-8') as lf:
+            lf.write(f"[{ts}] {message}\n")
+    except Exception:
+        pass
+
 # Auto-migrate old data on startup
 if 'migration_checked' not in st.session_state:
     migrate_old_data()
@@ -946,14 +980,14 @@ if 'migration_checked' not in st.session_state:
 
 # --- Client Management Functions ---
 
-@st.cache_data(ttl=300)  # Cache for 5 minutes
+@st.cache_data(ttl=300, show_spinner=False)  # Cache for 5 minutes
 def get_existing_clients():
     """Returns a list of client names from the config directory."""
     if not os.path.exists(CLIENT_CONFIG_DIR):
         os.makedirs(CLIENT_CONFIG_DIR)
     return [f.replace('.json', '') for f in os.listdir(CLIENT_CONFIG_DIR) if f.endswith('.json')]
 
-@st.cache_data(ttl=300)  # Cache for 5 minutes
+@st.cache_data(ttl=300, show_spinner=False)  # Cache for 5 minutes
 def load_client_config(client_name):
     """Loads the configuration for a given client."""
     filepath = os.path.join(CLIENT_CONFIG_DIR, f"{client_name}.json")
@@ -1049,7 +1083,7 @@ def ensure_session_directory(client_name):
         os.makedirs(client_session_dir)
     return client_session_dir
 
-@st.cache_data(ttl=300)  # Cache for 5 minutes
+@st.cache_data(ttl=300, show_spinner=False)  # Cache for 5 minutes
 def get_saved_sessions(client_name):
     """Returns a list of saved session files for a given client."""
     client_session_dir = os.path.join(CLIENT_SESSIONS_DIR, client_name)
@@ -1211,7 +1245,7 @@ def delete_audit_session(client_name, session_filename):
 
 # --- Data Processing Functions ---
 
-@st.cache_data(ttl=3600)  # Cache for 1 hour
+@st.cache_data(ttl=3600, show_spinner=False)  # Cache for 1 hour
 def extract_asins_from_sales_report(sales_df):
     """
     Extracts ASINs and their titles from a sales report DataFrame.
@@ -1298,7 +1332,7 @@ def extract_asins_from_sales_report(sales_df):
     st.session_state.debug_messages.append(f"Extracted {len(asin_title_map)} ASINs with titles from sales report")
     return asin_title_map
 
-@st.cache_data(ttl=3600)  # Cache for 1 hour
+@st.cache_data(ttl=3600, show_spinner=False)  # Cache for 1 hour
 def process_sales_report(uploaded_file):
     """
     Reads an SC or VC sales report (CSV or XLSX) and extracts relevant sales data.
@@ -1550,7 +1584,7 @@ def process_sales_report(uploaded_file):
 
 
 
-@st.cache_data(ttl=3600)  # Cache for 1 hour
+@st.cache_data(ttl=3600, show_spinner=False)  # Cache for 1 hour
 def detect_and_persist_sku_asin_mappings(bulk_data):
     """
     Detect SKU-ASIN mappings from bulk file data and persist them to Branded ASINs.
@@ -1901,7 +1935,7 @@ def process_bulk_data(uploaded_file):
         st.error(f"Error processing bulk file: {str(e)}")
         return None
 
-@st.cache_data(ttl=3600)  # Cache for 1 hour
+@st.cache_data(ttl=3600, show_spinner=False)  # Cache for 1 hour
 def process_companion_asin_data(uploaded_file):
     """
     Processes companion ASIN export CSV file and converts it to bulk data format.
@@ -1992,7 +2026,7 @@ def process_companion_asin_data(uploaded_file):
         st.session_state.debug_messages.append(f"[Companion ASIN] Error: {str(e)}")
         return None
 
-@st.cache_data(ttl=3600)  # Cache for 1 hour
+@st.cache_data(ttl=3600, show_spinner=False)  # Cache for 1 hour
 def process_companion_search_term_data(uploaded_file):
     """
     Processes companion Search Term export CSV file and converts it to bulk data format.
@@ -2200,7 +2234,7 @@ def process_companion_search_term_data(uploaded_file):
         st.session_state.debug_messages.append(f"[Companion Search Term] Error: {str(e)}")
         return None
 
-@st.cache_data(ttl=3600)  # Cache for 1 hour
+@st.cache_data(ttl=3600, show_spinner=False)  # Cache for 1 hour
 def process_companion_targeting_data(uploaded_file):
     """
     Processes companion Targeting export CSV file and converts it to bulk data format.
@@ -2477,7 +2511,7 @@ def process_companion_targeting_data(uploaded_file):
         st.session_state.debug_messages.append(f"[Companion Targeting] Error: {str(e)}")
         return None
 
-@st.cache_data(ttl=3600)  # Cache for 1 hour
+@st.cache_data(ttl=3600, show_spinner=False)  # Cache for 1 hour
 def process_companion_data(asin_file, search_term_file, targeting_file=None):
     """
     Combines companion ASIN, Search Term, and Targeting data into a unified bulk data structure.
@@ -4097,6 +4131,7 @@ def get_search_term_data(bulk_data, client_config=None):
         search_term_data.append(sd_df)
     
     # Combine all search term data
+    combined_df = pd.DataFrame()  # Initialize to empty DataFrame
     if search_term_data:
         combined_df = pd.concat(search_term_data, ignore_index=True)
         st.session_state.debug_messages.append(f"Combined search term data: {len(combined_df)} rows")
@@ -5535,12 +5570,21 @@ with st.sidebar:
     
     # Cache is automatically reset after 1 hour or when new data is uploaded
     
-    existing_clients = get_existing_clients()
+    try:
+        existing_clients = get_existing_clients()
+    except Exception as e:
+        st.error(f"Error loading client list: {str(e)}")
+        existing_clients = []
 
     # Load client if selected previously
     if 'selected_client_name' in st.session_state and st.session_state.client_config is None:
-        client_name = st.session_state.selected_client_name
-        st.session_state.client_config = load_client_config(client_name)
+        try:
+            client_name = st.session_state.selected_client_name
+            log_app_event(f"Auto-loading client: {client_name}")
+            st.session_state.client_config = load_client_config(client_name)
+        except Exception as e:
+            st.error(f"Error auto-loading client '{client_name}': {str(e)}")
+            log_app_event(f"Error auto-loading client '{client_name}': {str(e)}")
 
     # Radio button for action choice
     st.markdown("### Action")
@@ -5554,12 +5598,20 @@ with st.sidebar:
             
             with col1:
                 if st.button("Load Client", use_container_width=True):
-                    st.session_state.selected_client_name = selected_client
-                    st.session_state.client_config = load_client_config(selected_client)
-                    st.session_state.bulk_data = None 
-                    st.session_state.sales_report_data = None
-                    st.session_state.current_page = 'file_uploads'  # Redirect to File Uploads page
-                    st.rerun()
+                    try:
+                        log_app_event(f"Load Client clicked for: {selected_client}")
+                        st.session_state.selected_client_name = selected_client
+                        st.session_state.client_config = load_client_config(selected_client)
+                        st.session_state.bulk_data = None 
+                        st.session_state.sales_report_data = None
+                        st.session_state.current_page = 'file_uploads'  # Redirect to File Uploads page
+                        log_app_event(f"Client loaded successfully: {selected_client}")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error loading client: {str(e)}")
+                        import traceback
+                        log_app_event(f"Error loading client '{selected_client}': {str(e)}\n{traceback.format_exc()}")
+                        st.error(traceback.format_exc())
             
             with col2:
                 if st.button("Delete Client", use_container_width=True):
@@ -5578,8 +5630,8 @@ with st.sidebar:
                         # Store the client name before clearing session state
                         deleted_client_name = st.session_state.client_to_delete
                         
-                        # Get the client's config file path
-                        client_file = Path(f"clients/{st.session_state.client_to_delete}.json")
+                        # Get the client's config file path in the user data directory
+                        client_file = Path(os.path.join(CLIENT_CONFIG_DIR, f"{st.session_state.client_to_delete}.json"))
                         
                         # Delete the client file
                         if client_file.exists():
@@ -19741,7 +19793,7 @@ if st.session_state.client_config:
                                 search_term_df = search_term_df[search_term_df['Product Group'].isin(st.session_state.search_term_product_group_filter)]
                             
                             if search_term_df.empty:
-                                st.info("No search term data available. Please upload bulk advertising files with search term data.")
+                                st.info("Search Term data not present in bulk file.")
                             else:
                                 # Display the table with summary cards between filters and table
                                 display_search_term_table(search_term_df, "all", is_branded=None, show_metrics=True, show_filters=True)
@@ -19758,7 +19810,7 @@ if st.session_state.client_config:
                                 search_term_df = search_term_df[search_term_df['Product Group'].isin(st.session_state.search_term_product_group_filter)]
                             
                             if search_term_df.empty:
-                                st.info("No search term data available. Please upload bulk advertising files with search term data.")
+                                st.info("Search Term data not present in bulk file.")
                             else:
                                 # Get targeting data to merge for Target Type
                                 targeting_data = None
@@ -19849,7 +19901,7 @@ if st.session_state.client_config:
                                 search_term_df = search_term_df[search_term_df['Product Group'].isin(st.session_state.search_term_product_group_filter)]
                             
                             if search_term_df.empty:
-                                st.info("No search term data available. Please upload bulk advertising files with search term data.")
+                                st.info("Search Term data not present in bulk file.")
                             else:
                                 # Get targeting data to merge for Target Type
                                 targeting_data = None
