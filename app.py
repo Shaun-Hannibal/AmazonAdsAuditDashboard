@@ -5902,7 +5902,12 @@ with st.sidebar:
 
     # Radio button for action choice
     st.markdown("### Action")
-    choice = st.radio("Client Action", ["Load Existing Client", "Create New Client"], label_visibility="collapsed")
+    
+    # Add Import option if in cloud environment or if no clients exist
+    if is_cloud_environment() or not existing_clients:
+        choice = st.radio("Client Action", ["Load Existing Client", "Create New Client", "Import Client Data"], label_visibility="collapsed")
+    else:
+        choice = st.radio("Client Action", ["Load Existing Client", "Create New Client"], label_visibility="collapsed")
 
     if choice == "Load Existing Client":
         if existing_clients:
@@ -6011,6 +6016,118 @@ with st.sidebar:
                 st.error("Please enter a client name.")
             else:
                 st.error(f"Client '{clean_name}' already exists.")
+    
+    elif choice == "Import Client Data":
+        st.markdown("### Import Client Data")
+        
+        if is_cloud_environment():
+            st.info("🌐 **Cloud Mode**: Import your client data backup file to restore your settings and configurations.")
+        else:
+            st.info("💻 **Local Mode**: Import client data from a backup file.")
+        
+        st.markdown("---")
+        
+        # Export section (always available)
+        if existing_clients:
+            st.subheader("📤 Export Current Data")
+            st.markdown("Download all your client configurations as a backup file.")
+            
+            if st.button("Export All Clients", type="secondary", use_container_width=True):
+                try:
+                    export_data = {
+                        'version': '1.0',
+                        'export_date': datetime.now().isoformat(),
+                        'clients': {}
+                    }
+                    
+                    # Export all client configs
+                    for client_name in existing_clients:
+                        client_config = load_client_config(client_name)
+                        if client_config:
+                            export_data['clients'][client_name] = client_config
+                    
+                    # Create download button
+                    export_json = json.dumps(export_data, indent=2)
+                    st.download_button(
+                        label="💾 Download Backup File",
+                        data=export_json,
+                        file_name=f"amazon_dashboard_clients_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                        mime="application/json",
+                        use_container_width=True
+                    )
+                    st.success("✅ Export data prepared! Click the download button above.")
+                    
+                except Exception as e:
+                    st.error(f"❌ Error exporting data: {str(e)}")
+            
+            st.markdown("---")
+        
+        # Import section
+        st.subheader("📥 Import Client Data")
+        st.markdown("Upload a previously exported backup file to restore your client configurations.")
+        
+        uploaded_backup = st.file_uploader("Choose backup file", type=['json'], key="client_backup_import")
+        
+        if uploaded_backup:
+            try:
+                import_data = json.load(uploaded_backup)
+                
+                # Validate backup file
+                if 'version' not in import_data or 'clients' not in import_data:
+                    st.error("❌ Invalid backup file format.")
+                else:
+                    st.success(f"✅ Backup file loaded (exported on {import_data.get('export_date', 'unknown date')})")
+                    
+                    # Show what will be imported
+                    st.markdown("**Contents:**")
+                    st.write(f"- {len(import_data['clients'])} client(s): {', '.join(import_data['clients'].keys())}")
+                    
+                    import_mode = st.radio(
+                        "Import mode:",
+                        ["Merge (keep existing clients)", "Replace (overwrite all clients)"],
+                        help="Merge will add to existing clients. Replace will delete all current clients first."
+                    )
+                    
+                    if st.button("🔄 Import Clients", type="primary", use_container_width=True):
+                        try:
+                            # Replace mode: clear existing clients
+                            if "Replace" in import_mode:
+                                if is_cloud_environment():
+                                    # Clear localStorage
+                                    for client_name in existing_clients:
+                                        remove_localStorage_value(f'amazon_dashboard_client_{client_name}')
+                                    remove_localStorage_value('amazon_dashboard_client_list')
+                                else:
+                                    # Clear filesystem
+                                    if os.path.exists(CLIENT_CONFIG_DIR):
+                                        for file in os.listdir(CLIENT_CONFIG_DIR):
+                                            if file.endswith('.json'):
+                                                os.remove(os.path.join(CLIENT_CONFIG_DIR, file))
+                            
+                            # Import clients
+                            imported_count = 0
+                            for client_name, client_config in import_data['clients'].items():
+                                save_client_config(client_name, client_config)
+                                imported_count += 1
+                            
+                            # Clear caches
+                            get_existing_clients.clear()
+                            load_client_config.clear()
+                            
+                            st.success(f"✅ Successfully imported {imported_count} client(s)!")
+                            st.balloons()
+                            st.info("Please select 'Load Existing Client' to access your imported clients.")
+                            
+                        except Exception as e:
+                            st.error(f"❌ Error importing data: {str(e)}")
+                            
+            except json.JSONDecodeError:
+                st.error("❌ Invalid JSON file. Please upload a valid backup file.")
+            except Exception as e:
+                st.error(f"❌ Error reading backup file: {str(e)}")
+        
+        st.markdown("---")
+        st.caption("💡 **Tip**: Export your data regularly to prevent data loss, especially when using cloud mode where data is stored in your browser.")
 
 # --- Main Panel --- #
 if st.session_state.client_config:
