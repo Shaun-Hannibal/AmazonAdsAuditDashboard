@@ -1087,9 +1087,13 @@ def get_existing_clients():
             os.makedirs(CLIENT_CONFIG_DIR)
         return [f.replace('.json', '') for f in os.listdir(CLIENT_CONFIG_DIR) if f.endswith('.json')]
 
-@st.cache_data(ttl=300, show_spinner=False)  # Cache for 5 minutes
 def load_client_config(client_name):
-    """Loads the configuration for a given client from localStorage or filesystem."""
+    """Loads the configuration for a given client from localStorage or filesystem.
+    
+    Note: No caching decorator for cloud mode because get_localStorage_value uses
+    components.html which needs to render on each run to return values.
+    Session state provides the caching layer instead.
+    """
     if is_cloud_environment():
         # Use session state cache for localStorage values
         cache_key = f'client_config_cache_{client_name}'
@@ -1111,16 +1115,21 @@ def load_client_config(client_name):
                 return None
         return None
     else:
-        # Use filesystem locally
-        filepath = os.path.join(CLIENT_CONFIG_DIR, f"{client_name}.json")
-        if os.path.exists(filepath):
-            try:
-                with open(filepath, 'r') as f:
-                    return json.load(f)
-            except json.JSONDecodeError:
-                st.error(f"Error reading configuration file for {client_name}. It might be corrupted.")
-                return None
-        return None
+        # Use filesystem locally - can use caching here
+        return _load_client_config_from_file(client_name)
+
+@st.cache_data(ttl=300, show_spinner=False)
+def _load_client_config_from_file(client_name):
+    """Helper function for filesystem loading with caching."""
+    filepath = os.path.join(CLIENT_CONFIG_DIR, f"{client_name}.json")
+    if os.path.exists(filepath):
+        try:
+            with open(filepath, 'r') as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            st.error(f"Error reading configuration file for {client_name}. It might be corrupted.")
+            return None
+    return None
 
 def get_campaigns_from_bulk_file(bulk_data):
     """Extracts unique campaign names and types from the bulk file data."""
@@ -1196,7 +1205,7 @@ def save_client_config(client_name, config_data):
         
         # Clear cache
         get_existing_clients.clear()
-        load_client_config.clear()
+        _load_client_config_from_file.clear()
         
         st.session_state.settings_updated = True
     else:
@@ -6230,7 +6239,7 @@ with st.sidebar:
                             
                             # Clear caches
                             get_existing_clients.clear()
-                            load_client_config.clear()
+                            _load_client_config_from_file.clear()
                             
                             # Clear import data from session state
                             if 'import_backup_data' in st.session_state:
@@ -9424,7 +9433,7 @@ if st.session_state.client_config:
                                 
                                 # Clear caches
                                 get_existing_clients.clear()
-                                load_client_config.clear()
+                                _load_client_config_from_file.clear()
                                 get_saved_sessions.clear()
                                 
                                 st.success("✅ Data imported successfully! Please refresh the page.")
