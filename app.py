@@ -1,5 +1,5 @@
 import streamlit as st
-import datetime
+
 import base64
 import os
 import sys
@@ -66,12 +66,17 @@ from openpyxl.formatting.rule import ColorScaleRule
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.utils import get_column_letter
 try:
+    import extra_streamlit_components as stx
+except Exception:
+    stx = None
+try:
     from supabase_store import (
         is_supabase_configured,
         get_current_user_id,
         sign_in,
         sign_up,
         sign_out,
+        apply_session_from_state,
         list_client_names as sb_list_client_names,
         fetch_client_config as sb_fetch_client_config,
         upsert_client_config as sb_upsert_client_config,
@@ -1132,6 +1137,21 @@ CLIENT_CONFIG_DIR = os.path.join(USER_DATA_DIR, 'clients')
 if is_cloud_environment() and is_supabase_configured():
     with st.sidebar:
         st.markdown("### Account")
+        # Browser cookie-based session restore (cloud-only)
+        cookie_manager = None
+        if stx is not None:
+            try:
+                cookie_manager = stx.CookieManager(key="sb_cookie_mgr")
+                # Trigger internal initialization
+                _ = cookie_manager.get_all()
+                at = cookie_manager.get("sb_access_token")
+                rt = cookie_manager.get("sb_refresh_token")
+                if at and rt and "_sb_session" not in st.session_state:
+                    st.session_state["_sb_session"] = {"access_token": at, "refresh_token": rt}
+                    # Ensure cached Supabase client is rehydrated with tokens
+                    apply_session_from_state()
+            except Exception:
+                cookie_manager = None
         current_uid = get_current_user_id()
         if current_uid:
             st.success("Signed in")
@@ -1142,16 +1162,60 @@ if is_cloud_environment() and is_supabase_configured():
                     get_saved_sessions.clear()
                 except Exception:
                     pass
+                # Clear cookies on sign out
+                if cookie_manager is not None:
+                    try:
+                        cookie_manager.delete("sb_access_token")
+                        cookie_manager.delete("sb_refresh_token")
+                    except Exception:
+                        pass
                 st.rerun()
         else:
+            # Persist last-typed credentials across mode switches and reruns
+            if 'last_typed_email' not in st.session_state:
+                st.session_state.last_typed_email = ''
+            if 'last_typed_password' not in st.session_state:
+                st.session_state.last_typed_password = ''
+            # Initialize widget state from last typed values only once
+            if 'auth_email' not in st.session_state:
+                st.session_state.auth_email = st.session_state.last_typed_email
+            if 'auth_password' not in st.session_state:
+                st.session_state.auth_password = st.session_state.last_typed_password
+
             auth_mode = st.radio("Select", ["Sign in", "Create account"], key="auth_mode")
             email = st.text_input("Email", key="auth_email")
             password = st.text_input("Password", type="password", key="auth_password")
+            # Continuously remember last-typed values for auto-population
+            st.session_state.last_typed_email = st.session_state.get('auth_email', '')
+            st.session_state.last_typed_password = st.session_state.get('auth_password', '')
             if auth_mode == "Sign in":
                 if st.button("Sign in", key="auth_sign_in_btn"):
                     ok, msg = sign_in(email, password)
                     if ok:
                         st.success(msg)
+                        # Persist session to cookies for auto login across reloads
+                        if cookie_manager is not None:
+                            try:
+                                sess = st.session_state.get("_sb_session", {})
+                                if isinstance(sess, dict):
+                                    if sess.get("access_token"):
+                                        cookie_manager.set(
+                                            "sb_access_token",
+                                            sess.get("access_token"),
+                                            expires_at=datetime.now() + timedelta(days=90),
+                                            same_site="lax",
+                                            secure=True,
+                                        )
+                                    if sess.get("refresh_token"):
+                                        cookie_manager.set(
+                                            "sb_refresh_token",
+                                            sess.get("refresh_token"),
+                                            expires_at=datetime.now() + timedelta(days=90),
+                                            same_site="lax",
+                                            secure=True,
+                                        )
+                            except Exception:
+                                pass
                         try:
                             get_existing_clients.clear()
                             get_saved_sessions.clear()
@@ -1165,6 +1229,29 @@ if is_cloud_environment() and is_supabase_configured():
                     ok, msg = sign_up(email, password)
                     if ok:
                         st.success(msg)
+                        # Persist session to cookies if we already have one (some projects return session immediately)
+                        if cookie_manager is not None:
+                            try:
+                                sess = st.session_state.get("_sb_session", {})
+                                if isinstance(sess, dict):
+                                    if sess.get("access_token"):
+                                        cookie_manager.set(
+                                            "sb_access_token",
+                                            sess.get("access_token"),
+                                            expires_at=datetime.now() + timedelta(days=90),
+                                            same_site="lax",
+                                            secure=True,
+                                        )
+                                    if sess.get("refresh_token"):
+                                        cookie_manager.set(
+                                            "sb_refresh_token",
+                                            sess.get("refresh_token"),
+                                            expires_at=datetime.now() + timedelta(days=90),
+                                            same_site="lax",
+                                            secure=True,
+                                        )
+                            except Exception:
+                                pass
                         try:
                             get_existing_clients.clear()
                             get_saved_sessions.clear()
@@ -1172,7 +1259,12 @@ if is_cloud_environment() and is_supabase_configured():
                             pass
                         st.rerun()
                     else:
-                        st.error(msg)
+                        # Hide Supabase cooldown text; auto-switch to Sign in and rerun
+                        if isinstance(msg, str) and ("For security purposes" in msg or "request this after" in msg):
+                            st.session_state.auth_mode = "Sign in"
+                            st.rerun()
+                        else:
+                            st.error(msg)
 
     if not get_current_user_id():
         st.title("Amazon Advertising Dashboard")

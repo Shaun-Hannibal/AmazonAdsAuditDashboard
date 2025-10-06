@@ -19,17 +19,35 @@ def get_supabase() -> Optional[Client]:
         return None
     sb = create_client(url, key)
 
-    # Restore session from st.session_state if available
-    sess = st.session_state.get("_sb_session")
-    if sess and isinstance(sess, dict):
-        access_token = sess.get("access_token")
-        refresh_token = sess.get("refresh_token")
-        if access_token and refresh_token:
-            try:
+    # Restore session from st.session_state if available (first creation only)
+    try:
+        sess = st.session_state.get("_sb_session")
+        if sess and isinstance(sess, dict):
+            access_token = sess.get("access_token")
+            refresh_token = sess.get("refresh_token")
+            if access_token and refresh_token:
                 sb.auth.set_session(access_token, refresh_token)
-            except Exception:
-                pass
+    except Exception:
+        pass
     return sb
+
+
+def apply_session_from_state() -> None:
+    """Ensure the cached Supabase client has the current session from st.session_state.
+    Safe to call on every rerun. No-op if not configured or no tokens present.
+    """
+    sb = get_supabase()
+    if not sb:
+        return
+    try:
+        sess = st.session_state.get("_sb_session")
+        if sess and isinstance(sess, dict):
+            at = sess.get("access_token")
+            rt = sess.get("refresh_token")
+            if at and rt:
+                sb.auth.set_session(at, rt)
+    except Exception:
+        pass
 
 
 def is_supabase_configured() -> bool:
@@ -79,9 +97,36 @@ def sign_up(email: str, password: str) -> Tuple[bool, str]:
                 "access_token": res.session.access_token,
                 "refresh_token": res.session.refresh_token,
             }
-        return True, "Account created. Check your email for verification if required."
+            return True, "Account created. Check your email for verification if required."
+        # Some projects require email verification before a session is returned.
+        # In that case, immediately attempt sign-in (works if email already existed or verification not required).
+        try:
+            login = sb.auth.sign_in_with_password({"email": email, "password": password})
+            if login and login.session:
+                st.session_state["_sb_session"] = {
+                    "access_token": login.session.access_token,
+                    "refresh_token": login.session.refresh_token,
+                }
+                return True, "Signed in"
+        except Exception:
+            pass
+        return True, "Account request received. If verification is required, check your email."
     except Exception as e:
-        return False, str(e)
+        msg = str(e)
+        # Gracefully handle rate-limit/cooldown messages by attempting sign-in immediately
+        if "For security purposes" in msg or "request this after" in msg:
+            try:
+                login = sb.auth.sign_in_with_password({"email": email, "password": password})
+                if login and login.session:
+                    st.session_state["_sb_session"] = {
+                        "access_token": login.session.access_token,
+                        "refresh_token": login.session.refresh_token,
+                    }
+                    return True, "Signed in"
+            except Exception:
+                # Hide the noisy cooldown text
+                return False, "Please try signing in with the same email and password."
+        return False, msg
 
 
 def sign_out() -> None:
