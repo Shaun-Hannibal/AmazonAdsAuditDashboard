@@ -58,6 +58,7 @@ import matplotlib.pyplot as plt
 import uuid
 import functools
 from contextlib import contextmanager
+import streamlit.components.v1 as components
 from database import db_manager
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Font, Alignment, NamedStyle
@@ -848,6 +849,100 @@ def calculate_acos_distribution_with_ranges(df, ranges, labels):
 
 # --- End Helper Functions for Consistent ACoS Range Distribution ---
 
+# --- Browser LocalStorage Integration ---
+def is_cloud_environment():
+    """Detect if running on Streamlit Cloud or similar cloud environment."""
+    # Check for common cloud environment indicators
+    return (
+        os.environ.get('STREAMLIT_SHARING_MODE') is not None or
+        os.environ.get('STREAMLIT_SERVER_PORT') is not None or
+        not os.path.exists(os.path.expanduser('~/.streamlit')) or
+        os.environ.get('HOME', '').startswith('/home/appuser')
+    )
+
+def get_localStorage_value(key):
+    """Get a value from browser localStorage."""
+    # Generate unique component key to avoid conflicts
+    component_key = f"ls_get_{key}_{hash(key) % 10000}"
+    
+    html_code = f"""
+    <script>
+        const value = localStorage.getItem('{key}');
+        window.parent.postMessage({{
+            type: 'streamlit:setComponentValue',
+            value: value
+        }}, '*');
+    </script>
+    """
+    
+    result = components.html(html_code, height=0, key=component_key)
+    return result
+
+def set_localStorage_value(key, value):
+    """Set a value in browser localStorage."""
+    # Escape the value for JavaScript
+    import json
+    json_value = json.dumps(value)
+    
+    # Generate unique component key
+    component_key = f"ls_set_{key}_{hash(key) % 10000}_{hash(str(value)) % 10000}"
+    
+    html_code = f"""
+    <script>
+        localStorage.setItem('{key}', {json_value});
+        window.parent.postMessage({{
+            type: 'streamlit:setComponentValue',
+            value: 'success'
+        }}, '*');
+    </script>
+    """
+    
+    components.html(html_code, height=0, key=component_key)
+
+def remove_localStorage_value(key):
+    """Remove a value from browser localStorage."""
+    component_key = f"ls_remove_{key}_{hash(key) % 10000}"
+    
+    html_code = f"""
+    <script>
+        localStorage.removeItem('{key}');
+        window.parent.postMessage({{
+            type: 'streamlit:setComponentValue',
+            value: 'removed'
+        }}, '*');
+    </script>
+    """
+    
+    components.html(html_code, height=0, key=component_key)
+
+def get_all_localStorage_keys():
+    """Get all keys from browser localStorage that match our app prefix."""
+    component_key = f"ls_keys_{int(time.time() * 1000) % 10000}"
+    
+    html_code = """
+    <script>
+        const keys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('amazon_dashboard_')) {
+                keys.push(key);
+            }
+        }
+        window.parent.postMessage({
+            type: 'streamlit:setComponentValue',
+            value: JSON.stringify(keys)
+        }, '*');
+    </script>
+    """
+    
+    result = components.html(html_code, height=0, key=component_key)
+    if result:
+        try:
+            return json.loads(result)
+        except:
+            return []
+    return []
+
 # --- User Data Directory Helper ---
 def get_user_data_dir():
     """Get a safe directory for user data that works on both Windows and Mac, including work computers."""
@@ -982,23 +1077,50 @@ if 'migration_checked' not in st.session_state:
 
 @st.cache_data(ttl=300, show_spinner=False)  # Cache for 5 minutes
 def get_existing_clients():
-    """Returns a list of client names from the config directory."""
-    if not os.path.exists(CLIENT_CONFIG_DIR):
-        os.makedirs(CLIENT_CONFIG_DIR)
-    return [f.replace('.json', '') for f in os.listdir(CLIENT_CONFIG_DIR) if f.endswith('.json')]
+    """Returns a list of client names from the config directory or localStorage."""
+    if is_cloud_environment():
+        # Use localStorage on cloud
+        if 'client_list' not in st.session_state:
+            # Initialize from localStorage
+            stored_list = get_localStorage_value('amazon_dashboard_client_list')
+            if stored_list:
+                try:
+                    st.session_state.client_list = json.loads(stored_list)
+                except:
+                    st.session_state.client_list = []
+            else:
+                st.session_state.client_list = []
+        return st.session_state.get('client_list', [])
+    else:
+        # Use filesystem locally
+        if not os.path.exists(CLIENT_CONFIG_DIR):
+            os.makedirs(CLIENT_CONFIG_DIR)
+        return [f.replace('.json', '') for f in os.listdir(CLIENT_CONFIG_DIR) if f.endswith('.json')]
 
 @st.cache_data(ttl=300, show_spinner=False)  # Cache for 5 minutes
 def load_client_config(client_name):
-    """Loads the configuration for a given client."""
-    filepath = os.path.join(CLIENT_CONFIG_DIR, f"{client_name}.json")
-    if os.path.exists(filepath):
-        try:
-            with open(filepath, 'r') as f:
-                return json.load(f)
-        except json.JSONDecodeError:
-            st.error(f"Error reading configuration file for {client_name}. It might be corrupted.")
-            return None
-    return None # Or raise error
+    """Loads the configuration for a given client from localStorage or filesystem."""
+    if is_cloud_environment():
+        # Use localStorage on cloud
+        stored_config = get_localStorage_value(f'amazon_dashboard_client_{client_name}')
+        if stored_config:
+            try:
+                return json.loads(stored_config)
+            except json.JSONDecodeError:
+                st.error(f"Error reading configuration for {client_name}. It might be corrupted.")
+                return None
+        return None
+    else:
+        # Use filesystem locally
+        filepath = os.path.join(CLIENT_CONFIG_DIR, f"{client_name}.json")
+        if os.path.exists(filepath):
+            try:
+                with open(filepath, 'r') as f:
+                    return json.load(f)
+            except json.JSONDecodeError:
+                st.error(f"Error reading configuration file for {client_name}. It might be corrupted.")
+                return None
+        return None
 
 def get_campaigns_from_bulk_file(bulk_data):
     """Extracts unique campaign names and types from the bulk file data."""
@@ -1022,19 +1144,14 @@ def get_campaigns_from_bulk_file(bulk_data):
     return campaign_data
 
 def save_client_config(client_name, config_data):
-    """Saves the configuration for a given client.
+    """Saves the configuration for a given client to localStorage or filesystem.
 
-    Only persists the file and toggles ``st.session_state.settings_updated`` when the
-    incoming ``config_data`` differs from what is already stored on disk. This avoids
+    Only persists and toggles ``st.session_state.settings_updated`` when the
+    incoming ``config_data`` differs from what is already stored. This avoids
     unnecessary cache invalidation and re-processing on the Advertising Audit page
     when the user opens *Client Settings* and clicks *Save* without making any real
     changes.
     """
-    if not os.path.exists(CLIENT_CONFIG_DIR):
-        os.makedirs(CLIENT_CONFIG_DIR)
-
-    filepath = os.path.join(CLIENT_CONFIG_DIR, f"{client_name}.json")
-
     # Utility to canonicalise config for a *stable*, order-insensitive comparison
     def _normalise(obj):
         """Recursively sort dict keys and list items so ordering differences
@@ -1047,29 +1164,66 @@ def save_client_config(client_name, config_data):
             return sorted((_normalise(i) for i in obj), key=lambda x: json.dumps(x, sort_keys=True))
         return obj
 
-    # Load the previously-saved config (if available) to compare.
-    previous_data = None
-    if os.path.exists(filepath):
-        try:
-            with open(filepath, "r") as f:
-                previous_data = json.load(f)
-        except Exception:
-            # Corrupted or unreadable file – treat as changed so we overwrite it.
-            previous_data = None
+    if is_cloud_environment():
+        # Use localStorage on cloud
+        # Load previous data to compare
+        previous_data = None
+        stored_config = get_localStorage_value(f'amazon_dashboard_client_{client_name}')
+        if stored_config:
+            try:
+                previous_data = json.loads(stored_config)
+            except:
+                previous_data = None
+        
+        # Compare normalized versions
+        if previous_data is not None and _normalise(previous_data) == _normalise(config_data):
+            st.session_state.settings_updated = False
+            return
+        
+        # Save to localStorage
+        set_localStorage_value(f'amazon_dashboard_client_{client_name}', json.dumps(config_data))
+        
+        # Update client list
+        if 'client_list' not in st.session_state:
+            st.session_state.client_list = []
+        if client_name not in st.session_state.client_list:
+            st.session_state.client_list.append(client_name)
+            set_localStorage_value('amazon_dashboard_client_list', json.dumps(st.session_state.client_list))
+        
+        # Clear cache
+        get_existing_clients.clear()
+        load_client_config.clear()
+        
+        st.session_state.settings_updated = True
+    else:
+        # Use filesystem locally
+        if not os.path.exists(CLIENT_CONFIG_DIR):
+            os.makedirs(CLIENT_CONFIG_DIR)
 
-    # Compare *normalised* versions to ignore inconsequential ordering changes.
-    if previous_data is not None and _normalise(previous_data) == _normalise(config_data):
-        # Ensure the page isn't falsely refreshed by clearing any stale change flag.
-        st.session_state.settings_updated = False
-        return  # No meaningful change; skip write & flag.
+        filepath = os.path.join(CLIENT_CONFIG_DIR, f"{client_name}.json")
 
+        # Load the previously-saved config (if available) to compare.
+        previous_data = None
+        if os.path.exists(filepath):
+            try:
+                with open(filepath, "r") as f:
+                    previous_data = json.load(f)
+            except Exception:
+                # Corrupted or unreadable file – treat as changed so we overwrite it.
+                previous_data = None
 
-    # Persist the new configuration to disk.
-    with open(filepath, "w") as f:
-        json.dump(config_data, f, indent=4)
+        # Compare *normalised* versions to ignore inconsequential ordering changes.
+        if previous_data is not None and _normalise(previous_data) == _normalise(config_data):
+            # Ensure the page isn't falsely refreshed by clearing any stale change flag.
+            st.session_state.settings_updated = False
+            return  # No meaningful change; skip write & flag.
 
-    # Flag downstream pages to refresh because something actually changed.
-    st.session_state.settings_updated = True
+        # Persist the new configuration to disk.
+        with open(filepath, "w") as f:
+            json.dump(config_data, f, indent=4)
+
+        # Flag downstream pages to refresh because something actually changed.
+        st.session_state.settings_updated = True
 
 # --- Session Management Functions ---
 
@@ -1085,43 +1239,52 @@ def ensure_session_directory(client_name):
 
 @st.cache_data(ttl=300, show_spinner=False)  # Cache for 5 minutes
 def get_saved_sessions(client_name):
-    """Returns a list of saved session files for a given client."""
-    client_session_dir = os.path.join(CLIENT_SESSIONS_DIR, client_name)
-    if not os.path.exists(client_session_dir):
-        return []
-    
-    sessions = []
-    for file in os.listdir(client_session_dir):
-        if file.endswith('.json'):
-            filepath = os.path.join(client_session_dir, file)
+    """Returns a list of saved session files for a given client from localStorage or filesystem."""
+    if is_cloud_environment():
+        # Use localStorage on cloud
+        sessions_key = f'amazon_dashboard_sessions_{client_name}'
+        stored_sessions = get_localStorage_value(sessions_key)
+        if stored_sessions:
             try:
-                with open(filepath, 'r') as f:
-                    session_data = json.load(f)
-                    sessions.append({
-                        'filename': file,
-                        'filepath': filepath,
-                        'display_name': session_data.get('session_name', file.replace('.json', '')),
-                        'timestamp': session_data.get('timestamp', 'Unknown'),
-                        'created_date': session_data.get('created_date', 'Unknown'),
-                        'description': session_data.get('description', 'No description'),
-                        'data_types': session_data.get('data_types', [])
-                    })
-            except (json.JSONDecodeError, KeyError) as e:
-                st.session_state.debug_messages.append(f"Error reading session file {file}: {str(e)}")
-                continue
-    
-    # Sort by timestamp (newest first)
-    sessions.sort(key=lambda x: x['timestamp'], reverse=True)
-    return sessions
+                return json.loads(stored_sessions)
+            except:
+                return []
+        return []
+    else:
+        # Use filesystem locally
+        client_session_dir = os.path.join(CLIENT_SESSIONS_DIR, client_name)
+        if not os.path.exists(client_session_dir):
+            return []
+        
+        sessions = []
+        for file in os.listdir(client_session_dir):
+            if file.endswith('.json'):
+                filepath = os.path.join(client_session_dir, file)
+                try:
+                    with open(filepath, 'r') as f:
+                        session_data = json.load(f)
+                        sessions.append({
+                            'filename': file,
+                            'filepath': filepath,
+                            'display_name': session_data.get('session_name', file.replace('.json', '')),
+                            'timestamp': session_data.get('timestamp', 'Unknown'),
+                            'created_date': session_data.get('created_date', 'Unknown'),
+                            'description': session_data.get('description', 'No description'),
+                            'data_types': session_data.get('data_types', [])
+                        })
+                except (json.JSONDecodeError, KeyError) as e:
+                    st.session_state.debug_messages.append(f"Error reading session file {file}: {str(e)}")
+                    continue
+        
+        # Sort by timestamp (newest first)
+        sessions.sort(key=lambda x: x['timestamp'], reverse=True)
+        return sessions
 
 def save_audit_session(client_name, session_name=None, description=""):
-    """Saves the current audit session data for a client."""
+    """Saves the current audit session data for a client to localStorage or filesystem."""
     if not client_name:
         st.error("No client selected for saving session.")
         return False
-    
-    # Ensure session directory exists
-    client_session_dir = ensure_session_directory(client_name)
     
     # Generate session name if not provided
     if not session_name:
@@ -1163,14 +1326,48 @@ def save_audit_session(client_name, session_name=None, description=""):
     # Create filename from session name (sanitized)
     safe_session_name = re.sub(r'[^\w\-_\.]', '_', session_name)
     filename = f"{safe_session_name}.json"
-    filepath = os.path.join(client_session_dir, filename)
     
     try:
-        with open(filepath, 'w') as f:
-            json.dump(session_data, f, indent=2)
-        
-        # Clear the cache to refresh the session list
-        get_saved_sessions.clear()
+        if is_cloud_environment():
+            # Use localStorage on cloud
+            # Get existing sessions
+            sessions_key = f'amazon_dashboard_sessions_{client_name}'
+            stored_sessions = get_localStorage_value(sessions_key)
+            sessions_list = json.loads(stored_sessions) if stored_sessions else []
+            
+            # Add new session metadata
+            session_metadata = {
+                'filename': filename,
+                'display_name': session_data.get('session_name', filename.replace('.json', '')),
+                'timestamp': session_data.get('timestamp', 'Unknown'),
+                'created_date': session_data.get('created_date', 'Unknown'),
+                'description': session_data.get('description', 'No description'),
+                'data_types': session_data.get('data_types', [])
+            }
+            
+            # Remove old session with same filename if exists
+            sessions_list = [s for s in sessions_list if s.get('filename') != filename]
+            sessions_list.append(session_metadata)
+            
+            # Sort by timestamp (newest first)
+            sessions_list.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+            
+            # Save session data and metadata
+            set_localStorage_value(f'amazon_dashboard_session_data_{client_name}_{filename}', json.dumps(session_data))
+            set_localStorage_value(sessions_key, json.dumps(sessions_list))
+            
+            # Clear cache
+            get_saved_sessions.clear()
+        else:
+            # Use filesystem locally
+            client_session_dir = ensure_session_directory(client_name)
+            filepath = os.path.join(client_session_dir, filename)
+            
+            with open(filepath, 'w') as f:
+                json.dump(session_data, f, indent=2)
+            
+            # Clear the cache to refresh the session list
+            get_saved_sessions.clear()
         
         return True
         
@@ -1179,20 +1376,30 @@ def save_audit_session(client_name, session_name=None, description=""):
         return False
 
 def load_audit_session(client_name, session_filename):
-    """Loads a saved audit session for a client."""
+    """Loads a saved audit session for a client from localStorage or filesystem."""
     if not client_name or not session_filename:
         st.error("Invalid client name or session filename.")
         return False
     
-    filepath = os.path.join(CLIENT_SESSIONS_DIR, client_name, session_filename)
-    
-    if not os.path.exists(filepath):
-        st.error("Session file not found.")
-        return False
-    
     try:
-        with open(filepath, 'r') as f:
-            session_data = json.load(f)
+        if is_cloud_environment():
+            # Use localStorage on cloud
+            session_key = f'amazon_dashboard_session_data_{client_name}_{session_filename}'
+            stored_data = get_localStorage_value(session_key)
+            if not stored_data:
+                st.error("Session file not found.")
+                return False
+            session_data = json.loads(stored_data)
+        else:
+            # Use filesystem locally
+            filepath = os.path.join(CLIENT_SESSIONS_DIR, client_name, session_filename)
+            
+            if not os.path.exists(filepath):
+                st.error("Session file not found.")
+                return False
+            
+            with open(filepath, 'r') as f:
+                session_data = json.load(f)
         
         # Clear existing session data
         st.session_state.bulk_data = None
@@ -1226,20 +1433,38 @@ def load_audit_session(client_name, session_filename):
         return False
 
 def delete_audit_session(client_name, session_filename):
-    """Deletes a saved audit session for a client."""
+    """Deletes a saved audit session for a client from localStorage or filesystem."""
     if not client_name or not session_filename:
         return False
     
-    filepath = os.path.join(CLIENT_SESSIONS_DIR, client_name, session_filename)
-    
-    if not os.path.exists(filepath):
-        return False
-    
     try:
-        os.remove(filepath)
-        # Clear the cache to refresh the session list
-        get_saved_sessions.clear()
-        return True
+        if is_cloud_environment():
+            # Use localStorage on cloud
+            # Remove session data
+            remove_localStorage_value(f'amazon_dashboard_session_data_{client_name}_{session_filename}')
+            
+            # Update sessions list
+            sessions_key = f'amazon_dashboard_sessions_{client_name}'
+            stored_sessions = get_localStorage_value(sessions_key)
+            if stored_sessions:
+                sessions_list = json.loads(stored_sessions)
+                sessions_list = [s for s in sessions_list if s.get('filename') != session_filename]
+                set_localStorage_value(sessions_key, json.dumps(sessions_list))
+            
+            # Clear cache
+            get_saved_sessions.clear()
+            return True
+        else:
+            # Use filesystem locally
+            filepath = os.path.join(CLIENT_SESSIONS_DIR, client_name, session_filename)
+            
+            if not os.path.exists(filepath):
+                return False
+            
+            os.remove(filepath)
+            # Clear the cache to refresh the session list
+            get_saved_sessions.clear()
+            return True
     except Exception as e:
         return False
 
@@ -7124,7 +7349,7 @@ if st.session_state.client_config:
     </h2>""", unsafe_allow_html=True)
         
         # Create tabs for different settings
-        settings_tab1, settings_tab2, settings_tab3 = st.tabs(["Branded Terms", "Branded ASINs", "Campaign Tagging"])
+        settings_tab1, settings_tab2, settings_tab3, settings_tab4 = st.tabs(["Branded Terms", "Branded ASINs", "Campaign Tagging", "Data Backup"])
         
         with settings_tab1:
             st.markdown("""
@@ -8783,6 +9008,194 @@ if st.session_state.client_config:
                 </div>""", unsafe_allow_html=True)
         
         # ACoS Goals tab removed
+        
+        with settings_tab4:
+            st.markdown("""
+    <h4 style='font-family:'Inter','Roboto','Segoe UI',Arial,sans-serif; font-size:0.98rem; font-weight:600; color:#6c757d; margin-top:1.4rem; margin-bottom:0.7rem;'>
+        Data Backup & Transfer
+    </h4>""", unsafe_allow_html=True)
+            
+            if is_cloud_environment():
+                st.info("🌐 **Cloud Mode**: Your data is stored in your browser's localStorage. Use the export/import functions below to backup or transfer your data between browsers.")
+            else:
+                st.info("💻 **Local Mode**: Your data is stored on your computer's filesystem. You can still export/import for backup purposes.")
+            
+            st.markdown("---")
+            
+            # Export section
+            st.subheader("📤 Export All Data")
+            st.markdown("Download all your client configurations and saved sessions as a JSON file for backup or transfer to another browser.")
+            
+            if st.button("Export All Data", type="primary", use_container_width=True):
+                try:
+                    export_data = {
+                        'version': '1.0',
+                        'export_date': datetime.now().isoformat(),
+                        'clients': {},
+                        'sessions': {}
+                    }
+                    
+                    # Export all client configs
+                    clients = get_existing_clients()
+                    for client_name in clients:
+                        client_config = load_client_config(client_name)
+                        if client_config:
+                            export_data['clients'][client_name] = client_config
+                            
+                            # Export sessions for this client
+                            sessions = get_saved_sessions(client_name)
+                            export_data['sessions'][client_name] = []
+                            
+                            for session in sessions:
+                                if is_cloud_environment():
+                                    # Get session data from localStorage
+                                    session_key = f'amazon_dashboard_session_data_{client_name}_{session["filename"]}'
+                                    session_data = get_localStorage_value(session_key)
+                                    if session_data:
+                                        export_data['sessions'][client_name].append({
+                                            'filename': session['filename'],
+                                            'data': json.loads(session_data)
+                                        })
+                                else:
+                                    # Get session data from filesystem
+                                    filepath = os.path.join(CLIENT_SESSIONS_DIR, client_name, session['filename'])
+                                    if os.path.exists(filepath):
+                                        with open(filepath, 'r') as f:
+                                            export_data['sessions'][client_name].append({
+                                                'filename': session['filename'],
+                                                'data': json.load(f)
+                                            })
+                    
+                    # Create download button
+                    export_json = json.dumps(export_data, indent=2)
+                    st.download_button(
+                        label="💾 Download Backup File",
+                        data=export_json,
+                        file_name=f"amazon_dashboard_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                        mime="application/json",
+                        use_container_width=True
+                    )
+                    st.success("✅ Export data prepared! Click the download button above.")
+                    
+                except Exception as e:
+                    st.error(f"❌ Error exporting data: {str(e)}")
+            
+            st.markdown("---")
+            
+            # Import section
+            st.subheader("📥 Import Data")
+            st.markdown("Upload a previously exported backup file to restore your data.")
+            
+            uploaded_backup = st.file_uploader("Choose backup file", type=['json'], key="backup_import")
+            
+            if uploaded_backup:
+                try:
+                    import_data = json.load(uploaded_backup)
+                    
+                    # Validate backup file
+                    if 'version' not in import_data or 'clients' not in import_data:
+                        st.error("❌ Invalid backup file format.")
+                    else:
+                        st.success(f"✅ Backup file loaded (exported on {import_data.get('export_date', 'unknown date')})")
+                        
+                        # Show what will be imported
+                        st.markdown("**Contents:**")
+                        st.write(f"- {len(import_data['clients'])} client(s)")
+                        total_sessions = sum(len(sessions) for sessions in import_data.get('sessions', {}).values())
+                        st.write(f"- {total_sessions} saved session(s)")
+                        
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            import_mode = st.radio(
+                                "Import mode:",
+                                ["Merge (keep existing data)", "Replace (overwrite all data)"],
+                                help="Merge will add to existing data. Replace will delete all current data first."
+                            )
+                        
+                        if st.button("🔄 Import Data", type="primary", use_container_width=True):
+                            try:
+                                # Replace mode: clear existing data
+                                if "Replace" in import_mode:
+                                    if is_cloud_environment():
+                                        # Clear localStorage
+                                        for client_name in get_existing_clients():
+                                            remove_localStorage_value(f'amazon_dashboard_client_{client_name}')
+                                            # Clear sessions
+                                            sessions = get_saved_sessions(client_name)
+                                            for session in sessions:
+                                                remove_localStorage_value(f'amazon_dashboard_session_data_{client_name}_{session["filename"]}')
+                                            remove_localStorage_value(f'amazon_dashboard_sessions_{client_name}')
+                                        remove_localStorage_value('amazon_dashboard_client_list')
+                                    else:
+                                        # Clear filesystem
+                                        if os.path.exists(CLIENT_CONFIG_DIR):
+                                            for file in os.listdir(CLIENT_CONFIG_DIR):
+                                                if file.endswith('.json'):
+                                                    os.remove(os.path.join(CLIENT_CONFIG_DIR, file))
+                                        if os.path.exists(CLIENT_SESSIONS_DIR):
+                                            import shutil
+                                            shutil.rmtree(CLIENT_SESSIONS_DIR)
+                                
+                                # Import clients
+                                for client_name, client_config in import_data['clients'].items():
+                                    save_client_config(client_name, client_config)
+                                
+                                # Import sessions
+                                for client_name, sessions_list in import_data.get('sessions', {}).items():
+                                    for session_item in sessions_list:
+                                        filename = session_item['filename']
+                                        session_data = session_item['data']
+                                        
+                                        if is_cloud_environment():
+                                            # Save to localStorage
+                                            session_key = f'amazon_dashboard_session_data_{client_name}_{filename}'
+                                            set_localStorage_value(session_key, json.dumps(session_data))
+                                            
+                                            # Update sessions list
+                                            sessions_key = f'amazon_dashboard_sessions_{client_name}'
+                                            stored_sessions = get_localStorage_value(sessions_key)
+                                            sessions_list_current = json.loads(stored_sessions) if stored_sessions else []
+                                            
+                                            session_metadata = {
+                                                'filename': filename,
+                                                'display_name': session_data.get('session_name', filename.replace('.json', '')),
+                                                'timestamp': session_data.get('timestamp', 'Unknown'),
+                                                'created_date': session_data.get('created_date', 'Unknown'),
+                                                'description': session_data.get('description', 'No description'),
+                                                'data_types': session_data.get('data_types', [])
+                                            }
+                                            
+                                            # Remove old session with same filename if exists
+                                            sessions_list_current = [s for s in sessions_list_current if s.get('filename') != filename]
+                                            sessions_list_current.append(session_metadata)
+                                            sessions_list_current.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+                                            
+                                            set_localStorage_value(sessions_key, json.dumps(sessions_list_current))
+                                        else:
+                                            # Save to filesystem
+                                            client_session_dir = ensure_session_directory(client_name)
+                                            filepath = os.path.join(client_session_dir, filename)
+                                            with open(filepath, 'w') as f:
+                                                json.dump(session_data, f, indent=2)
+                                
+                                # Clear caches
+                                get_existing_clients.clear()
+                                load_client_config.clear()
+                                get_saved_sessions.clear()
+                                
+                                st.success("✅ Data imported successfully! Please refresh the page.")
+                                st.balloons()
+                                
+                            except Exception as e:
+                                st.error(f"❌ Error importing data: {str(e)}")
+                                
+                except json.JSONDecodeError:
+                    st.error("❌ Invalid JSON file. Please upload a valid backup file.")
+                except Exception as e:
+                    st.error(f"❌ Error reading backup file: {str(e)}")
+            
+            st.markdown("---")
+            st.caption("💡 **Tip**: Export your data regularly to prevent data loss, especially when using cloud mode where data is stored in your browser.")
 
         # Auto-save is now implemented for each individual setting
         st.divider() # Separator
