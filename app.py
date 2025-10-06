@@ -5903,11 +5903,8 @@ with st.sidebar:
     # Radio button for action choice
     st.markdown("### Action")
     
-    # Add Import option if in cloud environment or if no clients exist
-    if is_cloud_environment() or not existing_clients:
-        choice = st.radio("Client Action", ["Load Existing Client", "Create New Client", "Import Client Data"], label_visibility="collapsed")
-    else:
-        choice = st.radio("Client Action", ["Load Existing Client", "Create New Client"], label_visibility="collapsed")
+    # Always show Import Client Data option
+    choice = st.radio("Client Action", ["Load Existing Client", "Create New Client", "Import Client Data"], label_visibility="collapsed")
 
     if choice == "Load Existing Client":
         if existing_clients:
