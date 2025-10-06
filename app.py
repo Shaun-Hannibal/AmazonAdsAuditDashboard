@@ -6120,9 +6120,25 @@ with st.sidebar:
                 else:
                     st.success(f"✅ Backup file loaded (exported on {import_data.get('export_date', 'unknown date')})")
                     
+                    # Detect duplicates
+                    duplicate_clients = []
+                    new_clients = []
+                    
+                    for client_name in import_data['clients'].keys():
+                        if client_name in existing_clients:
+                            duplicate_clients.append(client_name)
+                        else:
+                            new_clients.append(client_name)
+                    
                     # Show what will be imported
                     st.markdown("**Contents:**")
-                    st.write(f"- {len(import_data['clients'])} client(s): {', '.join(import_data['clients'].keys())}")
+                    st.write(f"- **Total clients in backup:** {len(import_data['clients'])}")
+                    
+                    if new_clients:
+                        st.write(f"- ✅ **New clients** ({len(new_clients)}): {', '.join(sorted(new_clients))}")
+                    
+                    if duplicate_clients:
+                        st.write(f"- ⚠️ **Duplicate clients** ({len(duplicate_clients)}): {', '.join(sorted(duplicate_clients))}")
                     
                     import_mode = st.radio(
                         "Import mode:",
@@ -6130,8 +6146,35 @@ with st.sidebar:
                         help="Merge will add to existing clients. Replace will delete all current clients first."
                     )
                     
+                    # Handle duplicate resolution in Merge mode
+                    duplicate_actions = {}
+                    if "Merge" in import_mode and duplicate_clients:
+                        st.markdown("---")
+                        st.markdown("### 🔄 Duplicate Client Resolution")
+                        st.info("The following clients already exist. Choose what to do with each one:")
+                        
+                        # Store import data in session state for persistence
+                        if 'import_backup_data' not in st.session_state:
+                            st.session_state.import_backup_data = import_data
+                        
+                        for client_name in sorted(duplicate_clients):
+                            with st.expander(f"📋 {client_name}", expanded=False):
+                                action = st.radio(
+                                    f"Action for '{client_name}':",
+                                    ["Skip (keep existing)", "Overwrite (replace with backup)"],
+                                    key=f"duplicate_action_{client_name}",
+                                    help=f"Choose whether to keep your current '{client_name}' or replace it with the version from the backup file."
+                                )
+                                duplicate_actions[client_name] = action
+                        
+                        st.markdown("---")
+                    
                     if st.button("🔄 Import Clients", type="primary", use_container_width=True):
                         try:
+                            # Use stored import data if available
+                            if 'import_backup_data' in st.session_state:
+                                import_data = st.session_state.import_backup_data
+                            
                             # Replace mode: clear existing clients
                             if "Replace" in import_mode:
                                 if is_cloud_environment():
@@ -6148,20 +6191,56 @@ with st.sidebar:
                             
                             # Import clients
                             imported_count = 0
+                            skipped_count = 0
+                            overwritten_count = 0
+                            
                             for client_name, client_config in import_data['clients'].items():
-                                save_client_config(client_name, client_config)
-                                imported_count += 1
+                                # In Merge mode, check duplicate actions
+                                if "Merge" in import_mode and client_name in duplicate_clients:
+                                    action = duplicate_actions.get(client_name, "Skip (keep existing)")
+                                    
+                                    if "Skip" in action:
+                                        skipped_count += 1
+                                        continue
+                                    else:
+                                        # Overwrite
+                                        save_client_config(client_name, client_config)
+                                        overwritten_count += 1
+                                        imported_count += 1
+                                else:
+                                    # New client or Replace mode
+                                    save_client_config(client_name, client_config)
+                                    imported_count += 1
                             
                             # Clear caches
                             get_existing_clients.clear()
                             load_client_config.clear()
                             
-                            st.success(f"✅ Successfully imported {imported_count} client(s)!")
+                            # Clear import data from session state
+                            if 'import_backup_data' in st.session_state:
+                                del st.session_state.import_backup_data
+                            
+                            # Show detailed success message
+                            if "Replace" in import_mode:
+                                st.success(f"✅ Successfully imported {imported_count} client(s)!")
+                            else:
+                                result_parts = []
+                                if imported_count - overwritten_count > 0:
+                                    result_parts.append(f"{imported_count - overwritten_count} new")
+                                if overwritten_count > 0:
+                                    result_parts.append(f"{overwritten_count} overwritten")
+                                if skipped_count > 0:
+                                    result_parts.append(f"{skipped_count} skipped")
+                                
+                                st.success(f"✅ Import complete: {', '.join(result_parts)} client(s)!")
+                            
                             st.balloons()
                             st.info("Please select 'Load Existing Client' to access your imported clients.")
                             
                         except Exception as e:
                             st.error(f"❌ Error importing data: {str(e)}")
+                            import traceback
+                            st.error(traceback.format_exc())
                             
             except json.JSONDecodeError:
                 st.error("❌ Invalid JSON file. Please upload a valid backup file.")
