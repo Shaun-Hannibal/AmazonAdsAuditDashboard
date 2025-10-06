@@ -5556,6 +5556,47 @@ div[data-baseweb="select"]::after,
 /* Ensure select internals stay above any stray badges */
 div[data-baseweb="select"] > div { position: relative !important; z-index: 0 !important; }
 div[data-baseweb="select"] [role="combobox"] { position: relative !important; z-index: 1 !important; }
+
+/* Hide any stray "key" text that appears in expander headers or widget containers */
+/* This targets the specific issue where Streamlit Cloud renders internal keys as visible text */
+
+/* Target the expander header structure - hide any leading text before the icon */
+.streamlit-expanderHeader > div:first-child {
+    display: flex !important;
+    align-items: center !important;
+}
+
+/* Hide text nodes that appear before the expander icon/label */
+.streamlit-expanderHeader > div:first-child > *:first-child:not(svg):not([data-testid]) {
+    display: none !important;
+}
+
+/* More aggressive: target any small text at the start of expander headers */
+.streamlit-expanderHeader::before {
+    content: '' !important;
+    display: none !important;
+}
+
+/* Hide leading spans in expander headers that might contain keys */
+.streamlit-expanderHeader span[style*="font-size: 0"] {
+    display: none !important;
+}
+
+/* For selectboxes and other widgets, hide any leading text that looks like a key */
+div[data-baseweb="select"] > div:first-child > span:first-child {
+    display: none !important;
+}
+
+/* Nuclear option: hide all text content in expander headers, then re-show only the label */
+.streamlit-expanderHeader {
+    font-size: 0 !important;
+}
+.streamlit-expanderHeader svg,
+.streamlit-expanderHeader [data-testid="stMarkdownContainer"],
+.streamlit-expanderHeader p,
+.streamlit-expanderHeader div[data-testid] {
+    font-size: 1rem !important;
+}
 </style>
 """
 
@@ -32014,7 +32055,7 @@ if 'sales_report_data' in st.session_state and st.session_state.sales_report_dat
     track_session_activity("Sales Data", "Sales report processed successfully")
 
 # Display the application information in an expander at the very bottom
-with st.expander("Application Information", expanded=False):
+with st.expander("📊 Application Information", expanded=False):
     st.markdown("### 📊 Dashboard Status & Application Guide")
     st.markdown("This section provides an overview of your current session, data status, and helpful information for understanding how the dashboard works.")
     
