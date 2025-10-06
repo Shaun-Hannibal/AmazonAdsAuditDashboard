@@ -82,15 +82,34 @@ def create_spec_file():
 
 block_cipher = None
 
+from PyInstaller.utils.hooks import copy_metadata, collect_data_files
+import os
+
 a = Analysis(
-    ['app.py'],
+    ['run_dashboard.py'],
     pathex=[],
     binaries=[],
-    datas=[
-        ('assets', 'assets'),
-    ],
+    datas=(
+        copy_metadata('streamlit') +
+        copy_metadata('typing_extensions') +
+        copy_metadata('typing-extensions') +
+        copy_metadata('narwhals') +
+        collect_data_files('streamlit') + [
+            ('assets', 'assets'),
+            ('.streamlit', '.streamlit'),
+            ('app.py', '.'),
+        ]
+    ),
     hiddenimports=[
         'streamlit',
+        'streamlit.web.cli',
+        'importlib_metadata',
+        'typing_extensions',
+        'narwhals',
+        'streamlit.runtime',
+        'streamlit.runtime.scriptrunner',
+        'streamlit.runtime.scriptrunner.script_runner',
+        'streamlit.runtime.scriptrunner.magic_funcs',
         'plotly',
         'plotly.express',
         'plotly.graph_objects',
@@ -100,9 +119,15 @@ a = Analysis(
         'PIL',
         'PIL.Image',
         'openpyxl',
+        'openpyxl.utils',
+        'openpyxl.utils.dataframe',
+        'openpyxl.styles',
+        'openpyxl.formatting',
+        'openpyxl.formatting.rule',
         'database',
         'insights',
         'asin_helpers',
+        'bid_optimizer',
     ],
     hookspath=[],
     hooksconfig={},

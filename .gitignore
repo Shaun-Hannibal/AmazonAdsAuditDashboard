@@ -39,3 +39,8 @@ audit_cache.db
 
 # Mac cruft
 Icon?
+
+# Build artifacts and distribution files
+build/
+dist/
+*.spec

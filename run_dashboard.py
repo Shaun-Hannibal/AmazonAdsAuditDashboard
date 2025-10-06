@@ -8,12 +8,16 @@ import os
 import sys
 
 try:
-    # When frozen by PyInstaller, sys.frozen is set and sys.executable points to the bundled executable.
-    BASE_PATH = os.path.dirname(sys.executable if getattr(sys, "frozen", False) else __file__)
+    # When frozen by PyInstaller, resources are extracted to sys._MEIPASS.
+    if getattr(sys, "frozen", False):
+        MEIPASS = getattr(sys, "_MEIPASS", None)
+        BASE_PATH = MEIPASS if MEIPASS else os.path.dirname(sys.executable)
+    else:
+        BASE_PATH = os.path.dirname(__file__)
 except AttributeError:
     BASE_PATH = os.path.dirname(__file__)
 
-# Ensure any relative file reads/writes occur in the project directory (next to app.py)
+# Ensure any relative file reads/writes occur where bundled data lives
 os.chdir(BASE_PATH)
 
 # Ensure Streamlit runs on a predictable port and without dev server quirks
@@ -21,6 +25,10 @@ os.chdir(BASE_PATH)
 os.environ.setdefault("STREAMLIT_SERVER_HEADLESS", "false")
 # On macOS, ensure the default 'open' command is used
 os.environ.setdefault("BROWSER", "open")
+# Disable file watcher in frozen/packaged mode to prevent infinite reruns
+os.environ.setdefault("STREAMLIT_SERVER_FILE_WATCHER_TYPE", "none")
+# Disable anonymous usage stats collection
+os.environ.setdefault("STREAMLIT_BROWSER_GATHER_USAGE_STATS", "false")
 
 import streamlit.web.cli as st_cli  # pylint: disable=import-error
 
@@ -37,11 +45,11 @@ else:
     # Fallback to streamlit default search (will error but give useful message)
     APP_PATH = "app.py"
 
-# Replace argv so Streamlit runs with explicit config flags
+# Replace argv so Streamlit runs with explicit config flags using absolute path
 sys.argv = [
     "streamlit",
     "run",
-    APP_PATH,
+    os.path.abspath(APP_PATH),
     "--global.developmentMode=false",
 ]
 

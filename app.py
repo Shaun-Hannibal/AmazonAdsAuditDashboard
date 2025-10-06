@@ -5598,6 +5598,48 @@ div[data-baseweb="select"] > div:first-child > span:first-child {
     font-size: 1rem !important;
 }
 </style>
+
+<script>
+// Remove stray "key" text nodes from expander headers
+(function() {
+    function cleanExpanderHeaders() {
+        const headers = document.querySelectorAll('.streamlit-expanderHeader');
+        headers.forEach(header => {
+            // Iterate through child nodes and remove text nodes that start with "key"
+            const walker = document.createTreeWalker(
+                header,
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+            );
+            
+            let nodesToRemove = [];
+            let node;
+            while (node = walker.nextNode()) {
+                if (node.nodeValue && node.nodeValue.trim().startsWith('key')) {
+                    nodesToRemove.push(node);
+                }
+            }
+            
+            nodesToRemove.forEach(n => n.remove());
+        });
+    }
+    
+    // Run on load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', cleanExpanderHeaders);
+    } else {
+        cleanExpanderHeaders();
+    }
+    
+    // Re-run periodically to catch dynamically added expanders
+    setInterval(cleanExpanderHeaders, 500);
+    
+    // Also run on any DOM mutations
+    const observer = new MutationObserver(cleanExpanderHeaders);
+    observer.observe(document.body, { childList: true, subtree: true });
+})();
+</script>
 """
 
 # Initialize session state if needed
