@@ -1104,6 +1104,17 @@ def load_client_config(client_name):
         
         # Try to load from localStorage
         stored_config = get_localStorage_value(f'amazon_dashboard_client_{client_name}')
+        
+        # components.html returns None on first render, so we need to wait
+        if stored_config is None:
+            # Mark that we're waiting for localStorage to load
+            st.session_state[f'{cache_key}_loading'] = True
+            return None
+        
+        # Clear loading flag
+        if f'{cache_key}_loading' in st.session_state:
+            del st.session_state[f'{cache_key}_loading']
+        
         if stored_config:
             try:
                 config = json.loads(stored_config)
@@ -1112,6 +1123,7 @@ def load_client_config(client_name):
                 return config
             except (json.JSONDecodeError, TypeError) as e:
                 st.error(f"Error reading configuration for {client_name}. It might be corrupted.")
+                st.error(f"Debug - stored_config type: {type(stored_config)}, value: {stored_config[:100] if isinstance(stored_config, str) else stored_config}")
                 return None
         return None
     else:
