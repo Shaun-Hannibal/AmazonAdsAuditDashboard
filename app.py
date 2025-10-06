@@ -862,6 +862,11 @@ def is_cloud_environment():
 
 def get_localStorage_value(key):
     """Get a value from browser localStorage."""
+    # Check if we already have this value in session state
+    session_key = f'_ls_cache_{key}'
+    if session_key in st.session_state:
+        return st.session_state[session_key]
+    
     html_code = f"""
     <script>
         const value = localStorage.getItem('{key}');
@@ -872,9 +877,12 @@ def get_localStorage_value(key):
     </script>
     """
     
-    # Use a unique key for each localStorage key to track component state
-    component_key = f"get_ls_{key}"
-    result = components.html(html_code, height=0, key=component_key)
+    result = components.html(html_code, height=0)
+    
+    # Cache the result if it's a string (valid value)
+    if isinstance(result, str):
+        st.session_state[session_key] = result
+    
     return result
 
 def set_localStorage_value(key, value):
@@ -894,6 +902,11 @@ def set_localStorage_value(key, value):
     """
     
     components.html(html_code, height=0)
+    
+    # Clear the cache so next get will fetch fresh value
+    session_key = f'_ls_cache_{key}'
+    if session_key in st.session_state:
+        del st.session_state[session_key]
 
 def remove_localStorage_value(key):
     """Remove a value from browser localStorage."""
@@ -908,6 +921,11 @@ def remove_localStorage_value(key):
     """
     
     components.html(html_code, height=0)
+    
+    # Clear the cache
+    session_key = f'_ls_cache_{key}'
+    if session_key in st.session_state:
+        del st.session_state[session_key]
 
 def get_all_localStorage_keys():
     """Get all keys from browser localStorage that match our app prefix."""
