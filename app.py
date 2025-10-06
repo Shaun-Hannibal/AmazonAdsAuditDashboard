@@ -6030,35 +6030,77 @@ with st.sidebar:
         # Export section (always available)
         if existing_clients:
             st.subheader("📤 Export Current Data")
-            st.markdown("Download all your client configurations as a backup file.")
+            st.markdown("Select which clients to export as a backup file.")
             
-            if st.button("Export All Clients", type="secondary", use_container_width=True):
-                try:
-                    export_data = {
-                        'version': '1.0',
-                        'export_date': datetime.now().isoformat(),
-                        'clients': {}
-                    }
-                    
-                    # Export all client configs
-                    for client_name in existing_clients:
-                        client_config = load_client_config(client_name)
-                        if client_config:
-                            export_data['clients'][client_name] = client_config
-                    
-                    # Create download button
-                    export_json = json.dumps(export_data, indent=2)
-                    st.download_button(
-                        label="💾 Download Backup File",
-                        data=export_json,
-                        file_name=f"amazon_dashboard_clients_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
-                        mime="application/json",
-                        use_container_width=True
-                    )
-                    st.success("✅ Export data prepared! Click the download button above.")
-                    
-                except Exception as e:
-                    st.error(f"❌ Error exporting data: {str(e)}")
+            # Multi-select for clients
+            selected_clients_to_export = st.multiselect(
+                "Select clients to export:",
+                options=sorted(existing_clients),
+                default=sorted(existing_clients),
+                help="Choose one or more clients to include in the backup file"
+            )
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                if st.button("Select All", use_container_width=True):
+                    st.session_state.export_select_all = True
+                    st.rerun()
+            
+            with col2:
+                if st.button("Clear Selection", use_container_width=True):
+                    st.session_state.export_select_all = False
+                    st.rerun()
+            
+            # Handle select all/clear
+            if 'export_select_all' in st.session_state:
+                if st.session_state.export_select_all:
+                    selected_clients_to_export = sorted(existing_clients)
+                else:
+                    selected_clients_to_export = []
+                del st.session_state.export_select_all
+            
+            if selected_clients_to_export:
+                st.info(f"📊 {len(selected_clients_to_export)} client(s) selected for export")
+                
+                if st.button("📦 Export Selected Clients", type="primary", use_container_width=True):
+                    try:
+                        export_data = {
+                            'version': '1.0',
+                            'export_date': datetime.now().isoformat(),
+                            'clients': {}
+                        }
+                        
+                        # Export selected client configs
+                        for client_name in selected_clients_to_export:
+                            client_config = load_client_config(client_name)
+                            if client_config:
+                                export_data['clients'][client_name] = client_config
+                        
+                        # Create download button
+                        export_json = json.dumps(export_data, indent=2)
+                        
+                        # Create filename based on selection
+                        if len(selected_clients_to_export) == len(existing_clients):
+                            filename_prefix = "all_clients"
+                        elif len(selected_clients_to_export) == 1:
+                            filename_prefix = selected_clients_to_export[0].replace(' ', '_')
+                        else:
+                            filename_prefix = f"{len(selected_clients_to_export)}_clients"
+                        
+                        st.download_button(
+                            label=f"💾 Download Backup ({len(selected_clients_to_export)} client{'s' if len(selected_clients_to_export) > 1 else ''})",
+                            data=export_json,
+                            file_name=f"amazon_dashboard_{filename_prefix}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                            mime="application/json",
+                            use_container_width=True
+                        )
+                        st.success(f"✅ Export prepared! Click the download button above to save {len(selected_clients_to_export)} client(s).")
+                        
+                    except Exception as e:
+                        st.error(f"❌ Error exporting data: {str(e)}")
+            else:
+                st.warning("⚠️ Please select at least one client to export.")
             
             st.markdown("---")
         
