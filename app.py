@@ -5540,6 +5540,22 @@ margin-bottom: 1rem !important;
     border-radius: 8px !important;
     color: #FFFFFF !important;
 }
+
+/* --- Streamlit Cloud overlay fixes --- */
+/* Some cloud builds render keyboard hint badges as <kbd> elements that can overlap inputs. */
+.stApp kbd { display: none !important; }
+div[data-baseweb="select"] kbd { display: none !important; }
+.streamlit-expanderHeader kbd { display: none !important; }
+
+/* Prevent any pseudo-content overlays from appearing on selects/expanders */
+div[data-baseweb="select"]::before,
+div[data-baseweb="select"]::after,
+.streamlit-expanderHeader::before,
+.streamlit-expanderHeader::after { content: none !important; }
+
+/* Ensure select internals stay above any stray badges */
+div[data-baseweb="select"] > div { position: relative !important; z-index: 0 !important; }
+div[data-baseweb="select"] [role="combobox"] { position: relative !important; z-index: 1 !important; }
 </style>
 """
 
