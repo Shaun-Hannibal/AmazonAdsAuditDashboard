@@ -872,7 +872,9 @@ def get_localStorage_value(key):
     </script>
     """
     
-    result = components.html(html_code, height=0)
+    # Use a unique key for each localStorage key to track component state
+    component_key = f"get_ls_{key}"
+    result = components.html(html_code, height=0, key=component_key)
     return result
 
 def set_localStorage_value(key, value):
@@ -1102,16 +1104,17 @@ def load_client_config(client_name):
         if cache_key in st.session_state:
             return st.session_state[cache_key]
         
-        # Try to load from localStorage
+        # Check if we're still waiting for the component to load
         stored_config = get_localStorage_value(f'amazon_dashboard_client_{client_name}')
         
-        # components.html returns None on first render, so we need to wait
-        if stored_config is None:
-            # Mark that we're waiting for localStorage to load
+        # Handle the case where components.html returns None or DeltaGenerator on first render
+        # DeltaGenerator means the component hasn't returned a value yet
+        if stored_config is None or not isinstance(stored_config, str):
+            # Mark that we're loading and return None to trigger a rerun
             st.session_state[f'{cache_key}_loading'] = True
             return None
         
-        # Clear loading flag
+        # Clear loading flag if it was set
         if f'{cache_key}_loading' in st.session_state:
             del st.session_state[f'{cache_key}_loading']
         
@@ -1123,7 +1126,10 @@ def load_client_config(client_name):
                 return config
             except (json.JSONDecodeError, TypeError) as e:
                 st.error(f"Error reading configuration for {client_name}. It might be corrupted.")
-                st.error(f"Debug - stored_config type: {type(stored_config)}, value: {stored_config[:100] if isinstance(stored_config, str) else stored_config}")
+                if isinstance(stored_config, str):
+                    st.error(f"Debug - stored_config (first 200 chars): {stored_config[:200]}")
+                else:
+                    st.error(f"Debug - stored_config type: {type(stored_config).__name__}")
                 return None
         return None
     else:
