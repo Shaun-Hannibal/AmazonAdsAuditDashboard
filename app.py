@@ -862,9 +862,6 @@ def is_cloud_environment():
 
 def get_localStorage_value(key):
     """Get a value from browser localStorage."""
-    # Generate unique component key to avoid conflicts
-    component_key = f"ls_get_{key}_{hash(key) % 10000}"
-    
     html_code = f"""
     <script>
         const value = localStorage.getItem('{key}');
@@ -875,7 +872,7 @@ def get_localStorage_value(key):
     </script>
     """
     
-    result = components.html(html_code, height=0, key=component_key)
+    result = components.html(html_code, height=0)
     return result
 
 def set_localStorage_value(key, value):
@@ -883,9 +880,6 @@ def set_localStorage_value(key, value):
     # Escape the value for JavaScript
     import json
     json_value = json.dumps(value)
-    
-    # Generate unique component key
-    component_key = f"ls_set_{key}_{hash(key) % 10000}_{hash(str(value)) % 10000}"
     
     html_code = f"""
     <script>
@@ -897,12 +891,10 @@ def set_localStorage_value(key, value):
     </script>
     """
     
-    components.html(html_code, height=0, key=component_key)
+    components.html(html_code, height=0)
 
 def remove_localStorage_value(key):
     """Remove a value from browser localStorage."""
-    component_key = f"ls_remove_{key}_{hash(key) % 10000}"
-    
     html_code = f"""
     <script>
         localStorage.removeItem('{key}');
@@ -913,12 +905,10 @@ def remove_localStorage_value(key):
     </script>
     """
     
-    components.html(html_code, height=0, key=component_key)
+    components.html(html_code, height=0)
 
 def get_all_localStorage_keys():
     """Get all keys from browser localStorage that match our app prefix."""
-    component_key = f"ls_keys_{int(time.time() * 1000) % 10000}"
-    
     html_code = """
     <script>
         const keys = [];
@@ -935,7 +925,7 @@ def get_all_localStorage_keys():
     </script>
     """
     
-    result = components.html(html_code, height=0, key=component_key)
+    result = components.html(html_code, height=0)
     if result:
         try:
             return json.loads(result)
