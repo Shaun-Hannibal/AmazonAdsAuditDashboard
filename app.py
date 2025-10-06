@@ -1,5 +1,5 @@
 import streamlit as st
-
+import datetime
 import base64
 import os
 import sys
@@ -66,17 +66,12 @@ from openpyxl.formatting.rule import ColorScaleRule
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.utils import get_column_letter
 try:
-    import extra_streamlit_components as stx
-except Exception:
-    stx = None
-try:
     from supabase_store import (
         is_supabase_configured,
         get_current_user_id,
         sign_in,
         sign_up,
         sign_out,
-        apply_session_from_state,
         list_client_names as sb_list_client_names,
         fetch_client_config as sb_fetch_client_config,
         upsert_client_config as sb_upsert_client_config,
@@ -1137,21 +1132,6 @@ CLIENT_CONFIG_DIR = os.path.join(USER_DATA_DIR, 'clients')
 if is_cloud_environment() and is_supabase_configured():
     with st.sidebar:
         st.markdown("### Account")
-        # Browser cookie-based session restore (cloud-only)
-        cookie_manager = None
-        if stx is not None:
-            try:
-                cookie_manager = stx.CookieManager(key="sb_cookie_mgr")
-                # Trigger internal initialization
-                _ = cookie_manager.get_all()
-                at = cookie_manager.get("sb_access_token")
-                rt = cookie_manager.get("sb_refresh_token")
-                if at and rt and "_sb_session" not in st.session_state:
-                    st.session_state["_sb_session"] = {"access_token": at, "refresh_token": rt}
-                    # Ensure cached Supabase client is rehydrated with tokens
-                    apply_session_from_state()
-            except Exception:
-                cookie_manager = None
         current_uid = get_current_user_id()
         if current_uid:
             st.success("Signed in")
@@ -1162,13 +1142,6 @@ if is_cloud_environment() and is_supabase_configured():
                     get_saved_sessions.clear()
                 except Exception:
                     pass
-                # Clear cookies on sign out
-                if cookie_manager is not None:
-                    try:
-                        cookie_manager.delete("sb_access_token")
-                        cookie_manager.delete("sb_refresh_token")
-                    except Exception:
-                        pass
                 st.rerun()
         else:
             # Persist last-typed credentials across mode switches and reruns
@@ -1193,29 +1166,6 @@ if is_cloud_environment() and is_supabase_configured():
                     ok, msg = sign_in(email, password)
                     if ok:
                         st.success(msg)
-                        # Persist session to cookies for auto login across reloads
-                        if cookie_manager is not None:
-                            try:
-                                sess = st.session_state.get("_sb_session", {})
-                                if isinstance(sess, dict):
-                                    if sess.get("access_token"):
-                                        cookie_manager.set(
-                                            "sb_access_token",
-                                            sess.get("access_token"),
-                                            expires_at=datetime.now() + timedelta(days=90),
-                                            same_site="lax",
-                                            secure=True,
-                                        )
-                                    if sess.get("refresh_token"):
-                                        cookie_manager.set(
-                                            "sb_refresh_token",
-                                            sess.get("refresh_token"),
-                                            expires_at=datetime.now() + timedelta(days=90),
-                                            same_site="lax",
-                                            secure=True,
-                                        )
-                            except Exception:
-                                pass
                         try:
                             get_existing_clients.clear()
                             get_saved_sessions.clear()
@@ -1229,29 +1179,6 @@ if is_cloud_environment() and is_supabase_configured():
                     ok, msg = sign_up(email, password)
                     if ok:
                         st.success(msg)
-                        # Persist session to cookies if we already have one (some projects return session immediately)
-                        if cookie_manager is not None:
-                            try:
-                                sess = st.session_state.get("_sb_session", {})
-                                if isinstance(sess, dict):
-                                    if sess.get("access_token"):
-                                        cookie_manager.set(
-                                            "sb_access_token",
-                                            sess.get("access_token"),
-                                            expires_at=datetime.now() + timedelta(days=90),
-                                            same_site="lax",
-                                            secure=True,
-                                        )
-                                    if sess.get("refresh_token"):
-                                        cookie_manager.set(
-                                            "sb_refresh_token",
-                                            sess.get("refresh_token"),
-                                            expires_at=datetime.now() + timedelta(days=90),
-                                            same_site="lax",
-                                            secure=True,
-                                        )
-                            except Exception:
-                                pass
                         try:
                             get_existing_clients.clear()
                             get_saved_sessions.clear()
@@ -1415,7 +1342,7 @@ def get_campaigns_from_bulk_file(bulk_data):
                         campaign_data[campaign_name] = campaign_type
     return campaign_data
 
-def save_client_config(client_name, config_data) -> bool:
+def save_client_config(client_name, config_data):
     """Saves the configuration for a given client to localStorage or filesystem.
 
     Only persists and toggles ``st.session_state.settings_updated`` when the
@@ -1443,16 +1370,16 @@ def save_client_config(client_name, config_data) -> bool:
             if not uid:
                 st.error("Please sign in to save client settings.")
                 st.session_state.settings_updated = False
-                return False
+                return
             previous_data = sb_fetch_client_config(uid, client_name)
             if previous_data is not None and _normalise(previous_data) == _normalise(config_data):
                 st.session_state.settings_updated = False
-                return True
+                return
             ok = sb_upsert_client_config(uid, client_name, config_data)
             if not ok:
                 st.error("Failed to save client configuration.")
                 st.session_state.settings_updated = False
-                return False
+                return
             # Update cache
             cache_key = f'client_config_cache_{client_name}'
             st.session_state[cache_key] = config_data
@@ -1460,7 +1387,7 @@ def save_client_config(client_name, config_data) -> bool:
             get_existing_clients.clear()
             _load_client_config_from_file.clear()
             st.session_state.settings_updated = True
-            return True
+            return
         # Legacy: browser localStorage
         previous_data = None
         stored_config = get_localStorage_value(f'amazon_dashboard_client_{client_name}')
@@ -1471,7 +1398,7 @@ def save_client_config(client_name, config_data) -> bool:
                 previous_data = None
         if previous_data is not None and _normalise(previous_data) == _normalise(config_data):
             st.session_state.settings_updated = False
-            return True
+            return
         set_localStorage_value(f'amazon_dashboard_client_{client_name}', config_data)
         cache_key = f'client_config_cache_{client_name}'
         st.session_state[cache_key] = config_data
@@ -1483,7 +1410,6 @@ def save_client_config(client_name, config_data) -> bool:
         get_existing_clients.clear()
         _load_client_config_from_file.clear()
         st.session_state.settings_updated = True
-        return True
     else:
         # Use filesystem locally
         if not os.path.exists(CLIENT_CONFIG_DIR):
@@ -1505,7 +1431,7 @@ def save_client_config(client_name, config_data) -> bool:
         if previous_data is not None and _normalise(previous_data) == _normalise(config_data):
             # Ensure the page isn't falsely refreshed by clearing any stale change flag.
             st.session_state.settings_updated = False
-            return True  # No meaningful change; skip write & flag.
+            return  # No meaningful change; skip write & flag.
 
         # Persist the new configuration to disk.
         with open(filepath, "w") as f:
@@ -6379,17 +6305,14 @@ with st.sidebar:
                         "non_branded_acos": None
                     }
                 }
-                ok = save_client_config(clean_name, new_config)
-                if ok:
-                    st.session_state.selected_client_name = clean_name
-                    st.session_state.client_config = new_config
-                    st.session_state.bulk_data = None 
-                    st.session_state.sales_report_data = None
-                    st.session_state.current_page = 'file_uploads'  # Redirect to File Uploads page
-                    st.success(f"Client '{clean_name}' created and loaded.")
-                    st.rerun()
-                else:
-                    st.error("Failed to create client. Please try again or check cloud storage configuration.")
+                save_client_config(clean_name, new_config)
+                st.session_state.selected_client_name = clean_name
+                st.session_state.client_config = new_config
+                st.session_state.bulk_data = None 
+                st.session_state.sales_report_data = None
+                st.session_state.current_page = 'file_uploads'  # Redirect to File Uploads page
+                st.success(f"Client '{clean_name}' created and loaded.")
+                st.rerun()
             elif not clean_name:
                 st.error("Please enter a client name.")
             else:
@@ -6576,7 +6499,6 @@ with st.sidebar:
                             imported_count = 0
                             skipped_count = 0
                             overwritten_count = 0
-                            failed_count = 0
                             
                             for client_name, client_config in import_data['clients'].items():
                                 # In Merge mode, check duplicate actions
@@ -6588,19 +6510,13 @@ with st.sidebar:
                                         continue
                                     else:
                                         # Overwrite
-                                        ok = save_client_config(client_name, client_config)
-                                        if ok:
-                                            overwritten_count += 1
-                                            imported_count += 1
-                                        else:
-                                            failed_count += 1
+                                        save_client_config(client_name, client_config)
+                                        overwritten_count += 1
+                                        imported_count += 1
                                 else:
                                     # New client or Replace mode
-                                    ok = save_client_config(client_name, client_config)
-                                    if ok:
-                                        imported_count += 1
-                                    else:
-                                        failed_count += 1
+                                    save_client_config(client_name, client_config)
+                                    imported_count += 1
                             
                             # Clear caches
                             get_existing_clients.clear()
@@ -6613,8 +6529,6 @@ with st.sidebar:
                             # Show detailed success message
                             if "Replace" in import_mode:
                                 st.success(f"✅ Successfully imported {imported_count} client(s)!")
-                                if failed_count:
-                                    st.error(f"❌ {failed_count} client(s) failed to import. Please check your cloud configuration and policies.")
                             else:
                                 result_parts = []
                                 if imported_count - overwritten_count > 0:
@@ -6623,8 +6537,6 @@ with st.sidebar:
                                     result_parts.append(f"{overwritten_count} overwritten")
                                 if skipped_count > 0:
                                     result_parts.append(f"{skipped_count} skipped")
-                                if failed_count > 0:
-                                    result_parts.append(f"{failed_count} failed")
                                 
                                 st.success(f"✅ Import complete: {', '.join(result_parts)} client(s)!")
                             
