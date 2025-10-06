@@ -189,9 +189,16 @@ def upsert_client_config(user_id: str, client_name: str, config: Dict[str, Any])
             "config": config,
         }
         # Use upsert on unique (user_id, client_name)
-        sb.table("client_configs").upsert(payload, on_conflict=["user_id", "client_name"]).execute()
+        # Note: supabase-py expects a comma-separated string for on_conflict
+        sb.table("client_configs").upsert(payload, on_conflict="user_id,client_name").execute()
         return True
-    except Exception:
+    except Exception as e:
+        try:
+            # Surface a hint in debug messages for troubleshooting in the app
+            if "debug_messages" in st.session_state:
+                st.session_state.debug_messages.append(f"[Supabase] upsert_client_config failed: {str(e)}")
+        except Exception:
+            pass
         return False
 
 
@@ -234,9 +241,15 @@ def save_session(user_id: str, client_name: str, filename: str, metadata: Dict[s
             "session_data": session_data,
         }
         # unique (user_id, client_name, filename)
-        sb.table("client_sessions").upsert(payload, on_conflict=["user_id", "client_name", "filename"]).execute()
+        # supabase-py expects a comma-separated string for on_conflict
+        sb.table("client_sessions").upsert(payload, on_conflict="user_id,client_name,filename").execute()
         return True
-    except Exception:
+    except Exception as e:
+        try:
+            if "debug_messages" in st.session_state:
+                st.session_state.debug_messages.append(f"[Supabase] save_session failed: {str(e)}")
+        except Exception:
+            pass
         return False
 
 
