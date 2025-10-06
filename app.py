@@ -1201,8 +1201,8 @@ def save_client_config(client_name, config_data):
             st.session_state.settings_updated = False
             return
         
-        # Save to localStorage
-        set_localStorage_value(f'amazon_dashboard_client_{client_name}', json.dumps(config_data))
+        # Save to localStorage (set_localStorage_value handles JSON encoding)
+        set_localStorage_value(f'amazon_dashboard_client_{client_name}', config_data)
         
         # Update session state cache immediately
         cache_key = f'client_config_cache_{client_name}'
@@ -1213,7 +1213,7 @@ def save_client_config(client_name, config_data):
             st.session_state.client_list = []
         if client_name not in st.session_state.client_list:
             st.session_state.client_list.append(client_name)
-            set_localStorage_value('amazon_dashboard_client_list', json.dumps(st.session_state.client_list))
+            set_localStorage_value('amazon_dashboard_client_list', st.session_state.client_list)
         
         # Clear cache
         get_existing_clients.clear()
@@ -1378,8 +1378,8 @@ def save_audit_session(client_name, session_name=None, description=""):
             sessions_list.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
             
             # Save session data and metadata
-            set_localStorage_value(f'amazon_dashboard_session_data_{client_name}_{filename}', json.dumps(session_data))
-            set_localStorage_value(sessions_key, json.dumps(sessions_list))
+            set_localStorage_value(f'amazon_dashboard_session_data_{client_name}_{filename}', session_data)
+            set_localStorage_value(sessions_key, sessions_list)
             
             # Clear cache
             get_saved_sessions.clear()
@@ -1474,7 +1474,7 @@ def delete_audit_session(client_name, session_filename):
             if stored_sessions:
                 sessions_list = json.loads(stored_sessions)
                 sessions_list = [s for s in sessions_list if s.get('filename') != session_filename]
-                set_localStorage_value(sessions_key, json.dumps(sessions_list))
+                set_localStorage_value(sessions_key, sessions_list)
             
             # Clear cache
             get_saved_sessions.clear()
@@ -9414,7 +9414,7 @@ if st.session_state.client_config:
                                         if is_cloud_environment():
                                             # Save to localStorage
                                             session_key = f'amazon_dashboard_session_data_{client_name}_{filename}'
-                                            set_localStorage_value(session_key, json.dumps(session_data))
+                                            set_localStorage_value(session_key, session_data)
                                             
                                             # Update sessions list
                                             sessions_key = f'amazon_dashboard_sessions_{client_name}'
@@ -9435,7 +9435,7 @@ if st.session_state.client_config:
                                             sessions_list_current.append(session_metadata)
                                             sessions_list_current.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
                                             
-                                            set_localStorage_value(sessions_key, json.dumps(sessions_list_current))
+                                            set_localStorage_value(sessions_key, sessions_list_current)
                                         else:
                                             # Save to filesystem
                                             client_session_dir = ensure_session_directory(client_name)
