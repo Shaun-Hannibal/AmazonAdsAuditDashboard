@@ -65,6 +65,58 @@ from openpyxl.styles import PatternFill, Font, Alignment, NamedStyle
 from openpyxl.formatting.rule import ColorScaleRule
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.utils import get_column_letter
+try:
+    from supabase_store import (
+        is_supabase_configured,
+        get_current_user_id,
+        sign_in,
+        sign_up,
+        sign_out,
+        list_client_names as sb_list_client_names,
+        fetch_client_config as sb_fetch_client_config,
+        upsert_client_config as sb_upsert_client_config,
+        list_sessions as sb_list_sessions,
+        save_session as sb_save_session,
+        fetch_session as sb_fetch_session,
+        delete_session as sb_delete_session,
+    )
+except Exception:
+    # Supabase not available locally; provide no-op placeholders so local runs are unaffected
+    def is_supabase_configured() -> bool:
+        return False
+
+    def get_current_user_id():
+        return None
+
+    def sign_in(email: str, password: str):
+        return False, "Supabase not available"
+
+    def sign_up(email: str, password: str):
+        return False, "Supabase not available"
+
+    def sign_out():
+        return None
+
+    def sb_list_client_names(uid):
+        return []
+
+    def sb_fetch_client_config(uid, client_name):
+        return None
+
+    def sb_upsert_client_config(uid, client_name, config):
+        return False
+
+    def sb_list_sessions(uid, client_name):
+        return []
+
+    def sb_save_session(uid, client_name, filename, metadata, session_data):
+        return False
+
+    def sb_fetch_session(uid, client_name, filename):
+        return None
+
+    def sb_delete_session(uid, client_name, filename):
+        return False
 
 # --- Enhanced Campaign Filtering Function ---
 def phrase_match(value, filter_value):
@@ -851,14 +903,26 @@ def calculate_acos_distribution_with_ranges(df, ranges, labels):
 
 # --- Browser LocalStorage Integration ---
 def is_cloud_environment():
-    """Detect if running on Streamlit Cloud or similar cloud environment."""
-    # Check for common cloud environment indicators
+    """Detect if running on Streamlit Cloud or similar cloud environment.
+    
+    Returns True only if running on Streamlit Community Cloud or similar hosted environment.
+    Returns False for local development (even when running streamlit run locally).
+    """
+    # Check for definitive cloud environment indicators
+    # Note: STREAMLIT_SERVER_PORT is set locally too, so we don't use it
     return (
         os.environ.get('STREAMLIT_SHARING_MODE') is not None or
-        os.environ.get('STREAMLIT_SERVER_PORT') is not None or
-        not os.path.exists(os.path.expanduser('~/.streamlit')) or
-        os.environ.get('HOME', '').startswith('/home/appuser')
+        os.environ.get('HOME', '').startswith('/home/appuser') or
+        os.environ.get('HOSTNAME', '').startswith('streamlit-') or
+        'streamlit.io' in os.environ.get('HOSTNAME', '')
     )
+
+def use_supabase():
+    """Return True when running in cloud and Supabase credentials are present."""
+    try:
+        return is_cloud_environment() and is_supabase_configured()
+    except Exception:
+        return False
 
 def get_localStorage_value(key):
     """Get a value from browser localStorage."""
@@ -1064,6 +1128,57 @@ def migrate_old_data():
 USER_DATA_DIR = get_user_data_dir()
 CLIENT_CONFIG_DIR = os.path.join(USER_DATA_DIR, 'clients')
 
+# --- Authentication (Supabase) ---
+if is_cloud_environment() and is_supabase_configured():
+    with st.sidebar:
+        st.markdown("### Account")
+        current_uid = get_current_user_id()
+        if current_uid:
+            st.success("Signed in")
+            if st.button("Sign out", key="sb_sign_out"):
+                sign_out()
+                try:
+                    get_existing_clients.clear()
+                    get_saved_sessions.clear()
+                except Exception:
+                    pass
+                st.rerun()
+        else:
+            auth_mode = st.radio("Select", ["Sign in", "Create account"], key="auth_mode")
+            email = st.text_input("Email", key="auth_email")
+            password = st.text_input("Password", type="password", key="auth_password")
+            if auth_mode == "Sign in":
+                if st.button("Sign in", key="auth_sign_in_btn"):
+                    ok, msg = sign_in(email, password)
+                    if ok:
+                        st.success(msg)
+                        try:
+                            get_existing_clients.clear()
+                            get_saved_sessions.clear()
+                        except Exception:
+                            pass
+                        st.rerun()
+                    else:
+                        st.error(msg)
+            else:
+                if st.button("Create account", key="auth_sign_up_btn"):
+                    ok, msg = sign_up(email, password)
+                    if ok:
+                        st.success(msg)
+                        try:
+                            get_existing_clients.clear()
+                            get_saved_sessions.clear()
+                        except Exception:
+                            pass
+                        st.rerun()
+                    else:
+                        st.error(msg)
+
+    if not get_current_user_id():
+        st.title("Amazon Advertising Dashboard")
+        st.info("Please sign in to access your clients and sessions.")
+        st.stop()
+
 # Lightweight file logger for packaged builds
 def log_app_event(message: str):
     """Append a timestamped line to a log file in the user's data directory.
@@ -1089,9 +1204,14 @@ if 'migration_checked' not in st.session_state:
 def get_existing_clients():
     """Returns a list of client names from the config directory or localStorage."""
     if is_cloud_environment():
-        # Use localStorage on cloud
+        # Prefer Supabase per-user storage in cloud
+        if use_supabase():
+            uid = get_current_user_id()
+            if not uid:
+                return []
+            return sb_list_client_names(uid)
+        # Fallback: browser localStorage (legacy)
         if 'client_list' not in st.session_state:
-            # Initialize from localStorage
             stored_list = get_localStorage_value('amazon_dashboard_client_list')
             if stored_list:
                 try:
@@ -1105,7 +1225,9 @@ def get_existing_clients():
         # Use filesystem locally
         if not os.path.exists(CLIENT_CONFIG_DIR):
             os.makedirs(CLIENT_CONFIG_DIR)
-        return [f.replace('.json', '') for f in os.listdir(CLIENT_CONFIG_DIR) if f.endswith('.json')]
+        clients = [f.replace('.json', '') for f in os.listdir(CLIENT_CONFIG_DIR) if f.endswith('.json')]
+        log_app_event(f"get_existing_clients() found {len(clients)} clients in {CLIENT_CONFIG_DIR}")
+        return sorted(clients)
 
 def load_client_config(client_name):
     """Loads the configuration for a given client from localStorage or filesystem.
@@ -1115,34 +1237,34 @@ def load_client_config(client_name):
     Session state provides the caching layer instead.
     """
     if is_cloud_environment():
-        # Use session state cache for localStorage values
+        # Cloud: prefer Supabase
+        if use_supabase():
+            cache_key = f'client_config_cache_{client_name}'
+            if cache_key in st.session_state:
+                return st.session_state[cache_key]
+            uid = get_current_user_id()
+            if not uid:
+                return None
+            config = sb_fetch_client_config(uid, client_name)
+            if config is not None:
+                st.session_state[cache_key] = config
+            return config
+        # Legacy: browser localStorage path
         cache_key = f'client_config_cache_{client_name}'
-        
-        # Check if we have it in session state cache
         if cache_key in st.session_state:
             return st.session_state[cache_key]
-        
-        # Check if we're still waiting for the component to load
         stored_config = get_localStorage_value(f'amazon_dashboard_client_{client_name}')
-        
-        # Handle the case where components.html returns None or DeltaGenerator on first render
-        # DeltaGenerator means the component hasn't returned a value yet
         if stored_config is None or not isinstance(stored_config, str):
-            # Mark that we're loading and return None to trigger a rerun
             st.session_state[f'{cache_key}_loading'] = True
             return None
-        
-        # Clear loading flag if it was set
         if f'{cache_key}_loading' in st.session_state:
             del st.session_state[f'{cache_key}_loading']
-        
         if stored_config:
             try:
                 config = json.loads(stored_config)
-                # Cache in session state
                 st.session_state[cache_key] = config
                 return config
-            except (json.JSONDecodeError, TypeError) as e:
+            except (json.JSONDecodeError, TypeError):
                 st.error(f"Error reading configuration for {client_name}. It might be corrupted.")
                 if isinstance(stored_config, str):
                     st.error(f"Debug - stored_config (first 200 chars): {stored_config[:200]}")
@@ -1158,14 +1280,27 @@ def load_client_config(client_name):
 def _load_client_config_from_file(client_name):
     """Helper function for filesystem loading with caching."""
     filepath = os.path.join(CLIENT_CONFIG_DIR, f"{client_name}.json")
+    log_app_event(f"Attempting to load client config from: {filepath}")
+    
     if os.path.exists(filepath):
         try:
             with open(filepath, 'r') as f:
-                return json.load(f)
-        except json.JSONDecodeError:
+                config = json.load(f)
+                log_app_event(f"Successfully loaded config for {client_name}")
+                return config
+        except json.JSONDecodeError as e:
+            error_msg = f"JSON decode error for {client_name}: {str(e)}"
             st.error(f"Error reading configuration file for {client_name}. It might be corrupted.")
+            log_app_event(error_msg)
             return None
-    return None
+        except Exception as e:
+            error_msg = f"Unexpected error loading {client_name}: {str(e)}"
+            st.error(error_msg)
+            log_app_event(error_msg)
+            return None
+    else:
+        log_app_event(f"Config file not found for {client_name} at {filepath}")
+        return None
 
 def get_campaigns_from_bulk_file(bulk_data):
     """Extracts unique campaign names and types from the bulk file data."""
@@ -1210,8 +1345,31 @@ def save_client_config(client_name, config_data):
         return obj
 
     if is_cloud_environment():
-        # Use localStorage on cloud
-        # Load previous data to compare
+        # Cloud: prefer Supabase per-user storage
+        if use_supabase():
+            uid = get_current_user_id()
+            if not uid:
+                st.error("Please sign in to save client settings.")
+                st.session_state.settings_updated = False
+                return
+            previous_data = sb_fetch_client_config(uid, client_name)
+            if previous_data is not None and _normalise(previous_data) == _normalise(config_data):
+                st.session_state.settings_updated = False
+                return
+            ok = sb_upsert_client_config(uid, client_name, config_data)
+            if not ok:
+                st.error("Failed to save client configuration.")
+                st.session_state.settings_updated = False
+                return
+            # Update cache
+            cache_key = f'client_config_cache_{client_name}'
+            st.session_state[cache_key] = config_data
+            # Refresh clients cache
+            get_existing_clients.clear()
+            _load_client_config_from_file.clear()
+            st.session_state.settings_updated = True
+            return
+        # Legacy: browser localStorage
         previous_data = None
         stored_config = get_localStorage_value(f'amazon_dashboard_client_{client_name}')
         if stored_config:
@@ -1219,30 +1377,19 @@ def save_client_config(client_name, config_data):
                 previous_data = json.loads(stored_config)
             except:
                 previous_data = None
-        
-        # Compare normalized versions
         if previous_data is not None and _normalise(previous_data) == _normalise(config_data):
             st.session_state.settings_updated = False
             return
-        
-        # Save to localStorage (set_localStorage_value handles JSON encoding)
         set_localStorage_value(f'amazon_dashboard_client_{client_name}', config_data)
-        
-        # Update session state cache immediately
         cache_key = f'client_config_cache_{client_name}'
         st.session_state[cache_key] = config_data
-        
-        # Update client list
         if 'client_list' not in st.session_state:
             st.session_state.client_list = []
         if client_name not in st.session_state.client_list:
             st.session_state.client_list.append(client_name)
             set_localStorage_value('amazon_dashboard_client_list', st.session_state.client_list)
-        
-        # Clear cache
         get_existing_clients.clear()
         _load_client_config_from_file.clear()
-        
         st.session_state.settings_updated = True
     else:
         # Use filesystem locally
@@ -1271,6 +1418,10 @@ def save_client_config(client_name, config_data):
         with open(filepath, "w") as f:
             json.dump(config_data, f, indent=4)
 
+        # Clear caches so the new/updated client appears in the list
+        get_existing_clients.clear()
+        _load_client_config_from_file.clear()
+
         # Flag downstream pages to refresh because something actually changed.
         st.session_state.settings_updated = True
 
@@ -1290,7 +1441,13 @@ def ensure_session_directory(client_name):
 def get_saved_sessions(client_name):
     """Returns a list of saved session files for a given client from localStorage or filesystem."""
     if is_cloud_environment():
-        # Use localStorage on cloud
+        # Cloud: prefer Supabase
+        if use_supabase():
+            uid = get_current_user_id()
+            if not uid:
+                return []
+            return sb_list_sessions(uid, client_name)
+        # Legacy: browser localStorage
         sessions_key = f'amazon_dashboard_sessions_{client_name}'
         stored_sessions = get_localStorage_value(sessions_key)
         if stored_sessions:
@@ -1378,35 +1535,44 @@ def save_audit_session(client_name, session_name=None, description=""):
     
     try:
         if is_cloud_environment():
-            # Use localStorage on cloud
-            # Get existing sessions
-            sessions_key = f'amazon_dashboard_sessions_{client_name}'
-            stored_sessions = get_localStorage_value(sessions_key)
-            sessions_list = json.loads(stored_sessions) if stored_sessions else []
-            
-            # Add new session metadata
-            session_metadata = {
-                'filename': filename,
-                'display_name': session_data.get('session_name', filename.replace('.json', '')),
-                'timestamp': session_data.get('timestamp', 'Unknown'),
-                'created_date': session_data.get('created_date', 'Unknown'),
-                'description': session_data.get('description', 'No description'),
-                'data_types': session_data.get('data_types', [])
-            }
-            
-            # Remove old session with same filename if exists
-            sessions_list = [s for s in sessions_list if s.get('filename') != filename]
-            sessions_list.append(session_metadata)
-            
-            # Sort by timestamp (newest first)
-            sessions_list.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
-            
-            # Save session data and metadata
-            set_localStorage_value(f'amazon_dashboard_session_data_{client_name}_{filename}', session_data)
-            set_localStorage_value(sessions_key, sessions_list)
-            
-            # Clear cache
-            get_saved_sessions.clear()
+            # Cloud: prefer Supabase
+            if use_supabase():
+                uid = get_current_user_id()
+                if not uid:
+                    st.error("Please sign in to save sessions.")
+                    return False
+                session_metadata = {
+                    'filename': filename,
+                    'display_name': session_data.get('session_name', filename.replace('.json', '')),
+                    'timestamp': session_data.get('timestamp', 'Unknown'),
+                    'created_date': session_data.get('created_date', 'Unknown'),
+                    'description': session_data.get('description', 'No description'),
+                    'data_types': session_data.get('data_types', []),
+                }
+                ok = sb_save_session(uid, client_name, filename, session_metadata, session_data)
+                if not ok:
+                    st.error("Failed to save session.")
+                    return False
+                get_saved_sessions.clear()
+            else:
+                # Legacy: browser localStorage
+                sessions_key = f'amazon_dashboard_sessions_{client_name}'
+                stored_sessions = get_localStorage_value(sessions_key)
+                sessions_list = json.loads(stored_sessions) if stored_sessions else []
+                session_metadata = {
+                    'filename': filename,
+                    'display_name': session_data.get('session_name', filename.replace('.json', '')),
+                    'timestamp': session_data.get('timestamp', 'Unknown'),
+                    'created_date': session_data.get('created_date', 'Unknown'),
+                    'description': session_data.get('description', 'No description'),
+                    'data_types': session_data.get('data_types', [])
+                }
+                sessions_list = [s for s in sessions_list if s.get('filename') != filename]
+                sessions_list.append(session_metadata)
+                sessions_list.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+                set_localStorage_value(f'amazon_dashboard_session_data_{client_name}_{filename}', session_data)
+                set_localStorage_value(sessions_key, sessions_list)
+                get_saved_sessions.clear()
         else:
             # Use filesystem locally
             client_session_dir = ensure_session_directory(client_name)
@@ -1432,13 +1598,24 @@ def load_audit_session(client_name, session_filename):
     
     try:
         if is_cloud_environment():
-            # Use localStorage on cloud
-            session_key = f'amazon_dashboard_session_data_{client_name}_{session_filename}'
-            stored_data = get_localStorage_value(session_key)
-            if not stored_data:
-                st.error("Session file not found.")
-                return False
-            session_data = json.loads(stored_data)
+            # Cloud: prefer Supabase
+            if use_supabase():
+                uid = get_current_user_id()
+                if not uid:
+                    st.error("Please sign in to load sessions.")
+                    return False
+                session_data = sb_fetch_session(uid, client_name, session_filename)
+                if session_data is None:
+                    st.error("Session file not found.")
+                    return False
+            else:
+                # Legacy: browser localStorage
+                session_key = f'amazon_dashboard_session_data_{client_name}_{session_filename}'
+                stored_data = get_localStorage_value(session_key)
+                if not stored_data:
+                    st.error("Session file not found.")
+                    return False
+                session_data = json.loads(stored_data)
         else:
             # Use filesystem locally
             filepath = os.path.join(CLIENT_SESSIONS_DIR, client_name, session_filename)
@@ -1488,21 +1665,26 @@ def delete_audit_session(client_name, session_filename):
     
     try:
         if is_cloud_environment():
-            # Use localStorage on cloud
-            # Remove session data
-            remove_localStorage_value(f'amazon_dashboard_session_data_{client_name}_{session_filename}')
-            
-            # Update sessions list
-            sessions_key = f'amazon_dashboard_sessions_{client_name}'
-            stored_sessions = get_localStorage_value(sessions_key)
-            if stored_sessions:
-                sessions_list = json.loads(stored_sessions)
-                sessions_list = [s for s in sessions_list if s.get('filename') != session_filename]
-                set_localStorage_value(sessions_key, sessions_list)
-            
-            # Clear cache
-            get_saved_sessions.clear()
-            return True
+            # Cloud: prefer Supabase
+            if use_supabase():
+                uid = get_current_user_id()
+                if not uid:
+                    return False
+                ok = sb_delete_session(uid, client_name, session_filename)
+                if ok:
+                    get_saved_sessions.clear()
+                return ok
+            else:
+                # Legacy: browser localStorage
+                remove_localStorage_value(f'amazon_dashboard_session_data_{client_name}_{session_filename}')
+                sessions_key = f'amazon_dashboard_sessions_{client_name}'
+                stored_sessions = get_localStorage_value(sessions_key)
+                if stored_sessions:
+                    sessions_list = json.loads(stored_sessions)
+                    sessions_list = [s for s in sessions_list if s.get('filename') != session_filename]
+                    set_localStorage_value(sessions_key, sessions_list)
+                get_saved_sessions.clear()
+                return True
         else:
             # Use filesystem locally
             filepath = os.path.join(CLIENT_SESSIONS_DIR, client_name, session_filename)
@@ -5942,6 +6124,12 @@ with st.sidebar:
     st.markdown("<h2 style='text-align: center;'>Client Selection</h2>", unsafe_allow_html=True)
     
     # Cache is automatically reset after 1 hour or when new data is uploaded
+    # Also clear cache if a client was just saved/imported
+    if st.session_state.get('clients_list_changed', False):
+        get_existing_clients.clear()
+        _load_client_config_from_file.clear()
+        st.session_state.clients_list_changed = False
+        log_app_event("Cleared client list cache due to changes")
     
     try:
         existing_clients = get_existing_clients()
@@ -5951,13 +6139,38 @@ with st.sidebar:
 
     # Load client if selected previously
     if 'selected_client_name' in st.session_state and st.session_state.client_config is None:
-        try:
-            client_name = st.session_state.selected_client_name
-            log_app_event(f"Auto-loading client: {client_name}")
-            st.session_state.client_config = load_client_config(client_name)
-        except Exception as e:
-            st.error(f"Error auto-loading client '{client_name}': {str(e)}")
-            log_app_event(f"Error auto-loading client '{client_name}': {str(e)}")
+        # Prevent infinite rerun loop if client fails to load
+        if 'client_load_failed' not in st.session_state and 'client_load_attempt_count' not in st.session_state:
+            st.session_state.client_load_attempt_count = 0
+        
+        if 'client_load_failed' not in st.session_state and st.session_state.get('client_load_attempt_count', 0) < 3:
+            try:
+                client_name = st.session_state.selected_client_name
+                st.session_state.client_load_attempt_count += 1
+                log_app_event(f"Auto-loading client (attempt {st.session_state.client_load_attempt_count}): {client_name}")
+                loaded_config = load_client_config(client_name)
+                
+                if loaded_config is None:
+                    st.error(f"❌ Failed to load client '{client_name}'. The configuration file may be missing or corrupted.")
+                    log_app_event(f"Failed to load client '{client_name}' - config returned None")
+                    st.session_state.client_load_failed = True
+                    st.session_state.selected_client_name = None
+                    st.session_state.client_load_attempt_count = 0
+                else:
+                    st.session_state.client_config = loaded_config
+                    st.session_state.client_load_attempt_count = 0
+                    log_app_event(f"Auto-loaded client successfully: {client_name}")
+            except Exception as e:
+                st.error(f"Error auto-loading client '{client_name}': {str(e)}")
+                log_app_event(f"Error auto-loading client '{client_name}': {str(e)}")
+                st.session_state.client_load_failed = True
+                st.session_state.selected_client_name = None
+                st.session_state.client_load_attempt_count = 0
+        elif st.session_state.get('client_load_attempt_count', 0) >= 3:
+            st.error(f"❌ Failed to load client after 3 attempts. Please try selecting the client again.")
+            log_app_event(f"Failed to load client after 3 attempts")
+            st.session_state.selected_client_name = None
+            st.session_state.client_load_attempt_count = 0
 
     # Radio button for action choice
     st.markdown("### Action")
@@ -5975,13 +6188,26 @@ with st.sidebar:
                 if st.button("Load Client", use_container_width=True):
                     try:
                         log_app_event(f"Load Client clicked for: {selected_client}")
-                        st.session_state.selected_client_name = selected_client
-                        st.session_state.client_config = load_client_config(selected_client)
-                        st.session_state.bulk_data = None 
-                        st.session_state.sales_report_data = None
-                        st.session_state.current_page = 'file_uploads'  # Redirect to File Uploads page
-                        log_app_event(f"Client loaded successfully: {selected_client}")
-                        st.rerun()
+                        
+                        # Clear any previous load failure flag
+                        if 'client_load_failed' in st.session_state:
+                            del st.session_state.client_load_failed
+                        
+                        # Try to load the client config
+                        loaded_config = load_client_config(selected_client)
+                        
+                        if loaded_config is None:
+                            st.error(f"❌ Failed to load client '{selected_client}'. The configuration file may be missing or corrupted.")
+                            log_app_event(f"Failed to load client '{selected_client}' - config returned None")
+                            # Don't set selected_client_name if load failed
+                        else:
+                            st.session_state.selected_client_name = selected_client
+                            st.session_state.client_config = loaded_config
+                            st.session_state.bulk_data = None 
+                            st.session_state.sales_report_data = None
+                            st.session_state.current_page = 'file_uploads'  # Redirect to File Uploads page
+                            log_app_event(f"Client loaded successfully: {selected_client}")
+                            st.rerun()
                     except Exception as e:
                         st.error(f"Error loading client: {str(e)}")
                         import traceback

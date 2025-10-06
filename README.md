@@ -226,6 +226,64 @@ The dashboard works with Amazon Advertising bulk export files:
 
 ---
 
+## 👤 Cloud Accounts (Per-User Storage)
+
+When deployed on Streamlit Community Cloud, the app can use Supabase Auth + Postgres to give each user an account so their clients and sessions are isolated.
+
+### Setup (Maintainer)
+
+- Create a Supabase project at https://supabase.com
+- In Streamlit Cloud, add these Secrets:
+  - `SUPABASE_URL`
+  - `SUPABASE_ANON_KEY`
+- In Supabase SQL Editor, run the following to create tables and Row Level Security (RLS):
+
+```sql
+create table if not exists client_configs (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  client_name text not null,
+  config jsonb not null,
+  updated_at timestamptz not null default now(),
+  unique (user_id, client_name)
+);
+
+create table if not exists client_sessions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  client_name text not null,
+  filename text not null,
+  display_name text not null,
+  timestamp timestamptz not null,
+  created_date text,
+  description text,
+  data_types jsonb default '[]'::jsonb,
+  session_data jsonb not null,
+  unique (user_id, client_name, filename)
+);
+
+alter table client_configs enable row level security;
+alter table client_sessions enable row level security;
+
+create policy "owner_can_select_configs" on client_configs for select using (auth.uid() = user_id);
+create policy "owner_can_upsert_configs" on client_configs for insert with check (auth.uid() = user_id);
+create policy "owner_can_update_configs" on client_configs for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "owner_can_delete_configs" on client_configs for delete using (auth.uid() = user_id);
+
+create policy "owner_can_select_sessions" on client_sessions for select using (auth.uid() = user_id);
+create policy "owner_can_upsert_sessions" on client_sessions for insert with check (auth.uid() = user_id);
+create policy "owner_can_update_sessions" on client_sessions for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "owner_can_delete_sessions" on client_sessions for delete using (auth.uid() = user_id);
+```
+
+### Usage (End Users)
+
+- Open the app on Streamlit Community and sign up/in from the sidebar.
+- After signing in, all client configurations and sessions you create are saved to your account only.
+- Local desktop usage remains unchanged (files saved under your user data directory).
+
+---
+
 ## 🚀 For Developers
 
 ### Project Structure
