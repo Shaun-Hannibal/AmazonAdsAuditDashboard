@@ -1091,12 +1091,22 @@ def get_existing_clients():
 def load_client_config(client_name):
     """Loads the configuration for a given client from localStorage or filesystem."""
     if is_cloud_environment():
-        # Use localStorage on cloud
+        # Use session state cache for localStorage values
+        cache_key = f'client_config_cache_{client_name}'
+        
+        # Check if we have it in session state cache
+        if cache_key in st.session_state:
+            return st.session_state[cache_key]
+        
+        # Try to load from localStorage
         stored_config = get_localStorage_value(f'amazon_dashboard_client_{client_name}')
         if stored_config:
             try:
-                return json.loads(stored_config)
-            except json.JSONDecodeError:
+                config = json.loads(stored_config)
+                # Cache in session state
+                st.session_state[cache_key] = config
+                return config
+            except (json.JSONDecodeError, TypeError) as e:
                 st.error(f"Error reading configuration for {client_name}. It might be corrupted.")
                 return None
         return None
@@ -1172,6 +1182,10 @@ def save_client_config(client_name, config_data):
         
         # Save to localStorage
         set_localStorage_value(f'amazon_dashboard_client_{client_name}', json.dumps(config_data))
+        
+        # Update session state cache immediately
+        cache_key = f'client_config_cache_{client_name}'
+        st.session_state[cache_key] = config_data
         
         # Update client list
         if 'client_list' not in st.session_state:
@@ -6178,7 +6192,12 @@ with st.sidebar:
                                     # Clear localStorage
                                     for client_name in existing_clients:
                                         remove_localStorage_value(f'amazon_dashboard_client_{client_name}')
+                                        # Clear session state cache
+                                        cache_key = f'client_config_cache_{client_name}'
+                                        if cache_key in st.session_state:
+                                            del st.session_state[cache_key]
                                     remove_localStorage_value('amazon_dashboard_client_list')
+                                    st.session_state.client_list = []
                                 else:
                                     # Clear filesystem
                                     if os.path.exists(CLIENT_CONFIG_DIR):
