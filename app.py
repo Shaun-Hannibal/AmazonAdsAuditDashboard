@@ -72,6 +72,7 @@ try:
         sign_in,
         sign_up,
         sign_out,
+        apply_session_from_state,
         list_client_names as sb_list_client_names,
         fetch_client_config as sb_fetch_client_config,
         upsert_client_config as sb_upsert_client_config,
@@ -95,6 +96,9 @@ except Exception:
         return False, "Supabase not available"
 
     def sign_out():
+        return None
+
+    def apply_session_from_state():
         return None
 
     def sb_list_client_names(uid):
@@ -920,6 +924,9 @@ def is_cloud_environment():
 def use_supabase():
     """Return True when running in cloud and Supabase credentials are present."""
     try:
+        # Allow user to disable Supabase temporarily if network issues occur
+        if st.session_state.get('disable_supabase', False):
+            return False
         return is_cloud_environment() and is_supabase_configured()
     except Exception:
         return False
@@ -1128,8 +1135,12 @@ def migrate_old_data():
 USER_DATA_DIR = get_user_data_dir()
 CLIENT_CONFIG_DIR = os.path.join(USER_DATA_DIR, 'clients')
 
+# --- Restore Supabase session on every rerun ---
+if use_supabase():
+    apply_session_from_state()
+
 # --- Authentication (Supabase) ---
-if is_cloud_environment() and is_supabase_configured():
+if use_supabase():
     with st.sidebar:
         st.markdown("### Account")
         current_uid = get_current_user_id()
@@ -1239,7 +1250,19 @@ def get_existing_clients():
                     st.session_state.client_list = []
             else:
                 st.session_state.client_list = []
-        return st.session_state.get('client_list', [])
+        # Merge any in-session imported clients so they appear during this session
+        session_only_clients = []
+        try:
+            if 'in_memory_clients' in st.session_state and isinstance(st.session_state.in_memory_clients, dict):
+                session_only_clients = list(st.session_state.in_memory_clients.keys())
+        except Exception:
+            session_only_clients = []
+        base_list = st.session_state.get('client_list', [])
+        if session_only_clients:
+            # Deduplicate while preserving alphabetical order
+            merged = sorted(set(base_list) | set(session_only_clients))
+            return merged
+        return base_list
     else:
         # Use filesystem locally
         if not os.path.exists(CLIENT_CONFIG_DIR):
@@ -1256,20 +1279,30 @@ def load_client_config(client_name):
     Session state provides the caching layer instead.
     """
     if is_cloud_environment():
+        cache_key = f'client_config_cache_{client_name}'
         # Cloud: prefer Supabase
         if use_supabase():
-            cache_key = f'client_config_cache_{client_name}'
             if cache_key in st.session_state:
                 return st.session_state[cache_key]
             uid = get_current_user_id()
             if not uid:
                 return None
-            config = sb_fetch_client_config(uid, client_name)
+            # Show spinner for Supabase fetch to give user feedback
+            with st.spinner(f'Loading client configuration...'):
+                config = sb_fetch_client_config(uid, client_name)
             if config is not None:
                 st.session_state[cache_key] = config
             return config
+        # Cloud without Supabase: use session-only in-memory store first
+        try:
+            if 'in_memory_clients' in st.session_state and isinstance(st.session_state.in_memory_clients, dict):
+                if client_name in st.session_state.in_memory_clients:
+                    config = st.session_state.in_memory_clients[client_name]
+                    st.session_state[cache_key] = config
+                    return config
+        except Exception:
+            pass
         # Legacy: browser localStorage path
-        cache_key = f'client_config_cache_{client_name}'
         if cache_key in st.session_state:
             return st.session_state[cache_key]
         stored_config = get_localStorage_value(f'amazon_dashboard_client_{client_name}')
@@ -1388,27 +1421,45 @@ def save_client_config(client_name, config_data):
             _load_client_config_from_file.clear()
             st.session_state.settings_updated = True
             return
-        # Legacy: browser localStorage
-        previous_data = None
-        stored_config = get_localStorage_value(f'amazon_dashboard_client_{client_name}')
-        if stored_config:
-            try:
-                previous_data = json.loads(stored_config)
-            except:
-                previous_data = None
-        if previous_data is not None and _normalise(previous_data) == _normalise(config_data):
-            st.session_state.settings_updated = False
-            return
-        set_localStorage_value(f'amazon_dashboard_client_{client_name}', config_data)
+        # Cloud without Supabase: session-only fallback with best-effort localStorage write
+        try:
+            # Maintain in-memory map
+            if 'in_memory_clients' not in st.session_state or not isinstance(st.session_state.in_memory_clients, dict):
+                st.session_state.in_memory_clients = {}
+            st.session_state.in_memory_clients[client_name] = config_data
+        except Exception:
+            pass
+        # Try legacy localStorage write (may be unsupported on Streamlit Cloud)
+        try:
+            previous_data = None
+            stored_config = get_localStorage_value(f'amazon_dashboard_client_{client_name}')
+            if stored_config:
+                try:
+                    previous_data = json.loads(stored_config)
+                except Exception:
+                    previous_data = None
+            if previous_data is None or _normalise(previous_data) != _normalise(config_data):
+                set_localStorage_value(f'amazon_dashboard_client_{client_name}', config_data)
+        except Exception:
+            # Ignore localStorage failures in cloud; we rely on in-session memory
+            pass
         cache_key = f'client_config_cache_{client_name}'
         st.session_state[cache_key] = config_data
-        if 'client_list' not in st.session_state:
-            st.session_state.client_list = []
-        if client_name not in st.session_state.client_list:
-            st.session_state.client_list.append(client_name)
-            set_localStorage_value('amazon_dashboard_client_list', st.session_state.client_list)
+        # Merge into visible client list for this session
+        try:
+            if 'client_list' not in st.session_state or not isinstance(st.session_state.client_list, list):
+                st.session_state.client_list = []
+            if client_name not in st.session_state.client_list:
+                st.session_state.client_list.append(client_name)
+                try:
+                    set_localStorage_value('amazon_dashboard_client_list', st.session_state.client_list)
+                except Exception:
+                    pass
+        except Exception:
+            pass
         get_existing_clients.clear()
         _load_client_config_from_file.clear()
+        st.session_state.clients_list_changed = True
         st.session_state.settings_updated = True
     else:
         # Use filesystem locally
@@ -6141,6 +6192,21 @@ st.markdown(custom_css, unsafe_allow_html=True)
 # Create a dark sidebar with client selection
 with st.sidebar:
     st.markdown("<h2 style='text-align: center;'>Client Selection</h2>", unsafe_allow_html=True)
+    # Optional: allow disabling Supabase to fall back to session-only storage in cloud
+    try:
+        if is_cloud_environment() and is_supabase_configured():
+            prev = bool(st.session_state.get('disable_supabase', False))
+            toggled = st.checkbox("Disable Supabase (session-only)", value=prev, help="If you're seeing hangs or network issues, use session-only storage. Data will not persist across reloads.")
+            if toggled != prev:
+                st.session_state.disable_supabase = toggled
+                # Clear caches so UI reflects new storage mode
+                try:
+                    get_existing_clients.clear()
+                except Exception:
+                    pass
+                st.rerun()
+    except Exception:
+        pass
     
     # Cache is automatically reset after 1 hour or when new data is uploaded
     # Also clear cache if a client was just saved/imported
@@ -6167,7 +6233,10 @@ with st.sidebar:
                 client_name = st.session_state.selected_client_name
                 st.session_state.client_load_attempt_count += 1
                 log_app_event(f"Auto-loading client (attempt {st.session_state.client_load_attempt_count}): {client_name}")
-                loaded_config = load_client_config(client_name)
+                
+                # Show status message during auto-load
+                with st.spinner(f'Restoring client session: {client_name}...'):
+                    loaded_config = load_client_config(client_name)
                 
                 if loaded_config is None:
                     st.error(f"❌ Failed to load client '{client_name}'. The configuration file may be missing or corrupted.")
@@ -6226,6 +6295,9 @@ with st.sidebar:
                             st.session_state.sales_report_data = None
                             st.session_state.current_page = 'file_uploads'  # Redirect to File Uploads page
                             log_app_event(f"Client loaded successfully: {selected_client}")
+                            st.success(f"✅ Client '{selected_client}' loaded successfully!")
+                            import time
+                            time.sleep(0.5)  # Brief pause to show success message
                             st.rerun()
                     except Exception as e:
                         st.error(f"Error loading client: {str(e)}")
@@ -6539,6 +6611,30 @@ with st.sidebar:
                                     result_parts.append(f"{skipped_count} skipped")
                                 
                                 st.success(f"✅ Import complete: {', '.join(result_parts)} client(s)!")
+
+                            # In cloud without Supabase, localStorage fallback can be unreliable on Streamlit Cloud.
+                            # To avoid hangs and make the app usable, keep imported clients in-session and auto-load the first one.
+                            if is_cloud_environment() and not use_supabase():
+                                try:
+                                    st.session_state.in_memory_clients = import_data.get('clients', {})
+                                    first_client = None
+                                    for name in st.session_state.in_memory_clients.keys():
+                                        first_client = name
+                                        break
+                                    if first_client:
+                                        st.warning("Cloud mode without Supabase: clients are available for this session only. Configure Supabase to persist across reloads.")
+                                        st.session_state.selected_client_name = first_client
+                                        st.session_state.client_config = st.session_state.in_memory_clients[first_client]
+                                        # Refresh client list cache so the name shows up under Load Existing Client during this session
+                                        try:
+                                            get_existing_clients.clear()
+                                        except Exception:
+                                            pass
+                                        st.session_state.current_page = 'file_uploads'
+                                        st.balloons()
+                                        st.rerun()
+                                except Exception:
+                                    pass
                             
                             st.balloons()
                             st.info("Please select 'Load Existing Client' to access your imported clients.")
@@ -7030,6 +7126,25 @@ if st.session_state.client_config:
             st.markdown("* Client Overview - Calculating Total Sales, TACoS, Sessions, etc.")
             st.markdown("* Client Settings Center - Updating Advertised ASINs")
             st.markdown("* Client Settings Center - Product Tagging")
+        
+        # Add navigation button to Advertising Audit when both files are uploaded
+        if st.session_state.bulk_data is not None and st.session_state.sales_report_data is not None:
+            st.markdown("---")
+            st.markdown("### ✅ Files Ready for Analysis")
+            st.markdown("Both advertising data and sales report have been uploaded successfully!")
+            col_nav1, col_nav2, col_nav3 = st.columns([1, 2, 1])
+            with col_nav2:
+                if st.button("📊 Go to Advertising Audit", key="nav_to_audit_both", use_container_width=True, type="primary"):
+                    st.session_state.current_page = "advertising_audit"
+                    st.rerun()
+        elif st.session_state.bulk_data is not None or st.session_state.sales_report_data is not None:
+            st.markdown("---")
+            st.info("💡 Upload both files to access the full Advertising Audit analysis")
+            col_nav1, col_nav2, col_nav3 = st.columns([1, 2, 1])
+            with col_nav2:
+                if st.button("📊 View Advertising Audit", key="nav_to_audit_partial", use_container_width=True):
+                    st.session_state.current_page = "advertising_audit"
+                    st.rerun()
         
         # Display uploaded data viewer section
         st.markdown("---")
