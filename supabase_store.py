@@ -58,12 +58,23 @@ def is_supabase_configured() -> bool:
 
 
 def get_current_user_id() -> Optional[str]:
+    # Fast-path: return cached user id if present
+    try:
+        uid = st.session_state.get("_sb_user_id")
+        if isinstance(uid, str) and uid:
+            return uid
+    except Exception:
+        pass
     sb = get_supabase()
     if not sb:
         return None
     try:
         res = sb.auth.get_user()
         if res and res.user:
+            try:
+                st.session_state["_sb_user_id"] = res.user.id
+            except Exception:
+                pass
             return res.user.id
     except Exception:
         pass
@@ -81,6 +92,16 @@ def sign_in(email: str, password: str) -> Tuple[bool, str]:
                 "access_token": res.session.access_token,
                 "refresh_token": res.session.refresh_token,
             }
+            # Cache user id to avoid get_user() on every rerun
+            try:
+                if getattr(res, "user", None) and getattr(res.user, "id", None):
+                    st.session_state["_sb_user_id"] = res.user.id
+                else:
+                    got = sb.auth.get_user()
+                    if got and got.user:
+                        st.session_state["_sb_user_id"] = got.user.id
+            except Exception:
+                pass
         return True, "Signed in"
     except Exception as e:
         return False, str(e)
@@ -97,6 +118,16 @@ def sign_up(email: str, password: str) -> Tuple[bool, str]:
                 "access_token": res.session.access_token,
                 "refresh_token": res.session.refresh_token,
             }
+            # Cache user id
+            try:
+                if getattr(res, "user", None) and getattr(res.user, "id", None):
+                    st.session_state["_sb_user_id"] = res.user.id
+                else:
+                    got = sb.auth.get_user()
+                    if got and got.user:
+                        st.session_state["_sb_user_id"] = got.user.id
+            except Exception:
+                pass
             return True, "Account created. Check your email for verification if required."
         # Some projects require email verification before a session is returned.
         # In that case, immediately attempt sign-in (works if email already existed or verification not required).
@@ -122,6 +153,15 @@ def sign_up(email: str, password: str) -> Tuple[bool, str]:
                         "access_token": login.session.access_token,
                         "refresh_token": login.session.refresh_token,
                     }
+                    try:
+                        if getattr(login, "user", None) and getattr(login.user, "id", None):
+                            st.session_state["_sb_user_id"] = login.user.id
+                        else:
+                            got = sb.auth.get_user()
+                            if got and got.user:
+                                st.session_state["_sb_user_id"] = got.user.id
+                    except Exception:
+                        pass
                     return True, "Signed in"
             except Exception:
                 # Hide the noisy cooldown text
@@ -138,6 +178,7 @@ def sign_out() -> None:
     except Exception:
         pass
     st.session_state.pop("_sb_session", None)
+    st.session_state.pop("_sb_user_id", None)
 
 
 # ---------- Data operations (per-user) ----------
@@ -146,6 +187,7 @@ def sign_out() -> None:
 # Columns: id (uuid), user_id (uuid), client_name (text), config (jsonb), updated_at (timestamptz)
 
 
+@st.cache_data(ttl=120)
 def list_client_names(user_id: str) -> List[str]:
     sb = get_supabase()
     if not sb:
