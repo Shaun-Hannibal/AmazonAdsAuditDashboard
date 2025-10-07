@@ -43,7 +43,6 @@ import glob
 import time
 import io
 import math
-import calendar
 import traceback
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -51,10 +50,7 @@ from collections import defaultdict
 from io import StringIO
 from urllib.parse import quote
 from typing import Dict, List, Tuple, Optional, Any, Union, Set
-from sklearn.linear_model import LinearRegression
-from PIL import Image
-from wordcloud import WordCloud, STOPWORDS
-import matplotlib.pyplot as plt
+import importlib
 import uuid
 import functools
 from contextlib import contextmanager
@@ -930,6 +926,21 @@ def use_supabase():
         return is_cloud_environment() and is_supabase_configured()
     except Exception:
         return False
+
+# --- Lazy import helpers to speed up initial load ---
+@functools.lru_cache(maxsize=None)
+def _lazy_mod(name: str):
+    return importlib.import_module(name)
+
+def get_plt():
+    return _lazy_mod('matplotlib.pyplot')
+
+def get_wordcloud():
+    mod = _lazy_mod('wordcloud')
+    return mod.WordCloud, mod.STOPWORDS
+
+def get_linear_regression():
+    return _lazy_mod('sklearn.linear_model').LinearRegression
 
 def get_localStorage_value(key):
     """Get a value from browser localStorage."""
@@ -5063,6 +5074,10 @@ def generate_search_term_wordcloud(search_terms_df, filter_type='all', remove_as
     Returns:
         matplotlib figure with the word cloud visualization
     """
+    # Lazy import heavy libs
+    plt = get_plt()
+    WordCloud, STOPWORDS = get_wordcloud()
+
     if search_terms_df is None or search_terms_df.empty or 'Search Term' not in search_terms_df.columns:
         # Create an empty figure with a message
         fig, ax = plt.subplots(figsize=(10, 6))
@@ -20127,6 +20142,9 @@ if st.session_state.client_config:
                                                       if not (len(str(k)) == 10 and str(k).lower().startswith('b0'))}
                                             
                                             if wc_dict:
+                                                # Lazy import heavy libs
+                                                WordCloud, _STOP = get_wordcloud()
+                                                plt = get_plt()
                                                 wc = WordCloud(
                                                     width=900,
                                                     height=350,
@@ -29249,6 +29267,7 @@ if st.session_state.current_page == "advertising_audit":
                                     X = bestfit_clean[x_metric].values.reshape(-1, 1)
                                     y = bestfit_clean[y_metric].values
                                 
+                                    LinearRegression = get_linear_regression()
                                     model = LinearRegression()
                                     model.fit(X, y)
                                 
