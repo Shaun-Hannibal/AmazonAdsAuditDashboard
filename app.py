@@ -6538,11 +6538,10 @@ with st.sidebar:
                     # Show expandable lists for large imports
                     if new_clients:
                         with st.expander(f"📋 View New Clients ({len(new_clients)})", expanded=len(new_clients) <= 5):
-                            if len(new_clients) <= 20:
+                            if len(new_clients) <= 10:
                                 st.write(", ".join(sorted(new_clients)))
                             else:
                                 # Use dataframe for better display
-                                import pandas as pd
                                 st.dataframe(
                                     pd.DataFrame({"Client Name": sorted(new_clients)}),
                                     use_container_width=True,
@@ -6552,10 +6551,10 @@ with st.sidebar:
                     
                     if duplicate_clients:
                         with st.expander(f"⚠️ View Duplicate Clients ({len(duplicate_clients)})", expanded=len(duplicate_clients) <= 5):
-                            if len(duplicate_clients) <= 20:
+                            if len(duplicate_clients) <= 10:
                                 st.write(", ".join(sorted(duplicate_clients)))
                             else:
-                                import pandas as pd
+                                # Use dataframe for better display
                                 st.dataframe(
                                     pd.DataFrame({"Client Name": sorted(duplicate_clients)}),
                                     use_container_width=True,
@@ -9816,10 +9815,9 @@ if st.session_state.client_config:
                         # Show client list if not too many
                         if num_clients > 0:
                             with st.expander(f"📋 View Client List ({num_clients})", expanded=num_clients <= 5):
-                                if num_clients <= 20:
+                                if num_clients <= 10:
                                     st.write(", ".join(sorted(import_data['clients'].keys())))
                                 else:
-                                    import pandas as pd
                                     st.dataframe(
                                         pd.DataFrame({"Client Name": sorted(import_data['clients'].keys())}),
                                         use_container_width=True,

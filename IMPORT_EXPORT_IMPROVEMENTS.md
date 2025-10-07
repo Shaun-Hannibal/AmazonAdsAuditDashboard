@@ -20,8 +20,8 @@ The import functionality was breaking when uploading large backup files (like `a
 2. **Better Display for Large Lists**:
    - Shows counts only for new/duplicate clients
    - Uses expandable sections to view client lists
-   - For >20 clients, displays in a scrollable dataframe
-   - For ≤20 clients, shows comma-separated list
+   - For >10 clients, displays in a scrollable dataframe
+   - For ≤10 clients, shows comma-separated list
    - For ≤5 clients, expands automatically
 
 3. **Progress Indication**:
@@ -73,10 +73,10 @@ The import functionality was breaking when uploading large backup files (like `a
 ## Technical Details
 
 - **Bulk duplicate action**: Single radio with 2 options instead of N radio buttons
-- **Dataframe display**: Uses pandas for efficient large list rendering
+- **Dataframe display**: Uses pandas (already imported) for efficient large list rendering
 - **Progress tracking**: Real-time progress bar with item-by-item status
 - **File size calculation**: UTF-8 byte encoding for accurate size
 - **Threshold values**: 
-  - 20 clients: switches to dataframe display
+  - 10 clients: switches to dataframe display
   - 5 clients: auto-expands lists
   - 5MB: shows large file warning
