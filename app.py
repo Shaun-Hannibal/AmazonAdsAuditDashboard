@@ -1146,9 +1146,11 @@ def migrate_old_data():
 USER_DATA_DIR = get_user_data_dir()
 CLIENT_CONFIG_DIR = os.path.join(USER_DATA_DIR, 'clients')
 
-# --- Restore Supabase session on every rerun ---
+# --- Restore Supabase session (only once per session to avoid redundant overhead) ---
 if use_supabase():
-    apply_session_from_state()
+    if '_sb_session_applied' not in st.session_state:
+        apply_session_from_state()
+        st.session_state._sb_session_applied = True
 
 # --- Authentication (Supabase) ---
 if use_supabase():
@@ -1241,7 +1243,7 @@ if 'migration_checked' not in st.session_state:
 
 # --- Client Management Functions ---
 
-@st.cache_data(ttl=300, show_spinner=False)  # Cache for 5 minutes
+@st.cache_data(ttl=600, show_spinner=False)  # Increased from 300s to 600s (10 min)
 def get_existing_clients():
     """Returns a list of client names from the config directory or localStorage."""
     if is_cloud_environment():
@@ -1298,9 +1300,8 @@ def load_client_config(client_name):
             uid = get_current_user_id()
             if not uid:
                 return None
-            # Show spinner for Supabase fetch to give user feedback
-            with st.spinner(f'Loading client configuration...'):
-                config = sb_fetch_client_config(uid, client_name)
+            # sb_fetch_client_config now has session-level caching built in
+            config = sb_fetch_client_config(uid, client_name)
             if config is not None:
                 st.session_state[cache_key] = config
             return config
@@ -5470,7 +5471,7 @@ def display_logo():
         return None
 
 # Custom CSS to implement a dark charcoal gray theme that's compatible with charts
-custom_css = """
+custom_css = r'''
 <style>
 /* Import professional fonts */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -6181,7 +6182,7 @@ div[data-baseweb="select"] > div:first-child > span:first-child {
     observer.observe(document.body, { childList: true, subtree: true });
 })();
 </script>
-"""
+'''
 
 # Initialize session state if needed
 if 'client_config' not in st.session_state:
@@ -6467,6 +6468,8 @@ with st.sidebar:
                         
                         # Create download button
                         export_json = json.dumps(export_data, indent=2)
+                        file_size_bytes = len(export_json.encode('utf-8'))
+                        file_size_mb = file_size_bytes / (1024 * 1024)
                         
                         # Create filename based on selection
                         if len(selected_clients_to_export) == len(existing_clients):
@@ -6475,6 +6478,14 @@ with st.sidebar:
                             filename_prefix = selected_clients_to_export[0].replace(' ', '_')
                         else:
                             filename_prefix = f"{len(selected_clients_to_export)}_clients"
+                        
+                        # Show file size info
+                        if file_size_mb < 1:
+                            st.info(f"📦 Export size: {file_size_bytes / 1024:.1f} KB")
+                        else:
+                            st.info(f"📦 Export size: {file_size_mb:.2f} MB")
+                            if file_size_mb > 5:
+                                st.warning("⚠️ Large export file! Import may take longer. Consider exporting fewer clients at once if you experience issues.")
                         
                         st.download_button(
                             label=f"💾 Download Backup ({len(selected_clients_to_export)} client{'s' if len(selected_clients_to_export) > 1 else ''})",
@@ -6521,12 +6532,36 @@ with st.sidebar:
                     # Show what will be imported
                     st.markdown("**Contents:**")
                     st.write(f"- **Total clients in backup:** {len(import_data['clients'])}")
+                    st.write(f"- ✅ **New clients:** {len(new_clients)}")
+                    st.write(f"- ⚠️ **Duplicate clients:** {len(duplicate_clients)}")
                     
+                    # Show expandable lists for large imports
                     if new_clients:
-                        st.write(f"- ✅ **New clients** ({len(new_clients)}): {', '.join(sorted(new_clients))}")
+                        with st.expander(f"📋 View New Clients ({len(new_clients)})", expanded=len(new_clients) <= 5):
+                            if len(new_clients) <= 20:
+                                st.write(", ".join(sorted(new_clients)))
+                            else:
+                                # Use dataframe for better display
+                                import pandas as pd
+                                st.dataframe(
+                                    pd.DataFrame({"Client Name": sorted(new_clients)}),
+                                    use_container_width=True,
+                                    hide_index=True,
+                                    height=min(400, len(new_clients) * 35 + 38)
+                                )
                     
                     if duplicate_clients:
-                        st.write(f"- ⚠️ **Duplicate clients** ({len(duplicate_clients)}): {', '.join(sorted(duplicate_clients))}")
+                        with st.expander(f"⚠️ View Duplicate Clients ({len(duplicate_clients)})", expanded=len(duplicate_clients) <= 5):
+                            if len(duplicate_clients) <= 20:
+                                st.write(", ".join(sorted(duplicate_clients)))
+                            else:
+                                import pandas as pd
+                                st.dataframe(
+                                    pd.DataFrame({"Client Name": sorted(duplicate_clients)}),
+                                    use_container_width=True,
+                                    hide_index=True,
+                                    height=min(400, len(duplicate_clients) * 35 + 38)
+                                )
                     
                     import_mode = st.radio(
                         "Import mode:",
@@ -6534,26 +6569,25 @@ with st.sidebar:
                         help="Merge will add to existing clients. Replace will delete all current clients first."
                     )
                     
-                    # Handle duplicate resolution in Merge mode
-                    duplicate_actions = {}
+                    # Handle duplicate resolution in Merge mode - SIMPLIFIED APPROACH
+                    duplicate_action_choice = "skip_all"  # default
                     if "Merge" in import_mode and duplicate_clients:
                         st.markdown("---")
                         st.markdown("### 🔄 Duplicate Client Resolution")
-                        st.info("The following clients already exist. Choose what to do with each one:")
+                        st.info(f"{len(duplicate_clients)} client(s) already exist. Choose how to handle all duplicates:")
                         
                         # Store import data in session state for persistence
                         if 'import_backup_data' not in st.session_state:
                             st.session_state.import_backup_data = import_data
                         
-                        for client_name in sorted(duplicate_clients):
-                            with st.expander(f"📋 {client_name}", expanded=False):
-                                action = st.radio(
-                                    f"Action for '{client_name}':",
-                                    ["Skip (keep existing)", "Overwrite (replace with backup)"],
-                                    key=f"duplicate_action_{client_name}",
-                                    help=f"Choose whether to keep your current '{client_name}' or replace it with the version from the backup file."
-                                )
-                                duplicate_actions[client_name] = action
+                        # Single choice for ALL duplicates instead of per-client widgets
+                        duplicate_action_choice = st.radio(
+                            "Action for all duplicate clients:",
+                            ["skip_all", "overwrite_all"],
+                            format_func=lambda x: "Skip all (keep existing)" if x == "skip_all" else "Overwrite all (replace with backup)",
+                            help="This action will apply to all duplicate clients to avoid creating too many widgets.",
+                            key="bulk_duplicate_action"
+                        )
                         
                         st.markdown("---")
                     
@@ -6582,21 +6616,27 @@ with st.sidebar:
                                             if file.endswith('.json'):
                                                 os.remove(os.path.join(CLIENT_CONFIG_DIR, file))
                             
-                            # Import clients
+                            # Import clients with progress indication
                             imported_count = 0
                             skipped_count = 0
                             overwritten_count = 0
                             
-                            for client_name, client_config in import_data['clients'].items():
-                                # In Merge mode, check duplicate actions
+                            total_clients = len(import_data['clients'])
+                            progress_bar = st.progress(0)
+                            status_text = st.empty()
+                            
+                            for idx, (client_name, client_config) in enumerate(import_data['clients'].items(), 1):
+                                # Update progress
+                                progress_bar.progress(idx / total_clients)
+                                status_text.text(f"Importing {idx}/{total_clients}: {client_name}")
+                                
+                                # In Merge mode, check duplicate action (bulk decision)
                                 if "Merge" in import_mode and client_name in duplicate_clients:
-                                    action = duplicate_actions.get(client_name, "Skip (keep existing)")
-                                    
-                                    if "Skip" in action:
+                                    if duplicate_action_choice == "skip_all":
                                         skipped_count += 1
                                         continue
                                     else:
-                                        # Overwrite
+                                        # Overwrite all
                                         save_client_config(client_name, client_config)
                                         overwritten_count += 1
                                         imported_count += 1
@@ -6604,6 +6644,10 @@ with st.sidebar:
                                     # New client or Replace mode
                                     save_client_config(client_name, client_config)
                                     imported_count += 1
+                            
+                            # Clear progress indicators
+                            progress_bar.empty()
+                            status_text.empty()
                             
                             # Clear caches
                             get_existing_clients.clear()
@@ -9764,9 +9808,24 @@ if st.session_state.client_config:
                         
                         # Show what will be imported
                         st.markdown("**Contents:**")
-                        st.write(f"- {len(import_data['clients'])} client(s)")
+                        num_clients = len(import_data['clients'])
                         total_sessions = sum(len(sessions) for sessions in import_data.get('sessions', {}).values())
+                        st.write(f"- {num_clients} client(s)")
                         st.write(f"- {total_sessions} saved session(s)")
+                        
+                        # Show client list if not too many
+                        if num_clients > 0:
+                            with st.expander(f"📋 View Client List ({num_clients})", expanded=num_clients <= 5):
+                                if num_clients <= 20:
+                                    st.write(", ".join(sorted(import_data['clients'].keys())))
+                                else:
+                                    import pandas as pd
+                                    st.dataframe(
+                                        pd.DataFrame({"Client Name": sorted(import_data['clients'].keys())}),
+                                        use_container_width=True,
+                                        hide_index=True,
+                                        height=min(400, num_clients * 35 + 38)
+                                    )
                         
                         col1, col2 = st.columns(2)
                         with col1:
@@ -9800,13 +9859,27 @@ if st.session_state.client_config:
                                             import shutil
                                             shutil.rmtree(CLIENT_SESSIONS_DIR)
                                 
-                                # Import clients
+                                # Import clients with progress
+                                total_items = len(import_data['clients']) + sum(len(sessions) for sessions in import_data.get('sessions', {}).values())
+                                progress_bar = st.progress(0)
+                                status_text = st.empty()
+                                current_item = 0
+                                
                                 for client_name, client_config in import_data['clients'].items():
+                                    current_item += 1
+                                    progress_bar.progress(current_item / total_items)
+                                    status_text.text(f"Importing client {current_item}/{len(import_data['clients'])}: {client_name}")
                                     save_client_config(client_name, client_config)
                                 
                                 # Import sessions
+                                session_counter = 0
                                 for client_name, sessions_list in import_data.get('sessions', {}).items():
                                     for session_item in sessions_list:
+                                        session_counter += 1
+                                        current_item += 1
+                                        progress_bar.progress(current_item / total_items)
+                                        status_text.text(f"Importing session {session_counter}: {session_item['filename']}")
+                                        
                                         filename = session_item['filename']
                                         session_data = session_item['data']
                                         
@@ -9841,6 +9914,10 @@ if st.session_state.client_config:
                                             filepath = os.path.join(client_session_dir, filename)
                                             with open(filepath, 'w') as f:
                                                 json.dump(session_data, f, indent=2)
+                                
+                                # Clear progress indicators
+                                progress_bar.empty()
+                                status_text.empty()
                                 
                                 # Clear caches
                                 get_existing_clients.clear()
