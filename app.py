@@ -6461,10 +6461,27 @@ with st.sidebar:
                         }
                         
                         # Export selected client configs
+                        failed_clients = []
                         for client_name in selected_clients_to_export:
                             client_config = load_client_config(client_name)
                             if client_config:
                                 export_data['clients'][client_name] = client_config
+                            else:
+                                failed_clients.append(client_name)
+                        
+                        # Warn if some clients couldn't be loaded
+                        if failed_clients:
+                            if use_supabase() and not get_current_user_id():
+                                st.error(f"❌ Unable to export {len(failed_clients)} client(s) - Not logged in to Supabase. Please sign in or disable Supabase in the sidebar.")
+                            else:
+                                st.warning(f"⚠️ Unable to load config for {len(failed_clients)} client(s): {', '.join(failed_clients[:3])}{'...' if len(failed_clients) > 3 else ''}")
+                        
+                        # Check if we have any clients to export
+                        if not export_data['clients']:
+                            st.error("❌ No client data could be exported. Please check your authentication or storage settings.")
+                            if use_supabase():
+                                st.info("💡 Try disabling Supabase in the sidebar if you're not using it.")
+                            raise ValueError("No client data available for export")
                         
                         # Create download button
                         export_json = json.dumps(export_data, indent=2)
@@ -6625,6 +6642,11 @@ with st.sidebar:
                                     progress_bar.progress(idx / total_clients)
                                     status_text.text(f"Importing {idx}/{total_clients}: {client_name}")
                                     
+                                    # Check if Supabase is enabled but user is not logged in
+                                    if use_supabase() and not get_current_user_id():
+                                        st.error(f"❌ Import failed: Not logged in to Supabase. Please sign in or disable Supabase in the sidebar.")
+                                        break
+                                    
                                     # In Merge mode, check duplicate action (bulk decision)
                                     if "Merge" in import_mode and client_name in duplicate_clients:
                                         if duplicate_action_choice == "skip_all":
@@ -6632,13 +6654,21 @@ with st.sidebar:
                                             continue
                                         else:
                                             # Overwrite all
-                                            save_client_config(client_name, client_config)
-                                            overwritten_count += 1
-                                            imported_count += 1
+                                            try:
+                                                save_client_config(client_name, client_config)
+                                                overwritten_count += 1
+                                                imported_count += 1
+                                            except Exception as e:
+                                                st.error(f"❌ Failed to import {client_name}: {str(e)}")
+                                                skipped_count += 1
                                     else:
                                         # New client or Replace mode
-                                        save_client_config(client_name, client_config)
-                                        imported_count += 1
+                                        try:
+                                            save_client_config(client_name, client_config)
+                                            imported_count += 1
+                                        except Exception as e:
+                                            st.error(f"❌ Failed to import {client_name}: {str(e)}")
+                                            skipped_count += 1
                                 
                                 # Clear progress indicators
                                 progress_bar.empty()
