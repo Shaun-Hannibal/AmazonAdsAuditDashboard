@@ -7,8 +7,22 @@ from supabase import create_client, Client
 
 # ---------- Supabase client and auth helpers ----------
 
-@st.cache_resource
+_SB_CLIENT: Optional[Client] = None
+
 def get_supabase() -> Optional[Client]:
+    # Respect maintainer override early to avoid any UI spinner/context issues
+    try:
+        _force = st.secrets.get("FORCE_NO_SUPABASE")
+        if isinstance(_force, bool):
+            if _force:
+                return None
+        elif isinstance(_force, (int, float)) and _force != 0:
+            return None
+        elif isinstance(_force, str) and _force.strip().lower() in ("1", "true", "yes", "on"):
+            return None
+    except Exception:
+        pass
+
     try:
         url = st.secrets.get("SUPABASE_URL")
         key = st.secrets.get("SUPABASE_ANON_KEY")
@@ -17,25 +31,34 @@ def get_supabase() -> Optional[Client]:
         key = None
     if not url or not key:
         return None
-    sb = create_client(url, key)
 
-    # Restore session from st.session_state if available (first creation only)
-    try:
-        sess = st.session_state.get("_sb_session")
-        if sess and isinstance(sess, dict):
-            access_token = sess.get("access_token")
-            refresh_token = sess.get("refresh_token")
-            if access_token and refresh_token:
-                sb.auth.set_session(access_token, refresh_token)
-    except Exception:
-        pass
-    return sb
+    # Simple module-level cache to avoid Streamlit caching spinner/context
+    global _SB_CLIENT
+    if _SB_CLIENT is None:
+        _SB_CLIENT = create_client(url, key)
+        sb = _SB_CLIENT
+        # Restore session from st.session_state if available (first creation only)
+        try:
+            sess = st.session_state.get("_sb_session")
+            if sess and isinstance(sess, dict):
+                access_token = sess.get("access_token")
+                refresh_token = sess.get("refresh_token")
+                if access_token and refresh_token:
+                    sb.auth.set_session(access_token, refresh_token)
+        except Exception:
+            pass
+        return sb
+    else:
+        return _SB_CLIENT
 
 
 def apply_session_from_state() -> None:
     """Ensure the cached Supabase client has the current session from st.session_state.
     Safe to call on every rerun. No-op if not configured or no tokens present.
     """
+    # If Supabase is disabled or not configured, skip early
+    if not is_supabase_configured():
+        return
     sb = get_supabase()
     if not sb:
         return
@@ -52,6 +75,22 @@ def apply_session_from_state() -> None:
 
 def is_supabase_configured() -> bool:
     try:
+        # Maintainer override via secret: FORCE_NO_SUPABASE=true/1/yes/on
+        force_off = False
+        try:
+            val = st.secrets.get("FORCE_NO_SUPABASE")
+            if isinstance(val, bool):
+                force_off = val
+            elif isinstance(val, (int, float)):
+                force_off = val != 0
+            elif isinstance(val, str):
+                force_off = val.strip().lower() in ("1", "true", "yes", "on")
+        except Exception:
+            force_off = False
+
+        if force_off:
+            return False
+
         return bool(st.secrets.get("SUPABASE_URL") and st.secrets.get("SUPABASE_ANON_KEY"))
     except Exception:
         return False
@@ -187,21 +226,36 @@ def sign_out() -> None:
 # Columns: id (uuid), user_id (uuid), client_name (text), config (jsonb), updated_at (timestamptz)
 
 
-@st.cache_data(ttl=120)
+@st.cache_data(ttl=600, show_spinner=False)  # Increased from 120s to 600s (10 min)
 def list_client_names(user_id: str) -> List[str]:
+    """List all client names for a user. Cached for 10 minutes."""
+    # Session-level cache layer for faster access within the same session
+    cache_key = f"_client_names_cache_{user_id}"
+    if cache_key in st.session_state:
+        return st.session_state[cache_key]
+    
     sb = get_supabase()
     if not sb:
         return []
     try:
         res = sb.table("client_configs").select("client_name").eq("user_id", user_id).execute()
         names = sorted({row["client_name"] for row in (res.data or []) if row.get("client_name")})
-        return list(names)
+        result = list(names)
+        # Cache in session for instant access during this session
+        st.session_state[cache_key] = result
+        return result
     except Exception:
         return []
 
 
-@st.cache_data(ttl=120)
+@st.cache_data(ttl=600, show_spinner=False)  # Increased from 120s to 600s (10 min)
 def fetch_client_config(user_id: str, client_name: str) -> Optional[Dict[str, Any]]:
+    """Fetch a client config from Supabase. Cached for 10 minutes."""
+    # Session-level cache for instant access within the same session
+    cache_key = f"_config_cache_{user_id}_{client_name}"
+    if cache_key in st.session_state:
+        return st.session_state[cache_key]
+    
     sb = get_supabase()
     if not sb:
         return None
@@ -223,7 +277,11 @@ def fetch_client_config(user_id: str, client_name: str) -> Optional[Dict[str, An
         except Exception:
             pass
         if res.data and isinstance(res.data, dict):
-            return res.data.get("config")
+            result = res.data.get("config")
+            # Cache in session for instant access
+            if result is not None:
+                st.session_state[cache_key] = result
+            return result
     except Exception:
         return None
     return None
@@ -242,6 +300,18 @@ def upsert_client_config(user_id: str, client_name: str, config: Dict[str, Any])
         # Use upsert on unique (user_id, client_name)
         # Note: supabase-py expects a comma-separated string for on_conflict
         sb.table("client_configs").upsert(payload, on_conflict="user_id,client_name").execute()
+        
+        # Invalidate caches after write
+        cache_key_config = f"_config_cache_{user_id}_{client_name}"
+        cache_key_names = f"_client_names_cache_{user_id}"
+        st.session_state.pop(cache_key_config, None)
+        st.session_state.pop(cache_key_names, None)
+        try:
+            list_client_names.clear()
+            fetch_client_config.clear()
+        except Exception:
+            pass
+        
         return True
     except Exception as e:
         try:
@@ -257,8 +327,14 @@ def upsert_client_config(user_id: str, client_name: str, config: Dict[str, Any])
 # Columns: id, user_id, client_name, filename, display_name, timestamp, created_date, description, data_types (jsonb), session_data (jsonb)
 
 
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=300, show_spinner=False)  # Increased from 60s to 300s (5 min)
 def list_sessions(user_id: str, client_name: str) -> List[Dict[str, Any]]:
+    """List all sessions for a client. Cached for 5 minutes."""
+    # Session-level cache for faster access
+    cache_key = f"_sessions_cache_{user_id}_{client_name}"
+    if cache_key in st.session_state:
+        return st.session_state[cache_key]
+    
     sb = get_supabase()
     if not sb:
         return []
@@ -279,7 +355,10 @@ def list_sessions(user_id: str, client_name: str) -> List[Dict[str, Any]]:
                 st.session_state.debug_messages.append(f"[Supabase] list_sessions {client_name} took {int(_elapsed)}ms")
         except Exception:
             pass
-        return res.data or []
+        result = res.data or []
+        # Cache in session
+        st.session_state[cache_key] = result
+        return result
     except Exception:
         return []
 
@@ -303,6 +382,15 @@ def save_session(user_id: str, client_name: str, filename: str, metadata: Dict[s
         # unique (user_id, client_name, filename)
         # supabase-py expects a comma-separated string for on_conflict
         sb.table("client_sessions").upsert(payload, on_conflict="user_id,client_name,filename").execute()
+        
+        # Invalidate session list cache after write
+        cache_key = f"_sessions_cache_{user_id}_{client_name}"
+        st.session_state.pop(cache_key, None)
+        try:
+            list_sessions.clear()
+        except Exception:
+            pass
+        
         return True
     except Exception as e:
         try:
@@ -340,6 +428,15 @@ def delete_session(user_id: str, client_name: str, filename: str) -> bool:
         return False
     try:
         sb.table("client_sessions").delete().eq("user_id", user_id).eq("client_name", client_name).eq("filename", filename).execute()
+        
+        # Invalidate session list cache after delete
+        cache_key = f"_sessions_cache_{user_id}_{client_name}"
+        st.session_state.pop(cache_key, None)
+        try:
+            list_sessions.clear()
+        except Exception:
+            pass
+        
         return True
     except Exception:
         return False
