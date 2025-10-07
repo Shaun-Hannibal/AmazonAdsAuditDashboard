@@ -200,11 +200,14 @@ def list_client_names(user_id: str) -> List[str]:
         return []
 
 
+@st.cache_data(ttl=120)
 def fetch_client_config(user_id: str, client_name: str) -> Optional[Dict[str, Any]]:
     sb = get_supabase()
     if not sb:
         return None
     try:
+        import time as _t
+        _t0 = _t.perf_counter()
         res = (
             sb.table("client_configs")
             .select("config")
@@ -213,6 +216,12 @@ def fetch_client_config(user_id: str, client_name: str) -> Optional[Dict[str, An
             .single()
             .execute()
         )
+        _elapsed = (_t.perf_counter() - _t0) * 1000
+        try:
+            if "debug_messages" in st.session_state:
+                st.session_state.debug_messages.append(f"[Supabase] fetch_client_config {client_name} took {int(_elapsed)}ms")
+        except Exception:
+            pass
         if res.data and isinstance(res.data, dict):
             return res.data.get("config")
     except Exception:
@@ -248,11 +257,14 @@ def upsert_client_config(user_id: str, client_name: str, config: Dict[str, Any])
 # Columns: id, user_id, client_name, filename, display_name, timestamp, created_date, description, data_types (jsonb), session_data (jsonb)
 
 
+@st.cache_data(ttl=60)
 def list_sessions(user_id: str, client_name: str) -> List[Dict[str, Any]]:
     sb = get_supabase()
     if not sb:
         return []
     try:
+        import time as _t
+        _t0 = _t.perf_counter()
         res = (
             sb.table("client_sessions")
             .select("filename, display_name, timestamp, created_date, description, data_types")
@@ -261,6 +273,12 @@ def list_sessions(user_id: str, client_name: str) -> List[Dict[str, Any]]:
             .order("timestamp", desc=True)
             .execute()
         )
+        _elapsed = (_t.perf_counter() - _t0) * 1000
+        try:
+            if "debug_messages" in st.session_state:
+                st.session_state.debug_messages.append(f"[Supabase] list_sessions {client_name} took {int(_elapsed)}ms")
+        except Exception:
+            pass
         return res.data or []
     except Exception:
         return []
