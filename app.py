@@ -6623,6 +6623,27 @@ with st.sidebar:
                                 get_existing_clients.clear()
                                 _load_client_config_from_file.clear()
                                 
+                                # Clear Supabase session-state cache keys if using Supabase
+                                if use_supabase():
+                                    uid = get_current_user_id()
+                                    if uid:
+                                        # Clear the session-level cache for client names
+                                        cache_key_names = f"_client_names_cache_{uid}"
+                                        st.session_state.pop(cache_key_names, None)
+                                        # Clear individual client config caches
+                                        for client_name in import_data['clients'].keys():
+                                            cache_key_config = f"_config_cache_{uid}_{client_name}"
+                                            st.session_state.pop(cache_key_config, None)
+                                            # Also clear the app-level cache
+                                            app_cache_key = f'client_config_cache_{client_name}'
+                                            st.session_state.pop(app_cache_key, None)
+                                        # Clear the Streamlit @cache_data decorated functions
+                                        try:
+                                            sb_list_client_names.clear()
+                                            sb_fetch_client_config.clear()
+                                        except Exception:
+                                            pass
+                                
                                 # Show detailed success message
                                 if "Replace" in import_mode:
                                     st.success(f"✅ Successfully imported {imported_count} client(s)!")
@@ -6637,30 +6658,51 @@ with st.sidebar:
                                     
                                     st.success(f"✅ Import complete: {', '.join(result_parts)} client(s)!")
 
-                                # In cloud without Supabase, localStorage fallback can be unreliable on Streamlit Cloud.
-                                # To avoid hangs and make the app usable, keep imported clients in-session and auto-load the first one.
-                                if is_cloud_environment() and not use_supabase():
-                                    try:
-                                        st.session_state.in_memory_clients = import_data.get('clients', {})
-                                        first_client = None
-                                        for name in st.session_state.in_memory_clients.keys():
-                                            first_client = name
-                                            break
-                                        if first_client:
-                                            st.warning("Cloud mode without Supabase: clients are available for this session only. Configure Supabase to persist across reloads.")
-                                            st.session_state.selected_client_name = first_client
-                                            st.session_state.client_config = st.session_state.in_memory_clients[first_client]
-                                            # Refresh client list cache so the name shows up under Load Existing Client during this session
-                                            try:
-                                                get_existing_clients.clear()
-                                            except Exception:
-                                                pass
-                                            st.session_state.current_page = 'file_uploads'
-                                            st.balloons()
-                                            st.rerun()
-                                    except Exception:
-                                        pass
+                                # Auto-load first imported client and rerun to refresh UI
+                                if imported_count > 0:
+                                    should_rerun = False
+                                    
+                                    # In cloud without Supabase, localStorage fallback can be unreliable on Streamlit Cloud.
+                                    # To avoid hangs and make the app usable, keep imported clients in-session and auto-load the first one.
+                                    if is_cloud_environment() and not use_supabase():
+                                        try:
+                                            st.session_state.in_memory_clients = import_data.get('clients', {})
+                                            first_client = None
+                                            for name in st.session_state.in_memory_clients.keys():
+                                                first_client = name
+                                                break
+                                            if first_client:
+                                                st.warning("Cloud mode without Supabase: clients are available for this session only. Configure Supabase to persist across reloads.")
+                                                st.session_state.selected_client_name = first_client
+                                                st.session_state.client_config = st.session_state.in_memory_clients[first_client]
+                                                # Refresh client list cache so the name shows up under Load Existing Client during this session
+                                                try:
+                                                    get_existing_clients.clear()
+                                                except Exception:
+                                                    pass
+                                                st.session_state.current_page = 'file_uploads'
+                                                should_rerun = True
+                                        except Exception:
+                                            pass
+                                    else:
+                                        # For all other modes (local, cloud with Supabase), auto-load first client
+                                        try:
+                                            first_imported = list(import_data['clients'].keys())[0]
+                                            st.session_state.selected_client_name = first_imported
+                                            # Load the config to populate session state
+                                            loaded_config = load_client_config(first_imported)
+                                            if loaded_config:
+                                                st.session_state.client_config = loaded_config
+                                                st.session_state.current_page = 'file_uploads'
+                                                should_rerun = True
+                                        except Exception:
+                                            pass
+                                    
+                                    if should_rerun:
+                                        st.balloons()
+                                        st.rerun()
                                 
+                                # Fallback: just show success and info message (if we didn't rerun)
                                 st.balloons()
                                 st.info("Please select 'Load Existing Client' to access your imported clients.")
                                 
