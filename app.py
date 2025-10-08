@@ -6445,8 +6445,6 @@ with st.sidebar:
                         
                         # Merge clients from this file
                         for client_name, client_config in file_data['clients'].items():
-                            if client_name in merged_import_data['clients']:
-                                st.warning(f"⚠️ Client '{client_name}' appears in multiple files. Using data from {uploaded_file.name}.")
                             merged_import_data['clients'][client_name] = client_config
                         
                         files_processed += 1
@@ -6567,20 +6565,24 @@ with st.sidebar:
                                 imported_count = 0
                                 skipped_count = 0
                                 overwritten_count = 0
+                                failed_imports = []  # Track failures instead of showing errors in loop
                                 
                                 total_clients = len(import_data['clients'])
                                 progress_bar = st.progress(0)
                                 status_text = st.empty()
                                 
+                                # Check Supabase auth BEFORE loop to prevent crashes
+                                if use_supabase() and not get_current_user_id():
+                                    progress_bar.empty()
+                                    status_text.empty()
+                                    st.error("❌ Import failed: Not logged in to Supabase. Please sign in or disable Supabase in the sidebar.")
+                                    raise ValueError("Supabase authentication required")
+                                
                                 for idx, (client_name, client_config) in enumerate(import_data['clients'].items(), 1):
-                                    # Update progress
-                                    progress_bar.progress(idx / total_clients)
-                                    status_text.text(f"Importing {idx}/{total_clients}: {client_name}")
-                                    
-                                    # Check if Supabase is enabled but user is not logged in
-                                    if use_supabase() and not get_current_user_id():
-                                        st.error(f"❌ Import failed: Not logged in to Supabase. Please sign in or disable Supabase in the sidebar.")
-                                        break
+                                    # Update progress less frequently for large imports (every 10% or every client if <10 clients)
+                                    if total_clients <= 10 or idx % max(1, total_clients // 10) == 0 or idx == total_clients:
+                                        progress_bar.progress(idx / total_clients)
+                                        status_text.text(f"Importing {idx}/{total_clients}...")
                                     
                                     # In Merge mode, check duplicate action (bulk decision)
                                     if "Merge" in import_mode and client_name in duplicate_clients:
@@ -6594,7 +6596,7 @@ with st.sidebar:
                                                 overwritten_count += 1
                                                 imported_count += 1
                                             except Exception as e:
-                                                st.error(f"❌ Failed to import {client_name}: {str(e)}")
+                                                failed_imports.append((client_name, str(e)))
                                                 skipped_count += 1
                                     else:
                                         # New client or Replace mode
@@ -6602,12 +6604,20 @@ with st.sidebar:
                                             save_client_config(client_name, client_config)
                                             imported_count += 1
                                         except Exception as e:
-                                            st.error(f"❌ Failed to import {client_name}: {str(e)}")
+                                            failed_imports.append((client_name, str(e)))
                                             skipped_count += 1
                                 
                                 # Clear progress indicators
                                 progress_bar.empty()
                                 status_text.empty()
+                                
+                                # Show any import failures
+                                if failed_imports:
+                                    with st.expander(f"⚠️ {len(failed_imports)} client(s) failed to import", expanded=True):
+                                        for client_name, error in failed_imports[:10]:  # Show max 10
+                                            st.error(f"❌ {client_name}: {error}")
+                                        if len(failed_imports) > 10:
+                                            st.warning(f"... and {len(failed_imports) - 10} more")
                                 
                                 # Clear caches
                                 get_existing_clients.clear()
