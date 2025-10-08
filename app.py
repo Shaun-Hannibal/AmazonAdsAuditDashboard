@@ -43,6 +43,7 @@ import glob
 import time
 import io
 import math
+import calendar
 import traceback
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -50,7 +51,10 @@ from collections import defaultdict
 from io import StringIO
 from urllib.parse import quote
 from typing import Dict, List, Tuple, Optional, Any, Union, Set
-import importlib
+from sklearn.linear_model import LinearRegression
+from PIL import Image
+from wordcloud import WordCloud, STOPWORDS
+import matplotlib.pyplot as plt
 import uuid
 import functools
 from contextlib import contextmanager
@@ -68,7 +72,6 @@ try:
         sign_in,
         sign_up,
         sign_out,
-        apply_session_from_state,
         list_client_names as sb_list_client_names,
         fetch_client_config as sb_fetch_client_config,
         upsert_client_config as sb_upsert_client_config,
@@ -92,9 +95,6 @@ except Exception:
         return False, "Supabase not available"
 
     def sign_out():
-        return None
-
-    def apply_session_from_state():
         return None
 
     def sb_list_client_names(uid):
@@ -920,27 +920,9 @@ def is_cloud_environment():
 def use_supabase():
     """Return True when running in cloud and Supabase credentials are present."""
     try:
-        # Allow user to disable Supabase temporarily if network issues occur
-        if st.session_state.get('disable_supabase', False):
-            return False
         return is_cloud_environment() and is_supabase_configured()
     except Exception:
         return False
-
-# --- Lazy import helpers to speed up initial load ---
-@functools.lru_cache(maxsize=None)
-def _lazy_mod(name: str):
-    return importlib.import_module(name)
-
-def get_plt():
-    return _lazy_mod('matplotlib.pyplot')
-
-def get_wordcloud():
-    mod = _lazy_mod('wordcloud')
-    return mod.WordCloud, mod.STOPWORDS
-
-def get_linear_regression():
-    return _lazy_mod('sklearn.linear_model').LinearRegression
 
 def get_localStorage_value(key):
     """Get a value from browser localStorage."""
@@ -1146,14 +1128,8 @@ def migrate_old_data():
 USER_DATA_DIR = get_user_data_dir()
 CLIENT_CONFIG_DIR = os.path.join(USER_DATA_DIR, 'clients')
 
-# --- Restore Supabase session (only once per session to avoid redundant overhead) ---
-if use_supabase():
-    if '_sb_session_applied' not in st.session_state:
-        apply_session_from_state()
-        st.session_state._sb_session_applied = True
-
 # --- Authentication (Supabase) ---
-if use_supabase():
+if is_cloud_environment() and is_supabase_configured():
     with st.sidebar:
         st.markdown("### Account")
         current_uid = get_current_user_id()
@@ -1161,11 +1137,7 @@ if use_supabase():
             st.success("Signed in")
             if st.button("Sign out", key="sb_sign_out"):
                 sign_out()
-                try:
-                    clear_client_caches()
-                    get_saved_sessions.clear()
-                except Exception:
-                    pass
+                clear_client_caches()
                 st.rerun()
         else:
             # Persist last-typed credentials across mode switches and reruns
@@ -1190,11 +1162,7 @@ if use_supabase():
                     ok, msg = sign_in(email, password)
                     if ok:
                         st.success(msg)
-                        try:
-                            clear_client_caches()
-                            get_saved_sessions.clear()
-                        except Exception:
-                            pass
+                        clear_client_caches()
                         st.rerun()
                     else:
                         st.error(msg)
@@ -1203,11 +1171,7 @@ if use_supabase():
                     ok, msg = sign_up(email, password)
                     if ok:
                         st.success(msg)
-                        try:
-                            clear_client_caches()
-                            get_saved_sessions.clear()
-                        except Exception:
-                            pass
+                        clear_client_caches()
                         st.rerun()
                     else:
                         # Hide Supabase cooldown text; auto-switch to Sign in and rerun
@@ -1243,23 +1207,9 @@ if 'migration_checked' not in st.session_state:
 
 # --- Client Management Functions ---
 
-def clear_client_caches():
-    """Helper to clear all client-related caches across all storage layers."""
-    # Clear filesystem cache (local only)
-    try:
-        _load_client_config_from_file.clear()
-    except Exception:
-        pass
-    
-    # SQLite and Supabase caches are self-managing via TTL
-    # Session state caches are cleared per-key as needed
-
+@st.cache_data(ttl=300, show_spinner=False)  # Cache for 5 minutes
 def get_existing_clients():
-    """Returns a list of client names from the config directory or localStorage.
-    
-    Caching is handled at the supabase_store layer with multi-tier caching
-    (session_state -> SQLite -> Supabase) for optimal performance.
-    """
+    """Returns a list of client names from the config directory or localStorage."""
     if is_cloud_environment():
         # Prefer Supabase per-user storage in cloud
         if use_supabase():
@@ -1277,19 +1227,7 @@ def get_existing_clients():
                     st.session_state.client_list = []
             else:
                 st.session_state.client_list = []
-        # Merge any in-session imported clients so they appear during this session
-        session_only_clients = []
-        try:
-            if 'in_memory_clients' in st.session_state and isinstance(st.session_state.in_memory_clients, dict):
-                session_only_clients = list(st.session_state.in_memory_clients.keys())
-        except Exception:
-            session_only_clients = []
-        base_list = st.session_state.get('client_list', [])
-        if session_only_clients:
-            # Deduplicate while preserving alphabetical order
-            merged = sorted(set(base_list) | set(session_only_clients))
-            return merged
-        return base_list
+        return st.session_state.get('client_list', [])
     else:
         # Use filesystem locally
         if not os.path.exists(CLIENT_CONFIG_DIR):
@@ -1297,6 +1235,17 @@ def get_existing_clients():
         clients = [f.replace('.json', '') for f in os.listdir(CLIENT_CONFIG_DIR) if f.endswith('.json')]
         log_app_event(f"get_existing_clients() found {len(clients)} clients in {CLIENT_CONFIG_DIR}")
         return sorted(clients)
+
+def clear_client_caches():
+    """Helper to clear all client-related caches across all storage layers."""
+    # Clear filesystem cache (local only)
+    try:
+        _load_client_config_from_file.clear()
+    except Exception:
+        pass
+    
+    # SQLite and Supabase caches are self-managing via TTL
+    # Session state caches are cleared per-key as needed
 
 def load_client_config(client_name):
     """Loads the configuration for a given client from localStorage or filesystem.
@@ -1306,29 +1255,20 @@ def load_client_config(client_name):
     Session state provides the caching layer instead.
     """
     if is_cloud_environment():
-        cache_key = f'client_config_cache_{client_name}'
         # Cloud: prefer Supabase
         if use_supabase():
+            cache_key = f'client_config_cache_{client_name}'
             if cache_key in st.session_state:
                 return st.session_state[cache_key]
             uid = get_current_user_id()
             if not uid:
                 return None
-            # sb_fetch_client_config now has session-level caching built in
             config = sb_fetch_client_config(uid, client_name)
             if config is not None:
                 st.session_state[cache_key] = config
             return config
-        # Cloud without Supabase: use session-only in-memory store first
-        try:
-            if 'in_memory_clients' in st.session_state and isinstance(st.session_state.in_memory_clients, dict):
-                if client_name in st.session_state.in_memory_clients:
-                    config = st.session_state.in_memory_clients[client_name]
-                    st.session_state[cache_key] = config
-                    return config
-        except Exception:
-            pass
         # Legacy: browser localStorage path
+        cache_key = f'client_config_cache_{client_name}'
         if cache_key in st.session_state:
             return st.session_state[cache_key]
         stored_config = get_localStorage_value(f'amazon_dashboard_client_{client_name}')
@@ -1446,44 +1386,26 @@ def save_client_config(client_name, config_data):
             clear_client_caches()
             st.session_state.settings_updated = True
             return
-        # Cloud without Supabase: session-only fallback with best-effort localStorage write
-        try:
-            # Maintain in-memory map
-            if 'in_memory_clients' not in st.session_state or not isinstance(st.session_state.in_memory_clients, dict):
-                st.session_state.in_memory_clients = {}
-            st.session_state.in_memory_clients[client_name] = config_data
-        except Exception:
-            pass
-        # Try legacy localStorage write (may be unsupported on Streamlit Cloud)
-        try:
-            previous_data = None
-            stored_config = get_localStorage_value(f'amazon_dashboard_client_{client_name}')
-            if stored_config:
-                try:
-                    previous_data = json.loads(stored_config)
-                except Exception:
-                    previous_data = None
-            if previous_data is None or _normalise(previous_data) != _normalise(config_data):
-                set_localStorage_value(f'amazon_dashboard_client_{client_name}', config_data)
-        except Exception:
-            # Ignore localStorage failures in cloud; we rely on in-session memory
-            pass
+        # Legacy: browser localStorage
+        previous_data = None
+        stored_config = get_localStorage_value(f'amazon_dashboard_client_{client_name}')
+        if stored_config:
+            try:
+                previous_data = json.loads(stored_config)
+            except:
+                previous_data = None
+        if previous_data is not None and _normalise(previous_data) == _normalise(config_data):
+            st.session_state.settings_updated = False
+            return
+        set_localStorage_value(f'amazon_dashboard_client_{client_name}', config_data)
         cache_key = f'client_config_cache_{client_name}'
         st.session_state[cache_key] = config_data
-        # Merge into visible client list for this session
-        try:
-            if 'client_list' not in st.session_state or not isinstance(st.session_state.client_list, list):
-                st.session_state.client_list = []
-            if client_name not in st.session_state.client_list:
-                st.session_state.client_list.append(client_name)
-                try:
-                    set_localStorage_value('amazon_dashboard_client_list', st.session_state.client_list)
-                except Exception:
-                    pass
-        except Exception:
-            pass
+        if 'client_list' not in st.session_state:
+            st.session_state.client_list = []
+        if client_name not in st.session_state.client_list:
+            st.session_state.client_list.append(client_name)
+            set_localStorage_value('amazon_dashboard_client_list', st.session_state.client_list)
         clear_client_caches()
-        st.session_state.clients_list_changed = True
         st.session_state.settings_updated = True
     else:
         # Use filesystem locally
@@ -5086,10 +5008,6 @@ def generate_search_term_wordcloud(search_terms_df, filter_type='all', remove_as
     Returns:
         matplotlib figure with the word cloud visualization
     """
-    # Lazy import heavy libs
-    plt = get_plt()
-    WordCloud, STOPWORDS = get_wordcloud()
-
     if search_terms_df is None or search_terms_df.empty or 'Search Term' not in search_terms_df.columns:
         # Create an empty figure with a message
         fig, ax = plt.subplots(figsize=(10, 6))
@@ -5482,7 +5400,7 @@ def display_logo():
         return None
 
 # Custom CSS to implement a dark charcoal gray theme that's compatible with charts
-custom_css = r'''
+custom_css = """
 <style>
 /* Import professional fonts */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -6193,7 +6111,7 @@ div[data-baseweb="select"] > div:first-child > span:first-child {
     observer.observe(document.body, { childList: true, subtree: true });
 })();
 </script>
-'''
+"""
 
 # Initialize session state if needed
 if 'client_config' not in st.session_state:
@@ -6219,21 +6137,6 @@ st.markdown(custom_css, unsafe_allow_html=True)
 # Create a dark sidebar with client selection
 with st.sidebar:
     st.markdown("<h2 style='text-align: center;'>Client Selection</h2>", unsafe_allow_html=True)
-    # Optional: allow disabling Supabase to fall back to session-only storage in cloud
-    try:
-        if is_cloud_environment() and is_supabase_configured():
-            prev = bool(st.session_state.get('disable_supabase', False))
-            toggled = st.checkbox("Disable Supabase (session-only)", value=prev, help="If you're seeing hangs or network issues, use session-only storage. Data will not persist across reloads.")
-            if toggled != prev:
-                st.session_state.disable_supabase = toggled
-                # Clear caches so UI reflects new storage mode
-                try:
-                    clear_client_caches()
-                except Exception:
-                    pass
-                st.rerun()
-    except Exception:
-        pass
     
     # Cache is automatically reset after 1 hour or when new data is uploaded
     # Also clear cache if a client was just saved/imported
@@ -6259,10 +6162,7 @@ with st.sidebar:
                 client_name = st.session_state.selected_client_name
                 st.session_state.client_load_attempt_count += 1
                 log_app_event(f"Auto-loading client (attempt {st.session_state.client_load_attempt_count}): {client_name}")
-                
-                # Show status message during auto-load
-                with st.spinner(f'Restoring client session: {client_name}...'):
-                    loaded_config = load_client_config(client_name)
+                loaded_config = load_client_config(client_name)
                 
                 if loaded_config is None:
                     st.error(f"❌ Failed to load client '{client_name}'. The configuration file may be missing or corrupted.")
@@ -6321,9 +6221,6 @@ with st.sidebar:
                             st.session_state.sales_report_data = None
                             st.session_state.current_page = 'file_uploads'  # Redirect to File Uploads page
                             log_app_event(f"Client loaded successfully: {selected_client}")
-                            st.success(f"✅ Client '{selected_client}' loaded successfully!")
-                            import time
-                            time.sleep(0.5)  # Brief pause to show success message
                             st.rerun()
                     except Exception as e:
                         st.error(f"Error loading client: {str(e)}")
@@ -6426,307 +6323,6 @@ with st.sidebar:
         
         st.markdown("---")
         
-        # Import section
-        st.subheader("📥 Import Client Data")
-        st.markdown("Upload one or more previously exported backup files to restore your client configurations.")
-        
-        uploaded_backups = st.file_uploader("Choose backup file(s)", type=['json'], accept_multiple_files=True, key="client_backup_import")
-        
-        if uploaded_backups:
-            # Merge all uploaded files into a single import_data structure
-            merged_import_data = {
-                'version': '1.0',
-                'export_date': datetime.now().isoformat(),
-                'clients': {}
-            }
-            
-            file_errors = []
-            files_processed = 0
-            
-            with st.spinner(f"Loading {len(uploaded_backups)} backup file(s)..."):
-                for uploaded_file in uploaded_backups:
-                    try:
-                        file_data = json.load(uploaded_file)
-                        
-                        # Validate individual file
-                        if 'clients' not in file_data or not isinstance(file_data.get('clients'), dict):
-                            file_errors.append(f"{uploaded_file.name}: Invalid backup file format")
-                            continue
-                        
-                        # Merge clients from this file
-                        for client_name, client_config in file_data['clients'].items():
-                            merged_import_data['clients'][client_name] = client_config
-                        
-                        files_processed += 1
-                        
-                    except json.JSONDecodeError:
-                        file_errors.append(f"{uploaded_file.name}: Invalid JSON format")
-                    except Exception as e:
-                        file_errors.append(f"{uploaded_file.name}: {str(e)}")
-                
-                # Show file processing results
-                if file_errors:
-                    with st.expander(f"⚠️ {len(file_errors)} file(s) had errors", expanded=True):
-                        for error in file_errors:
-                            st.error(f"❌ {error}")
-                
-                if files_processed > 0:
-                    st.success(f"✅ Successfully loaded {files_processed} backup file(s)")
-                
-                # Use the merged data for import processing
-                import_data = merged_import_data
-                
-                try:
-                    # Validate merged backup
-                    if not import_data['clients']:
-                        st.error("❌ No valid client data found in uploaded files.")
-                    
-                    else:
-                        # Detect duplicates
-                        duplicate_clients = []
-                        new_clients = []
-                        
-                        for client_name in import_data['clients'].keys():
-                            if client_name in existing_clients:
-                                duplicate_clients.append(client_name)
-                            else:
-                                new_clients.append(client_name)
-                        
-                        # Show what will be imported
-                        st.markdown("**Contents:**")
-                        st.write(f"- **Total clients in backup:** {len(import_data['clients'])}")
-                        st.write(f"- ✅ **New clients:** {len(new_clients)}")
-                        st.write(f"- ⚠️ **Duplicate clients:** {len(duplicate_clients)}")
-                        
-                        # Show expandable lists for large imports (collapsed by default to prevent render issues)
-                        if new_clients:
-                            with st.expander(f"📋 View New Clients ({len(new_clients)})", expanded=False):
-                                if len(new_clients) <= 10:
-                                    st.write(", ".join(sorted(new_clients)))
-                                else:
-                                    # Use dataframe for better display
-                                    st.dataframe(
-                                        pd.DataFrame({"Client Name": sorted(new_clients)}),
-                                        use_container_width=True,
-                                        hide_index=True,
-                                        height=min(300, len(new_clients) * 35 + 38)
-                                    )
-                        
-                        if duplicate_clients:
-                            with st.expander(f"⚠️ View Duplicate Clients ({len(duplicate_clients)})", expanded=False):
-                                if len(duplicate_clients) <= 10:
-                                    st.write(", ".join(sorted(duplicate_clients)))
-                                else:
-                                    # Use dataframe for better display
-                                    st.dataframe(
-                                        pd.DataFrame({"Client Name": sorted(duplicate_clients)}),
-                                        use_container_width=True,
-                                        hide_index=True,
-                                        height=min(300, len(duplicate_clients) * 35 + 38)
-                                    )
-                        
-                        import_mode = st.radio(
-                            "Import mode:",
-                            ["Merge (keep existing clients)", "Replace (overwrite all clients)"],
-                            help="Merge will add to existing clients. Replace will delete all current clients first."
-                        )
-                        
-                        # Handle duplicate resolution in Merge mode - SIMPLIFIED APPROACH
-                        duplicate_action_choice = "skip_all"  # default
-                        if "Merge" in import_mode and duplicate_clients:
-                            st.markdown("---")
-                            st.markdown("### 🔄 Duplicate Client Resolution")
-                            st.info(f"{len(duplicate_clients)} client(s) already exist. Choose how to handle all duplicates:")
-                            
-                            # Single choice for ALL duplicates instead of per-client widgets
-                            duplicate_action_choice = st.radio(
-                                "Action for all duplicate clients:",
-                                ["skip_all", "overwrite_all"],
-                                format_func=lambda x: "Skip all (keep existing)" if x == "skip_all" else "Overwrite all (replace with backup)",
-                                help="This action will apply to all duplicate clients to avoid creating too many widgets.",
-                                key="bulk_duplicate_action"
-                            )
-                            
-                            st.markdown("---")
-                        
-                        if st.button("🔄 Import Clients", type="primary", use_container_width=True):
-                            try:
-                                
-                                # Replace mode: clear existing clients
-                                if "Replace" in import_mode:
-                                    if is_cloud_environment():
-                                        # Clear localStorage
-                                        for client_name in existing_clients:
-                                            remove_localStorage_value(f'amazon_dashboard_client_{client_name}')
-                                            # Clear session state cache
-                                            cache_key = f'client_config_cache_{client_name}'
-                                            if cache_key in st.session_state:
-                                                del st.session_state[cache_key]
-                                        remove_localStorage_value('amazon_dashboard_client_list')
-                                        st.session_state.client_list = []
-                                    else:
-                                        # Clear filesystem
-                                        if os.path.exists(CLIENT_CONFIG_DIR):
-                                            for file in os.listdir(CLIENT_CONFIG_DIR):
-                                                if file.endswith('.json'):
-                                                    os.remove(os.path.join(CLIENT_CONFIG_DIR, file))
-                                
-                                # Import clients with progress indication
-                                imported_count = 0
-                                skipped_count = 0
-                                overwritten_count = 0
-                                failed_imports = []  # Track failures instead of showing errors in loop
-                                
-                                total_clients = len(import_data['clients'])
-                                progress_bar = st.progress(0)
-                                status_text = st.empty()
-                                
-                                # Check Supabase auth BEFORE loop to prevent crashes
-                                if use_supabase() and not get_current_user_id():
-                                    progress_bar.empty()
-                                    status_text.empty()
-                                    st.error("❌ Import failed: Not logged in to Supabase. Please sign in or disable Supabase in the sidebar.")
-                                    raise ValueError("Supabase authentication required")
-                                
-                                for idx, (client_name, client_config) in enumerate(import_data['clients'].items(), 1):
-                                    # Update progress less frequently for large imports (every 10% or every client if <10 clients)
-                                    if total_clients <= 10 or idx % max(1, total_clients // 10) == 0 or idx == total_clients:
-                                        progress_bar.progress(idx / total_clients)
-                                        status_text.text(f"Importing {idx}/{total_clients}...")
-                                    
-                                    # In Merge mode, check duplicate action (bulk decision)
-                                    if "Merge" in import_mode and client_name in duplicate_clients:
-                                        if duplicate_action_choice == "skip_all":
-                                            skipped_count += 1
-                                            continue
-                                        else:
-                                            # Overwrite all
-                                            try:
-                                                save_client_config(client_name, client_config)
-                                                overwritten_count += 1
-                                                imported_count += 1
-                                            except Exception as e:
-                                                failed_imports.append((client_name, str(e)))
-                                                skipped_count += 1
-                                    else:
-                                        # New client or Replace mode
-                                        try:
-                                            save_client_config(client_name, client_config)
-                                            imported_count += 1
-                                        except Exception as e:
-                                            failed_imports.append((client_name, str(e)))
-                                            skipped_count += 1
-                                
-                                # Clear progress indicators
-                                progress_bar.empty()
-                                status_text.empty()
-                                
-                                # Show any import failures
-                                if failed_imports:
-                                    with st.expander(f"⚠️ {len(failed_imports)} client(s) failed to import", expanded=True):
-                                        for client_name, error in failed_imports[:10]:  # Show max 10
-                                            st.error(f"❌ {client_name}: {error}")
-                                        if len(failed_imports) > 10:
-                                            st.warning(f"... and {len(failed_imports) - 10} more")
-                                
-                                # Clear caches
-                                clear_client_caches()
-                                
-                                # Clear Supabase session-state cache keys if using Supabase
-                                if use_supabase():
-                                    uid = get_current_user_id()
-                                    if uid:
-                                        # Clear the session-level cache for client names
-                                        cache_key_names = f"_client_names_cache_{uid}"
-                                        st.session_state.pop(cache_key_names, None)
-                                        # Clear individual client config caches
-                                        for client_name in import_data['clients'].keys():
-                                            cache_key_config = f"_config_cache_{uid}_{client_name}"
-                                            st.session_state.pop(cache_key_config, None)
-                                            # Also clear the app-level cache
-                                            app_cache_key = f'client_config_cache_{client_name}'
-                                            st.session_state.pop(app_cache_key, None)
-                                        # Clear the Streamlit @cache_data decorated functions
-                                        try:
-                                            sb_list_client_names.clear()
-                                            sb_fetch_client_config.clear()
-                                        except Exception:
-                                            pass
-                                
-                                # Show detailed success message
-                                if "Replace" in import_mode:
-                                    st.success(f"✅ Successfully imported {imported_count} client(s)!")
-                                else:
-                                    result_parts = []
-                                    if imported_count - overwritten_count > 0:
-                                        result_parts.append(f"{imported_count - overwritten_count} new")
-                                    if overwritten_count > 0:
-                                        result_parts.append(f"{overwritten_count} overwritten")
-                                    if skipped_count > 0:
-                                        result_parts.append(f"{skipped_count} skipped")
-                                    
-                                    st.success(f"✅ Import complete: {', '.join(result_parts)} client(s)!")
-
-                                # Auto-load first imported client and rerun to refresh UI
-                                if imported_count > 0:
-                                    should_rerun = False
-                                    
-                                    # In cloud without Supabase, localStorage fallback can be unreliable on Streamlit Cloud.
-                                    # To avoid hangs and make the app usable, keep imported clients in-session and auto-load the first one.
-                                    if is_cloud_environment() and not use_supabase():
-                                        try:
-                                            st.session_state.in_memory_clients = import_data.get('clients', {})
-                                            first_client = None
-                                            for name in st.session_state.in_memory_clients.keys():
-                                                first_client = name
-                                                break
-                                            if first_client:
-                                                st.warning("Cloud mode without Supabase: clients are available for this session only. Configure Supabase to persist across reloads.")
-                                                st.session_state.selected_client_name = first_client
-                                                st.session_state.client_config = st.session_state.in_memory_clients[first_client]
-                                                # Refresh client list cache so the name shows up under Load Existing Client during this session
-                                                try:
-                                                    clear_client_caches()
-                                                except Exception:
-                                                    pass
-                                                st.session_state.current_page = 'file_uploads'
-                                                should_rerun = True
-                                        except Exception:
-                                            pass
-                                    else:
-                                        # For all other modes (local, cloud with Supabase), auto-load first client
-                                        try:
-                                            first_imported = list(import_data['clients'].keys())[0]
-                                            st.session_state.selected_client_name = first_imported
-                                            # Load the config to populate session state
-                                            loaded_config = load_client_config(first_imported)
-                                            if loaded_config:
-                                                st.session_state.client_config = loaded_config
-                                                st.session_state.current_page = 'file_uploads'
-                                                should_rerun = True
-                                        except Exception:
-                                            pass
-                                    
-                                    if should_rerun:
-                                        st.balloons()
-                                        st.rerun()
-                                
-                                # Fallback: just show success and info message (if we didn't rerun)
-                                st.balloons()
-                                st.info("Please select 'Load Existing Client' to access your imported clients.")
-                                
-                            except Exception as e:
-                                st.error(f"❌ Error importing data: {str(e)}")
-                                import traceback
-                                st.error(traceback.format_exc())
-                            
-                except Exception as e:
-                    st.error(f"❌ Error importing data: {str(e)}")
-                    import traceback
-                    st.error(traceback.format_exc())
-        
-        st.markdown("---")
-        
         # Export section (always available)
         if existing_clients:
             st.subheader("📤 Export Current Data")
@@ -6772,32 +6368,13 @@ with st.sidebar:
                         }
                         
                         # Export selected client configs
-                        failed_clients = []
                         for client_name in selected_clients_to_export:
                             client_config = load_client_config(client_name)
                             if client_config:
                                 export_data['clients'][client_name] = client_config
-                            else:
-                                failed_clients.append(client_name)
-                        
-                        # Warn if some clients couldn't be loaded
-                        if failed_clients:
-                            if use_supabase() and not get_current_user_id():
-                                st.error(f"❌ Unable to export {len(failed_clients)} client(s) - Not logged in to Supabase. Please sign in or disable Supabase in the sidebar.")
-                            else:
-                                st.warning(f"⚠️ Unable to load config for {len(failed_clients)} client(s): {', '.join(failed_clients[:3])}{'...' if len(failed_clients) > 3 else ''}")
-                        
-                        # Check if we have any clients to export
-                        if not export_data['clients']:
-                            st.error("❌ No client data could be exported. Please check your authentication or storage settings.")
-                            if use_supabase():
-                                st.info("💡 Try disabling Supabase in the sidebar if you're not using it.")
-                            raise ValueError("No client data available for export")
                         
                         # Create download button
                         export_json = json.dumps(export_data, indent=2)
-                        file_size_bytes = len(export_json.encode('utf-8'))
-                        file_size_mb = file_size_bytes / (1024 * 1024)
                         
                         # Create filename based on selection
                         if len(selected_clients_to_export) == len(existing_clients):
@@ -6806,14 +6383,6 @@ with st.sidebar:
                             filename_prefix = selected_clients_to_export[0].replace(' ', '_')
                         else:
                             filename_prefix = f"{len(selected_clients_to_export)}_clients"
-                        
-                        # Show file size info
-                        if file_size_mb < 1:
-                            st.info(f"📦 Export size: {file_size_bytes / 1024:.1f} KB")
-                        else:
-                            st.info(f"📦 Export size: {file_size_mb:.2f} MB")
-                            if file_size_mb > 5:
-                                st.warning("⚠️ Large export file! Import may take longer. Consider exporting fewer clients at once if you experience issues.")
                         
                         st.download_button(
                             label=f"💾 Download Backup ({len(selected_clients_to_export)} client{'s' if len(selected_clients_to_export) > 1 else ''})",
@@ -6831,6 +6400,154 @@ with st.sidebar:
             
             st.markdown("---")
         
+        # Import section
+        st.subheader("📥 Import Client Data")
+        st.markdown("Upload a previously exported backup file to restore your client configurations.")
+        
+        uploaded_backup = st.file_uploader("Choose backup file", type=['json'], key="client_backup_import")
+        
+        if uploaded_backup:
+            try:
+                import_data = json.load(uploaded_backup)
+                
+                # Validate backup file
+                if 'version' not in import_data or 'clients' not in import_data:
+                    st.error("❌ Invalid backup file format.")
+                else:
+                    st.success(f"✅ Backup file loaded (exported on {import_data.get('export_date', 'unknown date')})")
+                    
+                    # Detect duplicates
+                    duplicate_clients = []
+                    new_clients = []
+                    
+                    for client_name in import_data['clients'].keys():
+                        if client_name in existing_clients:
+                            duplicate_clients.append(client_name)
+                        else:
+                            new_clients.append(client_name)
+                    
+                    # Show what will be imported
+                    st.markdown("**Contents:**")
+                    st.write(f"- **Total clients in backup:** {len(import_data['clients'])}")
+                    
+                    if new_clients:
+                        st.write(f"- ✅ **New clients** ({len(new_clients)}): {', '.join(sorted(new_clients))}")
+                    
+                    if duplicate_clients:
+                        st.write(f"- ⚠️ **Duplicate clients** ({len(duplicate_clients)}): {', '.join(sorted(duplicate_clients))}")
+                    
+                    import_mode = st.radio(
+                        "Import mode:",
+                        ["Merge (keep existing clients)", "Replace (overwrite all clients)"],
+                        help="Merge will add to existing clients. Replace will delete all current clients first."
+                    )
+                    
+                    # Handle duplicate resolution in Merge mode
+                    duplicate_actions = {}
+                    if "Merge" in import_mode and duplicate_clients:
+                        st.markdown("---")
+                        st.markdown("### 🔄 Duplicate Client Resolution")
+                        st.info("The following clients already exist. Choose what to do with each one:")
+                        
+                        # Store import data in session state for persistence
+                        if 'import_backup_data' not in st.session_state:
+                            st.session_state.import_backup_data = import_data
+                        
+                        for client_name in sorted(duplicate_clients):
+                            with st.expander(f"📋 {client_name}", expanded=False):
+                                action = st.radio(
+                                    f"Action for '{client_name}':",
+                                    ["Skip (keep existing)", "Overwrite (replace with backup)"],
+                                    key=f"duplicate_action_{client_name}",
+                                    help=f"Choose whether to keep your current '{client_name}' or replace it with the version from the backup file."
+                                )
+                                duplicate_actions[client_name] = action
+                        
+                        st.markdown("---")
+                    
+                    if st.button("🔄 Import Clients", type="primary", use_container_width=True):
+                        try:
+                            # Use stored import data if available
+                            if 'import_backup_data' in st.session_state:
+                                import_data = st.session_state.import_backup_data
+                            
+                            # Replace mode: clear existing clients
+                            if "Replace" in import_mode:
+                                if is_cloud_environment():
+                                    # Clear localStorage
+                                    for client_name in existing_clients:
+                                        remove_localStorage_value(f'amazon_dashboard_client_{client_name}')
+                                        # Clear session state cache
+                                        cache_key = f'client_config_cache_{client_name}'
+                                        if cache_key in st.session_state:
+                                            del st.session_state[cache_key]
+                                    remove_localStorage_value('amazon_dashboard_client_list')
+                                    st.session_state.client_list = []
+                                else:
+                                    # Clear filesystem
+                                    if os.path.exists(CLIENT_CONFIG_DIR):
+                                        for file in os.listdir(CLIENT_CONFIG_DIR):
+                                            if file.endswith('.json'):
+                                                os.remove(os.path.join(CLIENT_CONFIG_DIR, file))
+                            
+                            # Import clients
+                            imported_count = 0
+                            skipped_count = 0
+                            overwritten_count = 0
+                            
+                            for client_name, client_config in import_data['clients'].items():
+                                # In Merge mode, check duplicate actions
+                                if "Merge" in import_mode and client_name in duplicate_clients:
+                                    action = duplicate_actions.get(client_name, "Skip (keep existing)")
+                                    
+                                    if "Skip" in action:
+                                        skipped_count += 1
+                                        continue
+                                    else:
+                                        # Overwrite
+                                        save_client_config(client_name, client_config)
+                                        overwritten_count += 1
+                                        imported_count += 1
+                                else:
+                                    # New client or Replace mode
+                                    save_client_config(client_name, client_config)
+                                    imported_count += 1
+                            
+                            # Clear caches
+                            clear_client_caches()
+                            
+                            # Clear import data from session state
+                            if 'import_backup_data' in st.session_state:
+                                del st.session_state.import_backup_data
+                            
+                            # Show detailed success message
+                            if "Replace" in import_mode:
+                                st.success(f"✅ Successfully imported {imported_count} client(s)!")
+                            else:
+                                result_parts = []
+                                if imported_count - overwritten_count > 0:
+                                    result_parts.append(f"{imported_count - overwritten_count} new")
+                                if overwritten_count > 0:
+                                    result_parts.append(f"{overwritten_count} overwritten")
+                                if skipped_count > 0:
+                                    result_parts.append(f"{skipped_count} skipped")
+                                
+                                st.success(f"✅ Import complete: {', '.join(result_parts)} client(s)!")
+                            
+                            st.balloons()
+                            st.info("Please select 'Load Existing Client' to access your imported clients.")
+                            
+                        except Exception as e:
+                            st.error(f"❌ Error importing data: {str(e)}")
+                            import traceback
+                            st.error(traceback.format_exc())
+                            
+            except json.JSONDecodeError:
+                st.error("❌ Invalid JSON file. Please upload a valid backup file.")
+            except Exception as e:
+                st.error(f"❌ Error reading backup file: {str(e)}")
+        
+        st.markdown("---")
         st.caption("💡 **Tip**: Export your data regularly to prevent data loss, especially when using cloud mode where data is stored in your browser.")
 
 # --- Main Panel --- #
@@ -7307,25 +7024,6 @@ if st.session_state.client_config:
             st.markdown("* Client Overview - Calculating Total Sales, TACoS, Sessions, etc.")
             st.markdown("* Client Settings Center - Updating Advertised ASINs")
             st.markdown("* Client Settings Center - Product Tagging")
-        
-        # Add navigation button to Advertising Audit when both files are uploaded
-        if st.session_state.bulk_data is not None and st.session_state.sales_report_data is not None:
-            st.markdown("---")
-            st.markdown("### ✅ Files Ready for Analysis")
-            st.markdown("Both advertising data and sales report have been uploaded successfully!")
-            col_nav1, col_nav2, col_nav3 = st.columns([1, 2, 1])
-            with col_nav2:
-                if st.button("📊 Go to Advertising Audit", key="nav_to_audit_both", use_container_width=True, type="primary"):
-                    st.session_state.current_page = "advertising_audit"
-                    st.rerun()
-        elif st.session_state.bulk_data is not None or st.session_state.sales_report_data is not None:
-            st.markdown("---")
-            st.info("💡 Upload both files to access the full Advertising Audit analysis")
-            col_nav1, col_nav2, col_nav3 = st.columns([1, 2, 1])
-            with col_nav2:
-                if st.button("📊 View Advertising Audit", key="nav_to_audit_partial", use_container_width=True):
-                    st.session_state.current_page = "advertising_audit"
-                    st.rerun()
         
         # Display uploaded data viewer section
         st.markdown("---")
@@ -9930,23 +9628,9 @@ if st.session_state.client_config:
                         
                         # Show what will be imported
                         st.markdown("**Contents:**")
-                        num_clients = len(import_data['clients'])
+                        st.write(f"- {len(import_data['clients'])} client(s)")
                         total_sessions = sum(len(sessions) for sessions in import_data.get('sessions', {}).values())
-                        st.write(f"- {num_clients} client(s)")
                         st.write(f"- {total_sessions} saved session(s)")
-                        
-                        # Show client list if not too many
-                        if num_clients > 0:
-                            with st.expander(f"📋 View Client List ({num_clients})", expanded=num_clients <= 5):
-                                if num_clients <= 10:
-                                    st.write(", ".join(sorted(import_data['clients'].keys())))
-                                else:
-                                    st.dataframe(
-                                        pd.DataFrame({"Client Name": sorted(import_data['clients'].keys())}),
-                                        use_container_width=True,
-                                        hide_index=True,
-                                        height=min(400, num_clients * 35 + 38)
-                                    )
                         
                         col1, col2 = st.columns(2)
                         with col1:
@@ -9980,27 +9664,13 @@ if st.session_state.client_config:
                                             import shutil
                                             shutil.rmtree(CLIENT_SESSIONS_DIR)
                                 
-                                # Import clients with progress
-                                total_items = len(import_data['clients']) + sum(len(sessions) for sessions in import_data.get('sessions', {}).values())
-                                progress_bar = st.progress(0)
-                                status_text = st.empty()
-                                current_item = 0
-                                
+                                # Import clients
                                 for client_name, client_config in import_data['clients'].items():
-                                    current_item += 1
-                                    progress_bar.progress(current_item / total_items)
-                                    status_text.text(f"Importing client {current_item}/{len(import_data['clients'])}: {client_name}")
                                     save_client_config(client_name, client_config)
                                 
                                 # Import sessions
-                                session_counter = 0
                                 for client_name, sessions_list in import_data.get('sessions', {}).items():
                                     for session_item in sessions_list:
-                                        session_counter += 1
-                                        current_item += 1
-                                        progress_bar.progress(current_item / total_items)
-                                        status_text.text(f"Importing session {session_counter}: {session_item['filename']}")
-                                        
                                         filename = session_item['filename']
                                         session_data = session_item['data']
                                         
@@ -10036,13 +9706,8 @@ if st.session_state.client_config:
                                             with open(filepath, 'w') as f:
                                                 json.dump(session_data, f, indent=2)
                                 
-                                # Clear progress indicators
-                                progress_bar.empty()
-                                status_text.empty()
-                                
                                 # Clear caches
                                 clear_client_caches()
-                                get_saved_sessions.clear()
                                 
                                 st.success("✅ Data imported successfully! Please refresh the page.")
                                 st.balloons()
@@ -20339,9 +20004,6 @@ if st.session_state.client_config:
                                                       if not (len(str(k)) == 10 and str(k).lower().startswith('b0'))}
                                             
                                             if wc_dict:
-                                                # Lazy import heavy libs
-                                                WordCloud, _STOP = get_wordcloud()
-                                                plt = get_plt()
                                                 wc = WordCloud(
                                                     width=900,
                                                     height=350,
@@ -29464,7 +29126,6 @@ if st.session_state.current_page == "advertising_audit":
                                     X = bestfit_clean[x_metric].values.reshape(-1, 1)
                                     y = bestfit_clean[y_metric].values
                                 
-                                    LinearRegression = get_linear_regression()
                                     model = LinearRegression()
                                     model.fit(X, y)
                                 
