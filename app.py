@@ -69,6 +69,7 @@ try:
     from supabase_store import (
         is_supabase_configured,
         get_current_user_id,
+        apply_session_from_state,
         sign_in,
         sign_up,
         sign_out,
@@ -87,6 +88,9 @@ except Exception:
 
     def get_current_user_id():
         return None
+
+    def apply_session_from_state():
+        pass
 
     def sign_in(email: str, password: str):
         return False, "Supabase not available"
@@ -1139,6 +1143,10 @@ def clear_client_caches():
     
     # SQLite and Supabase caches are self-managing via TTL
     # Session state caches are cleared per-key as needed
+
+# --- Restore Supabase session on each rerun ---
+if is_cloud_environment() and is_supabase_configured():
+    apply_session_from_state()
 
 # --- Authentication (Supabase) ---
 if is_cloud_environment() and is_supabase_configured():
