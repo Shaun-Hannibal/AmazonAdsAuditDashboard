@@ -1128,6 +1128,17 @@ def migrate_old_data():
 USER_DATA_DIR = get_user_data_dir()
 CLIENT_CONFIG_DIR = os.path.join(USER_DATA_DIR, 'clients')
 
+def clear_client_caches():
+    """Helper to clear all client-related caches across all storage layers."""
+    # Clear filesystem cache (local only)
+    try:
+        _load_client_config_from_file.clear()
+    except Exception:
+        pass
+    
+    # SQLite and Supabase caches are self-managing via TTL
+    # Session state caches are cleared per-key as needed
+
 # --- Authentication (Supabase) ---
 if is_cloud_environment() and is_supabase_configured():
     with st.sidebar:
@@ -1235,17 +1246,6 @@ def get_existing_clients():
         clients = [f.replace('.json', '') for f in os.listdir(CLIENT_CONFIG_DIR) if f.endswith('.json')]
         log_app_event(f"get_existing_clients() found {len(clients)} clients in {CLIENT_CONFIG_DIR}")
         return sorted(clients)
-
-def clear_client_caches():
-    """Helper to clear all client-related caches across all storage layers."""
-    # Clear filesystem cache (local only)
-    try:
-        _load_client_config_from_file.clear()
-    except Exception:
-        pass
-    
-    # SQLite and Supabase caches are self-managing via TTL
-    # Session state caches are cleared per-key as needed
 
 def load_client_config(client_name):
     """Loads the configuration for a given client from localStorage or filesystem.
@@ -3476,10 +3476,26 @@ def get_targeting_performance_data(bulk_data, client_config):
     using_campaign_sheets = len(campaign_sheets_with_targets) > 0
 
     if using_campaign_sheets:
-        targeting_sheets = campaign_sheets_with_targets
-        st.session_state.debug_messages.append(
-            f"[Targeting Perf] Using dynamically detected targeting sheets: {targeting_sheets}"
-        )
+        # For companion data, ONLY use Campaign sheets from targeting export to avoid duplicates
+        # The Targeting Export provides complete targeting information; Search Term files should not be used here
+        if is_companion_data:
+            targeting_sheets = [
+                sheet for sheet in campaign_sheets_with_targets 
+                if 'Campaigns' in sheet
+            ]
+            excluded_sheets = [s for s in campaign_sheets_with_targets if s not in targeting_sheets]
+            st.session_state.debug_messages.append(
+                f"[Targeting Perf] Companion data: Using ONLY Campaign sheets: {targeting_sheets}"
+            )
+            if excluded_sheets:
+                st.session_state.debug_messages.append(
+                    f"[Targeting Perf] Companion data: Excluded sheets (not Campaign sheets): {excluded_sheets}"
+                )
+        else:
+            targeting_sheets = campaign_sheets_with_targets
+            st.session_state.debug_messages.append(
+                f"[Targeting Perf] Using dynamically detected targeting sheets: {targeting_sheets}"
+            )
     else:
         # No sheets with explicit targeting rows; there may still be Search Term Reports available
         # Leave targeting_sheets empty so loop below will skip; All-mode will still pull data from get_search_term_data()
