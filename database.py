@@ -84,10 +84,50 @@ class DatabaseManager:
             )
         ''')
         
+        # Client config cache table (per-user)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS client_config_cache (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id TEXT NOT NULL,
+                client_name TEXT NOT NULL,
+                config_data TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_accessed TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, client_name)
+            )
+        ''')
+        
+        # Client names cache table (per-user)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS client_names_cache (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id TEXT NOT NULL UNIQUE,
+                client_names TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_accessed TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        # Session metadata cache table (per-user, per-client)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS session_metadata_cache (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id TEXT NOT NULL,
+                client_name TEXT NOT NULL,
+                session_list TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_accessed TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, client_name)
+            )
+        ''')
+        
         # Create indexes for better performance
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_cache_key ON data_cache(cache_key)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_client_data ON client_data(client_name, data_type)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_analysis_cache ON analysis_cache(client_name, analysis_type)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_client_config_cache ON client_config_cache(user_id, client_name)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_client_names_cache ON client_names_cache(user_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_session_metadata_cache ON session_metadata_cache(user_id, client_name)')
         
         conn.commit()
         conn.close()
@@ -298,6 +338,258 @@ class DatabaseManager:
             if 'debug_messages' in st.session_state:
                 st.session_state.debug_messages.append(f"[DB Error] Failed to clear client cache: {str(e)}")
             return False
+    
+    # ========== Client Config Caching Methods ==========
+    
+    def cache_client_names(self, user_id: str, client_names: List[str]) -> bool:
+        """Cache list of client names for a user."""
+        try:
+            import time as _t
+            _t0 = _t.perf_counter()
+            
+            names_json = json.dumps(client_names)
+            
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                INSERT OR REPLACE INTO client_names_cache (user_id, client_names, last_accessed)
+                VALUES (?, ?, CURRENT_TIMESTAMP)
+            ''', (user_id, names_json))
+            
+            conn.commit()
+            conn.close()
+            
+            _elapsed = (_t.perf_counter() - _t0) * 1000
+            if 'debug_messages' in st.session_state:
+                st.session_state.debug_messages.append(f"[SQLite] Cached {len(client_names)} client names for user in {int(_elapsed)}ms")
+            
+            return True
+        except Exception as e:
+            if 'debug_messages' in st.session_state:
+                st.session_state.debug_messages.append(f"[SQLite Error] Failed to cache client names: {str(e)}")
+            return False
+    
+    def get_cached_client_names(self, user_id: str, max_age_seconds: int = 1800) -> Optional[List[str]]:
+        """Retrieve cached client names for a user if not expired (default 30 min)."""
+        try:
+            import time as _t
+            _t0 = _t.perf_counter()
+            
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                SELECT client_names, 
+                       (julianday('now') - julianday(last_accessed)) * 86400 as age_seconds
+                FROM client_names_cache 
+                WHERE user_id = ?
+            ''', (user_id,))
+            
+            result = cursor.fetchone()
+            
+            if result:
+                names_json, age = result
+                if age <= max_age_seconds:
+                    # Update last_accessed
+                    cursor.execute('''
+                        UPDATE client_names_cache 
+                        SET last_accessed = CURRENT_TIMESTAMP 
+                        WHERE user_id = ?
+                    ''', (user_id,))
+                    conn.commit()
+                    conn.close()
+                    
+                    client_names = json.loads(names_json)
+                    _elapsed = (_t.perf_counter() - _t0) * 1000
+                    if 'debug_messages' in st.session_state:
+                        st.session_state.debug_messages.append(f"[SQLite] Retrieved {len(client_names)} client names from cache in {int(_elapsed)}ms")
+                    return client_names
+            
+            conn.close()
+            return None
+        except Exception as e:
+            if 'debug_messages' in st.session_state:
+                st.session_state.debug_messages.append(f"[SQLite Error] Failed to retrieve cached client names: {str(e)}")
+            return None
+    
+    def cache_client_config(self, user_id: str, client_name: str, config_data: Dict[str, Any]) -> bool:
+        """Cache a client config for a user."""
+        try:
+            import time as _t
+            _t0 = _t.perf_counter()
+            
+            config_json = json.dumps(config_data)
+            
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                INSERT OR REPLACE INTO client_config_cache 
+                (user_id, client_name, config_data, last_accessed)
+                VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+            ''', (user_id, client_name, config_json))
+            
+            conn.commit()
+            conn.close()
+            
+            _elapsed = (_t.perf_counter() - _t0) * 1000
+            if 'debug_messages' in st.session_state:
+                st.session_state.debug_messages.append(f"[SQLite] Cached config for {client_name} in {int(_elapsed)}ms")
+            
+            return True
+        except Exception as e:
+            if 'debug_messages' in st.session_state:
+                st.session_state.debug_messages.append(f"[SQLite Error] Failed to cache client config: {str(e)}")
+            return False
+    
+    def get_cached_client_config(self, user_id: str, client_name: str, max_age_seconds: int = 1800) -> Optional[Dict[str, Any]]:
+        """Retrieve cached client config if not expired (default 30 min)."""
+        try:
+            import time as _t
+            _t0 = _t.perf_counter()
+            
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                SELECT config_data,
+                       (julianday('now') - julianday(last_accessed)) * 86400 as age_seconds
+                FROM client_config_cache 
+                WHERE user_id = ? AND client_name = ?
+            ''', (user_id, client_name))
+            
+            result = cursor.fetchone()
+            
+            if result:
+                config_json, age = result
+                if age <= max_age_seconds:
+                    # Update last_accessed
+                    cursor.execute('''
+                        UPDATE client_config_cache 
+                        SET last_accessed = CURRENT_TIMESTAMP 
+                        WHERE user_id = ? AND client_name = ?
+                    ''', (user_id, client_name))
+                    conn.commit()
+                    conn.close()
+                    
+                    config_data = json.loads(config_json)
+                    _elapsed = (_t.perf_counter() - _t0) * 1000
+                    if 'debug_messages' in st.session_state:
+                        st.session_state.debug_messages.append(f"[SQLite] Retrieved config for {client_name} from cache in {int(_elapsed)}ms")
+                    return config_data
+            
+            conn.close()
+            return None
+        except Exception as e:
+            if 'debug_messages' in st.session_state:
+                st.session_state.debug_messages.append(f"[SQLite Error] Failed to retrieve cached client config: {str(e)}")
+            return None
+    
+    def cache_session_list(self, user_id: str, client_name: str, session_list: List[Dict[str, Any]]) -> bool:
+        """Cache session list for a client."""
+        try:
+            import time as _t
+            _t0 = _t.perf_counter()
+            
+            sessions_json = json.dumps(session_list)
+            
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                INSERT OR REPLACE INTO session_metadata_cache 
+                (user_id, client_name, session_list, last_accessed)
+                VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+            ''', (user_id, client_name, sessions_json))
+            
+            conn.commit()
+            conn.close()
+            
+            _elapsed = (_t.perf_counter() - _t0) * 1000
+            if 'debug_messages' in st.session_state:
+                st.session_state.debug_messages.append(f"[SQLite] Cached {len(session_list)} sessions for {client_name} in {int(_elapsed)}ms")
+            
+            return True
+        except Exception as e:
+            if 'debug_messages' in st.session_state:
+                st.session_state.debug_messages.append(f"[SQLite Error] Failed to cache session list: {str(e)}")
+            return False
+    
+    def get_cached_session_list(self, user_id: str, client_name: str, max_age_seconds: int = 300) -> Optional[List[Dict[str, Any]]]:
+        """Retrieve cached session list if not expired (default 5 min)."""
+        try:
+            import time as _t
+            _t0 = _t.perf_counter()
+            
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                SELECT session_list,
+                       (julianday('now') - julianday(last_accessed)) * 86400 as age_seconds
+                FROM session_metadata_cache 
+                WHERE user_id = ? AND client_name = ?
+            ''', (user_id, client_name))
+            
+            result = cursor.fetchone()
+            
+            if result:
+                sessions_json, age = result
+                if age <= max_age_seconds:
+                    # Update last_accessed
+                    cursor.execute('''
+                        UPDATE session_metadata_cache 
+                        SET last_accessed = CURRENT_TIMESTAMP 
+                        WHERE user_id = ? AND client_name = ?
+                    ''', (user_id, client_name))
+                    conn.commit()
+                    conn.close()
+                    
+                    session_list = json.loads(sessions_json)
+                    _elapsed = (_t.perf_counter() - _t0) * 1000
+                    if 'debug_messages' in st.session_state:
+                        st.session_state.debug_messages.append(f"[SQLite] Retrieved {len(session_list)} sessions from cache in {int(_elapsed)}ms")
+                    return session_list
+            
+            conn.close()
+            return None
+        except Exception as e:
+            if 'debug_messages' in st.session_state:
+                st.session_state.debug_messages.append(f"[SQLite Error] Failed to retrieve cached session list: {str(e)}")
+            return None
+    
+    def invalidate_client_cache(self, user_id: str, client_name: str = None) -> bool:
+        """Invalidate cached data for a user or specific client."""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            if client_name:
+                # Invalidate specific client
+                cursor.execute('DELETE FROM client_config_cache WHERE user_id = ? AND client_name = ?', 
+                             (user_id, client_name))
+                cursor.execute('DELETE FROM session_metadata_cache WHERE user_id = ? AND client_name = ?', 
+                             (user_id, client_name))
+                if 'debug_messages' in st.session_state:
+                    st.session_state.debug_messages.append(f"[SQLite] Invalidated cache for {client_name}")
+            else:
+                # Invalidate all for user
+                cursor.execute('DELETE FROM client_config_cache WHERE user_id = ?', (user_id,))
+                cursor.execute('DELETE FROM client_names_cache WHERE user_id = ?', (user_id,))
+                cursor.execute('DELETE FROM session_metadata_cache WHERE user_id = ?', (user_id,))
+                if 'debug_messages' in st.session_state:
+                    st.session_state.debug_messages.append(f"[SQLite] Invalidated all cache for user")
+            
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            if 'debug_messages' in st.session_state:
+                st.session_state.debug_messages.append(f"[SQLite Error] Failed to invalidate cache: {str(e)}")
+            return False
+    
+    # ========== End Client Config Caching Methods ==========
     
     def cleanup_old_cache(self, days_old: int = 7) -> bool:
         """Remove cached data older than specified days."""

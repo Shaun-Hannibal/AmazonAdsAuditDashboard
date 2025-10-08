@@ -5,6 +5,14 @@ from typing import Any, Dict, List, Optional, Tuple
 import streamlit as st
 from supabase import create_client, Client
 
+# Import database manager for SQLite caching
+try:
+    from database import db_manager
+    _DB_AVAILABLE = True
+except Exception:
+    _DB_AVAILABLE = False
+    db_manager = None
+
 # ---------- Supabase client and auth helpers ----------
 
 _SB_CLIENT: Optional[Client] = None
@@ -210,12 +218,21 @@ def sign_up(email: str, password: str) -> Tuple[bool, str]:
 
 def sign_out() -> None:
     sb = get_supabase()
-    if not sb:
-        return
+    
+    # Clear SQLite cache for this user before signing out
     try:
-        sb.auth.sign_out()
+        uid = st.session_state.get("_sb_user_id")
+        if uid and _DB_AVAILABLE and db_manager:
+            db_manager.invalidate_client_cache(uid)
     except Exception:
         pass
+    
+    if sb:
+        try:
+            sb.auth.sign_out()
+        except Exception:
+            pass
+    
     st.session_state.pop("_sb_session", None)
     st.session_state.pop("_sb_user_id", None)
 
@@ -226,36 +243,64 @@ def sign_out() -> None:
 # Columns: id (uuid), user_id (uuid), client_name (text), config (jsonb), updated_at (timestamptz)
 
 
-@st.cache_data(ttl=600, show_spinner=False)  # Increased from 120s to 600s (10 min)
 def list_client_names(user_id: str) -> List[str]:
-    """List all client names for a user. Cached for 10 minutes."""
-    # Session-level cache layer for faster access within the same session
+    """List all client names for a user. Multi-layer caching: session_state -> SQLite -> Supabase."""
+    # Layer 1: Session state cache (instant)
     cache_key = f"_client_names_cache_{user_id}"
     if cache_key in st.session_state:
         return st.session_state[cache_key]
     
+    # Layer 2: SQLite cache (fast, 30 min TTL)
+    if _DB_AVAILABLE and db_manager:
+        cached = db_manager.get_cached_client_names(user_id, max_age_seconds=1800)
+        if cached is not None:
+            st.session_state[cache_key] = cached
+            return cached
+    
+    # Layer 3: Supabase (slowest, source of truth)
     sb = get_supabase()
     if not sb:
         return []
     try:
+        import time as _t
+        _t0 = _t.perf_counter()
         res = sb.table("client_configs").select("client_name").eq("user_id", user_id).execute()
+        _elapsed = (_t.perf_counter() - _t0) * 1000
+        try:
+            if "debug_messages" in st.session_state:
+                st.session_state.debug_messages.append(f"[Supabase] list_client_names took {int(_elapsed)}ms")
+        except Exception:
+            pass
+        
         names = sorted({row["client_name"] for row in (res.data or []) if row.get("client_name")})
         result = list(names)
-        # Cache in session for instant access during this session
+        
+        # Cache in SQLite for next session
+        if _DB_AVAILABLE and db_manager:
+            db_manager.cache_client_names(user_id, result)
+        
+        # Cache in session for instant access
         st.session_state[cache_key] = result
         return result
     except Exception:
         return []
 
 
-@st.cache_data(ttl=600, show_spinner=False)  # Increased from 120s to 600s (10 min)
 def fetch_client_config(user_id: str, client_name: str) -> Optional[Dict[str, Any]]:
-    """Fetch a client config from Supabase. Cached for 10 minutes."""
-    # Session-level cache for instant access within the same session
+    """Fetch a client config. Multi-layer caching: session_state -> SQLite -> Supabase."""
+    # Layer 1: Session state cache (instant)
     cache_key = f"_config_cache_{user_id}_{client_name}"
     if cache_key in st.session_state:
         return st.session_state[cache_key]
     
+    # Layer 2: SQLite cache (fast, 30 min TTL)
+    if _DB_AVAILABLE and db_manager:
+        cached = db_manager.get_cached_client_config(user_id, client_name, max_age_seconds=1800)
+        if cached is not None:
+            st.session_state[cache_key] = cached
+            return cached
+    
+    # Layer 3: Supabase (slowest, source of truth)
     sb = get_supabase()
     if not sb:
         return None
@@ -278,8 +323,12 @@ def fetch_client_config(user_id: str, client_name: str) -> Optional[Dict[str, An
             pass
         if res.data and isinstance(res.data, dict):
             result = res.data.get("config")
-            # Cache in session for instant access
+            
+            # Cache in SQLite for next session
             if result is not None:
+                if _DB_AVAILABLE and db_manager:
+                    db_manager.cache_client_config(user_id, client_name, result)
+                # Cache in session for instant access
                 st.session_state[cache_key] = result
             return result
     except Exception:
@@ -301,16 +350,24 @@ def upsert_client_config(user_id: str, client_name: str, config: Dict[str, Any])
         # Note: supabase-py expects a comma-separated string for on_conflict
         sb.table("client_configs").upsert(payload, on_conflict="user_id,client_name").execute()
         
-        # Invalidate caches after write
+        # Update SQLite cache immediately with new data
+        if _DB_AVAILABLE and db_manager:
+            db_manager.cache_client_config(user_id, client_name, config)
+            # Also refresh client names list since this might be a new client
+            try:
+                names_cached = db_manager.get_cached_client_names(user_id, max_age_seconds=999999)
+                if names_cached is not None and client_name not in names_cached:
+                    names_cached.append(client_name)
+                    names_cached.sort()
+                    db_manager.cache_client_names(user_id, names_cached)
+            except Exception:
+                pass
+        
+        # Invalidate session state caches after write
         cache_key_config = f"_config_cache_{user_id}_{client_name}"
         cache_key_names = f"_client_names_cache_{user_id}"
         st.session_state.pop(cache_key_config, None)
         st.session_state.pop(cache_key_names, None)
-        try:
-            list_client_names.clear()
-            fetch_client_config.clear()
-        except Exception:
-            pass
         
         return True
     except Exception as e:
@@ -327,14 +384,21 @@ def upsert_client_config(user_id: str, client_name: str, config: Dict[str, Any])
 # Columns: id, user_id, client_name, filename, display_name, timestamp, created_date, description, data_types (jsonb), session_data (jsonb)
 
 
-@st.cache_data(ttl=300, show_spinner=False)  # Increased from 60s to 300s (5 min)
 def list_sessions(user_id: str, client_name: str) -> List[Dict[str, Any]]:
-    """List all sessions for a client. Cached for 5 minutes."""
-    # Session-level cache for faster access
+    """List all sessions for a client. Multi-layer caching: session_state -> SQLite -> Supabase."""
+    # Layer 1: Session state cache (instant)
     cache_key = f"_sessions_cache_{user_id}_{client_name}"
     if cache_key in st.session_state:
         return st.session_state[cache_key]
     
+    # Layer 2: SQLite cache (fast, 5 min TTL)
+    if _DB_AVAILABLE and db_manager:
+        cached = db_manager.get_cached_session_list(user_id, client_name, max_age_seconds=300)
+        if cached is not None:
+            st.session_state[cache_key] = cached
+            return cached
+    
+    # Layer 3: Supabase (slowest, source of truth)
     sb = get_supabase()
     if not sb:
         return []
@@ -356,6 +420,11 @@ def list_sessions(user_id: str, client_name: str) -> List[Dict[str, Any]]:
         except Exception:
             pass
         result = res.data or []
+        
+        # Cache in SQLite for next session
+        if _DB_AVAILABLE and db_manager:
+            db_manager.cache_session_list(user_id, client_name, result)
+        
         # Cache in session
         st.session_state[cache_key] = result
         return result
@@ -383,13 +452,13 @@ def save_session(user_id: str, client_name: str, filename: str, metadata: Dict[s
         # supabase-py expects a comma-separated string for on_conflict
         sb.table("client_sessions").upsert(payload, on_conflict="user_id,client_name,filename").execute()
         
-        # Invalidate session list cache after write
+        # Invalidate SQLite session list cache
+        if _DB_AVAILABLE and db_manager:
+            db_manager.invalidate_client_cache(user_id, client_name)
+        
+        # Invalidate session state cache after write
         cache_key = f"_sessions_cache_{user_id}_{client_name}"
         st.session_state.pop(cache_key, None)
-        try:
-            list_sessions.clear()
-        except Exception:
-            pass
         
         return True
     except Exception as e:
@@ -429,13 +498,13 @@ def delete_session(user_id: str, client_name: str, filename: str) -> bool:
     try:
         sb.table("client_sessions").delete().eq("user_id", user_id).eq("client_name", client_name).eq("filename", filename).execute()
         
-        # Invalidate session list cache after delete
+        # Invalidate SQLite session list cache
+        if _DB_AVAILABLE and db_manager:
+            db_manager.invalidate_client_cache(user_id, client_name)
+        
+        # Invalidate session state cache after delete
         cache_key = f"_sessions_cache_{user_id}_{client_name}"
         st.session_state.pop(cache_key, None)
-        try:
-            list_sessions.clear()
-        except Exception:
-            pass
         
         return True
     except Exception:

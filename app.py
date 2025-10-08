@@ -1162,7 +1162,7 @@ if use_supabase():
             if st.button("Sign out", key="sb_sign_out"):
                 sign_out()
                 try:
-                    get_existing_clients.clear()
+                    clear_client_caches()
                     get_saved_sessions.clear()
                 except Exception:
                     pass
@@ -1191,7 +1191,7 @@ if use_supabase():
                     if ok:
                         st.success(msg)
                         try:
-                            get_existing_clients.clear()
+                            clear_client_caches()
                             get_saved_sessions.clear()
                         except Exception:
                             pass
@@ -1204,7 +1204,7 @@ if use_supabase():
                     if ok:
                         st.success(msg)
                         try:
-                            get_existing_clients.clear()
+                            clear_client_caches()
                             get_saved_sessions.clear()
                         except Exception:
                             pass
@@ -1243,9 +1243,23 @@ if 'migration_checked' not in st.session_state:
 
 # --- Client Management Functions ---
 
-@st.cache_data(ttl=600, show_spinner=False)  # Increased from 300s to 600s (10 min)
+def clear_client_caches():
+    """Helper to clear all client-related caches across all storage layers."""
+    # Clear filesystem cache (local only)
+    try:
+        _load_client_config_from_file.clear()
+    except Exception:
+        pass
+    
+    # SQLite and Supabase caches are self-managing via TTL
+    # Session state caches are cleared per-key as needed
+
 def get_existing_clients():
-    """Returns a list of client names from the config directory or localStorage."""
+    """Returns a list of client names from the config directory or localStorage.
+    
+    Caching is handled at the supabase_store layer with multi-tier caching
+    (session_state -> SQLite -> Supabase) for optimal performance.
+    """
     if is_cloud_environment():
         # Prefer Supabase per-user storage in cloud
         if use_supabase():
@@ -1429,8 +1443,7 @@ def save_client_config(client_name, config_data):
             cache_key = f'client_config_cache_{client_name}'
             st.session_state[cache_key] = config_data
             # Refresh clients cache
-            get_existing_clients.clear()
-            _load_client_config_from_file.clear()
+            clear_client_caches()
             st.session_state.settings_updated = True
             return
         # Cloud without Supabase: session-only fallback with best-effort localStorage write
@@ -1469,8 +1482,7 @@ def save_client_config(client_name, config_data):
                     pass
         except Exception:
             pass
-        get_existing_clients.clear()
-        _load_client_config_from_file.clear()
+        clear_client_caches()
         st.session_state.clients_list_changed = True
         st.session_state.settings_updated = True
     else:
@@ -1501,8 +1513,7 @@ def save_client_config(client_name, config_data):
             json.dump(config_data, f, indent=4)
 
         # Clear caches so the new/updated client appears in the list
-        get_existing_clients.clear()
-        _load_client_config_from_file.clear()
+        clear_client_caches()
 
         # Flag downstream pages to refresh because something actually changed.
         st.session_state.settings_updated = True
@@ -6217,7 +6228,7 @@ with st.sidebar:
                 st.session_state.disable_supabase = toggled
                 # Clear caches so UI reflects new storage mode
                 try:
-                    get_existing_clients.clear()
+                    clear_client_caches()
                 except Exception:
                     pass
                 st.rerun()
@@ -6227,8 +6238,7 @@ with st.sidebar:
     # Cache is automatically reset after 1 hour or when new data is uploaded
     # Also clear cache if a client was just saved/imported
     if st.session_state.get('clients_list_changed', False):
-        get_existing_clients.clear()
-        _load_client_config_from_file.clear()
+        clear_client_caches()
         st.session_state.clients_list_changed = False
         log_app_event("Cleared client list cache due to changes")
     
@@ -6620,8 +6630,7 @@ with st.sidebar:
                                             st.warning(f"... and {len(failed_imports) - 10} more")
                                 
                                 # Clear caches
-                                get_existing_clients.clear()
-                                _load_client_config_from_file.clear()
+                                clear_client_caches()
                                 
                                 # Clear Supabase session-state cache keys if using Supabase
                                 if use_supabase():
@@ -6677,7 +6686,7 @@ with st.sidebar:
                                                 st.session_state.client_config = st.session_state.in_memory_clients[first_client]
                                                 # Refresh client list cache so the name shows up under Load Existing Client during this session
                                                 try:
-                                                    get_existing_clients.clear()
+                                                    clear_client_caches()
                                                 except Exception:
                                                     pass
                                                 st.session_state.current_page = 'file_uploads'
@@ -10032,8 +10041,7 @@ if st.session_state.client_config:
                                 status_text.empty()
                                 
                                 # Clear caches
-                                get_existing_clients.clear()
-                                _load_client_config_from_file.clear()
+                                clear_client_caches()
                                 get_saved_sessions.clear()
                                 
                                 st.success("✅ Data imported successfully! Please refresh the page.")
