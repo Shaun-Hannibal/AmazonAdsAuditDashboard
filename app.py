@@ -6416,129 +6416,64 @@ with st.sidebar:
         
         st.markdown("---")
         
-        # Export section (always available)
-        if existing_clients:
-            st.subheader("📤 Export Current Data")
-            st.markdown("Select which clients to export as a backup file.")
-            
-            # Multi-select for clients
-            selected_clients_to_export = st.multiselect(
-                "Select clients to export:",
-                options=sorted(existing_clients),
-                default=sorted(existing_clients),
-                help="Choose one or more clients to include in the backup file"
-            )
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                if st.button("Select All", use_container_width=True):
-                    st.session_state.export_select_all = True
-                    st.rerun()
-            
-            with col2:
-                if st.button("Clear Selection", use_container_width=True):
-                    st.session_state.export_select_all = False
-                    st.rerun()
-            
-            # Handle select all/clear
-            if 'export_select_all' in st.session_state:
-                if st.session_state.export_select_all:
-                    selected_clients_to_export = sorted(existing_clients)
-                else:
-                    selected_clients_to_export = []
-                del st.session_state.export_select_all
-            
-            if selected_clients_to_export:
-                st.info(f"📊 {len(selected_clients_to_export)} client(s) selected for export")
-                
-                if st.button("📦 Export Selected Clients", type="primary", use_container_width=True):
-                    try:
-                        export_data = {
-                            'version': '1.0',
-                            'export_date': datetime.now().isoformat(),
-                            'clients': {}
-                        }
-                        
-                        # Export selected client configs
-                        failed_clients = []
-                        for client_name in selected_clients_to_export:
-                            client_config = load_client_config(client_name)
-                            if client_config:
-                                export_data['clients'][client_name] = client_config
-                            else:
-                                failed_clients.append(client_name)
-                        
-                        # Warn if some clients couldn't be loaded
-                        if failed_clients:
-                            if use_supabase() and not get_current_user_id():
-                                st.error(f"❌ Unable to export {len(failed_clients)} client(s) - Not logged in to Supabase. Please sign in or disable Supabase in the sidebar.")
-                            else:
-                                st.warning(f"⚠️ Unable to load config for {len(failed_clients)} client(s): {', '.join(failed_clients[:3])}{'...' if len(failed_clients) > 3 else ''}")
-                        
-                        # Check if we have any clients to export
-                        if not export_data['clients']:
-                            st.error("❌ No client data could be exported. Please check your authentication or storage settings.")
-                            if use_supabase():
-                                st.info("💡 Try disabling Supabase in the sidebar if you're not using it.")
-                            raise ValueError("No client data available for export")
-                        
-                        # Create download button
-                        export_json = json.dumps(export_data, indent=2)
-                        file_size_bytes = len(export_json.encode('utf-8'))
-                        file_size_mb = file_size_bytes / (1024 * 1024)
-                        
-                        # Create filename based on selection
-                        if len(selected_clients_to_export) == len(existing_clients):
-                            filename_prefix = "all_clients"
-                        elif len(selected_clients_to_export) == 1:
-                            filename_prefix = selected_clients_to_export[0].replace(' ', '_')
-                        else:
-                            filename_prefix = f"{len(selected_clients_to_export)}_clients"
-                        
-                        # Show file size info
-                        if file_size_mb < 1:
-                            st.info(f"📦 Export size: {file_size_bytes / 1024:.1f} KB")
-                        else:
-                            st.info(f"📦 Export size: {file_size_mb:.2f} MB")
-                            if file_size_mb > 5:
-                                st.warning("⚠️ Large export file! Import may take longer. Consider exporting fewer clients at once if you experience issues.")
-                        
-                        st.download_button(
-                            label=f"💾 Download Backup ({len(selected_clients_to_export)} client{'s' if len(selected_clients_to_export) > 1 else ''})",
-                            data=export_json,
-                            file_name=f"amazon_dashboard_{filename_prefix}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
-                            mime="application/json",
-                            use_container_width=True
-                        )
-                        st.success(f"✅ Export prepared! Click the download button above to save {len(selected_clients_to_export)} client(s).")
-                        
-                    except Exception as e:
-                        st.error(f"❌ Error exporting data: {str(e)}")
-            else:
-                st.warning("⚠️ Please select at least one client to export.")
-            
-            st.markdown("---")
-        
         # Import section
         st.subheader("📥 Import Client Data")
-        st.markdown("Upload a previously exported backup file to restore your client configurations.")
+        st.markdown("Upload one or more previously exported backup files to restore your client configurations.")
         
-        uploaded_backup = st.file_uploader("Choose backup file", type=['json'], key="client_backup_import")
+        uploaded_backups = st.file_uploader("Choose backup file(s)", type=['json'], accept_multiple_files=True, key="client_backup_import")
         
-        if uploaded_backup:
-            with st.spinner("Loading backup file..."):
-                try:
-                    import_data = json.load(uploaded_backup)
-                    
-                    # Validate backup file
-                    if 'version' not in import_data or 'clients' not in import_data:
-                        st.error("❌ Invalid backup file format.")
-                    elif not isinstance(import_data.get('clients'), dict):
-                        st.error("❌ Invalid backup file structure - clients data is corrupted.")
-                    else:
-                        st.success(f"✅ Backup file loaded (exported on {import_data.get('export_date', 'unknown date')})")
+        if uploaded_backups:
+            # Merge all uploaded files into a single import_data structure
+            merged_import_data = {
+                'version': '1.0',
+                'export_date': datetime.now().isoformat(),
+                'clients': {}
+            }
+            
+            file_errors = []
+            files_processed = 0
+            
+            with st.spinner(f"Loading {len(uploaded_backups)} backup file(s)..."):
+                for uploaded_file in uploaded_backups:
+                    try:
+                        file_data = json.load(uploaded_file)
                         
+                        # Validate individual file
+                        if 'clients' not in file_data or not isinstance(file_data.get('clients'), dict):
+                            file_errors.append(f"{uploaded_file.name}: Invalid backup file format")
+                            continue
+                        
+                        # Merge clients from this file
+                        for client_name, client_config in file_data['clients'].items():
+                            if client_name in merged_import_data['clients']:
+                                st.warning(f"⚠️ Client '{client_name}' appears in multiple files. Using data from {uploaded_file.name}.")
+                            merged_import_data['clients'][client_name] = client_config
+                        
+                        files_processed += 1
+                        
+                    except json.JSONDecodeError:
+                        file_errors.append(f"{uploaded_file.name}: Invalid JSON format")
+                    except Exception as e:
+                        file_errors.append(f"{uploaded_file.name}: {str(e)}")
+                
+                # Show file processing results
+                if file_errors:
+                    with st.expander(f"⚠️ {len(file_errors)} file(s) had errors", expanded=True):
+                        for error in file_errors:
+                            st.error(f"❌ {error}")
+                
+                if files_processed > 0:
+                    st.success(f"✅ Successfully loaded {files_processed} backup file(s)")
+                
+                # Use the merged data for import processing
+                import_data = merged_import_data
+                
+                try:
+                    # Validate merged backup
+                    if not import_data['clients']:
+                        st.error("❌ No valid client data found in uploaded files.")
+                    
+                    else:
                         # Detect duplicates
                         duplicate_clients = []
                         new_clients = []
@@ -6724,12 +6659,117 @@ with st.sidebar:
                                 import traceback
                                 st.error(traceback.format_exc())
                             
-                except json.JSONDecodeError:
-                    st.error("❌ Invalid JSON file. Please upload a valid backup file.")
                 except Exception as e:
-                    st.error(f"❌ Error reading backup file: {str(e)}")
+                    st.error(f"❌ Error importing data: {str(e)}")
+                    import traceback
+                    st.error(traceback.format_exc())
         
         st.markdown("---")
+        
+        # Export section (always available)
+        if existing_clients:
+            st.subheader("📤 Export Current Data")
+            st.markdown("Select which clients to export as a backup file.")
+            
+            # Multi-select for clients
+            selected_clients_to_export = st.multiselect(
+                "Select clients to export:",
+                options=sorted(existing_clients),
+                default=sorted(existing_clients),
+                help="Choose one or more clients to include in the backup file"
+            )
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                if st.button("Select All", use_container_width=True):
+                    st.session_state.export_select_all = True
+                    st.rerun()
+            
+            with col2:
+                if st.button("Clear Selection", use_container_width=True):
+                    st.session_state.export_select_all = False
+                    st.rerun()
+            
+            # Handle select all/clear
+            if 'export_select_all' in st.session_state:
+                if st.session_state.export_select_all:
+                    selected_clients_to_export = sorted(existing_clients)
+                else:
+                    selected_clients_to_export = []
+                del st.session_state.export_select_all
+            
+            if selected_clients_to_export:
+                st.info(f"📊 {len(selected_clients_to_export)} client(s) selected for export")
+                
+                if st.button("📦 Export Selected Clients", type="primary", use_container_width=True):
+                    try:
+                        export_data = {
+                            'version': '1.0',
+                            'export_date': datetime.now().isoformat(),
+                            'clients': {}
+                        }
+                        
+                        # Export selected client configs
+                        failed_clients = []
+                        for client_name in selected_clients_to_export:
+                            client_config = load_client_config(client_name)
+                            if client_config:
+                                export_data['clients'][client_name] = client_config
+                            else:
+                                failed_clients.append(client_name)
+                        
+                        # Warn if some clients couldn't be loaded
+                        if failed_clients:
+                            if use_supabase() and not get_current_user_id():
+                                st.error(f"❌ Unable to export {len(failed_clients)} client(s) - Not logged in to Supabase. Please sign in or disable Supabase in the sidebar.")
+                            else:
+                                st.warning(f"⚠️ Unable to load config for {len(failed_clients)} client(s): {', '.join(failed_clients[:3])}{'...' if len(failed_clients) > 3 else ''}")
+                        
+                        # Check if we have any clients to export
+                        if not export_data['clients']:
+                            st.error("❌ No client data could be exported. Please check your authentication or storage settings.")
+                            if use_supabase():
+                                st.info("💡 Try disabling Supabase in the sidebar if you're not using it.")
+                            raise ValueError("No client data available for export")
+                        
+                        # Create download button
+                        export_json = json.dumps(export_data, indent=2)
+                        file_size_bytes = len(export_json.encode('utf-8'))
+                        file_size_mb = file_size_bytes / (1024 * 1024)
+                        
+                        # Create filename based on selection
+                        if len(selected_clients_to_export) == len(existing_clients):
+                            filename_prefix = "all_clients"
+                        elif len(selected_clients_to_export) == 1:
+                            filename_prefix = selected_clients_to_export[0].replace(' ', '_')
+                        else:
+                            filename_prefix = f"{len(selected_clients_to_export)}_clients"
+                        
+                        # Show file size info
+                        if file_size_mb < 1:
+                            st.info(f"📦 Export size: {file_size_bytes / 1024:.1f} KB")
+                        else:
+                            st.info(f"📦 Export size: {file_size_mb:.2f} MB")
+                            if file_size_mb > 5:
+                                st.warning("⚠️ Large export file! Import may take longer. Consider exporting fewer clients at once if you experience issues.")
+                        
+                        st.download_button(
+                            label=f"💾 Download Backup ({len(selected_clients_to_export)} client{'s' if len(selected_clients_to_export) > 1 else ''})",
+                            data=export_json,
+                            file_name=f"amazon_dashboard_{filename_prefix}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                            mime="application/json",
+                            use_container_width=True
+                        )
+                        st.success(f"✅ Export prepared! Click the download button above to save {len(selected_clients_to_export)} client(s).")
+                        
+                    except Exception as e:
+                        st.error(f"❌ Error exporting data: {str(e)}")
+            else:
+                st.warning("⚠️ Please select at least one client to export.")
+            
+            st.markdown("---")
+        
         st.caption("💡 **Tip**: Export your data regularly to prevent data loss, especially when using cloud mode where data is stored in your browser.")
 
 # --- Main Panel --- #
