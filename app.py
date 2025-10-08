@@ -1132,7 +1132,8 @@ def clear_client_caches():
     """Helper to clear all client-related caches across all storage layers."""
     # Clear filesystem cache (local only)
     try:
-        _load_client_config_from_file.clear()
+        if '_load_client_config_from_file' in globals():
+            _load_client_config_from_file.clear()
     except Exception:
         pass
     
