@@ -723,12 +723,12 @@ def get_acos_color(acos, target_acos):
     return ''
 
 def style_acos(df, target_acos=None, column_config=None, use_avg_as_fallback=False, title=None, use_expander=False):
-    """Display a DataFrame. ACoS coloring has been removed.
+    """Display a DataFrame with Python-level formatting (compatible with PyInstaller).
     
     Args:
         df: DataFrame to display
         target_acos: Parameter kept for backward compatibility but no longer used
-        column_config: Optional column configuration for st.dataframe
+        column_config: Parameter kept for backward compatibility but no longer used (Python formatting used instead)
         use_avg_as_fallback: Parameter kept for backward compatibility but no longer used
         title: Optional title for expandable section
         use_expander: Whether to use expandable section
@@ -742,14 +742,116 @@ def style_acos(df, target_acos=None, column_config=None, use_avg_as_fallback=Fal
                     col1, col2 = st.columns([0.85, 0.15])
                     with col2:
                         get_table_download_link(df, f"{title.lower().replace(' ', '_')}")
-                    return st.dataframe(df, use_container_width=True, column_config=column_config, hide_index=True) if column_config else st.dataframe(df, use_container_width=True, hide_index=True)
+                    return st.dataframe(df, use_container_width=True, hide_index=True)
             else:
-                return st.dataframe(df, use_container_width=True, column_config=column_config, hide_index=True) if column_config else st.dataframe(df, use_container_width=True, hide_index=True)
+                return st.dataframe(df, use_container_width=True, hide_index=True)
         
         # Make a copy to avoid modifying the original
-        df = df.copy()
+        display_df = df.copy()
         
-        # Display the dataframe without ACoS styling
+        # Debug: log column names and dtypes
+        if 'debug_messages' in st.session_state:
+            st.session_state.debug_messages.append(f"[style_acos] Input columns: {list(display_df.columns)}")
+            st.session_state.debug_messages.append(f"[style_acos] Input dtypes: {display_df.dtypes.to_dict()}")
+            if not display_df.empty and 'Spend' in display_df.columns:
+                st.session_state.debug_messages.append(f"[style_acos] Sample Spend values: {display_df['Spend'].head(3).tolist()}")
+        
+        # Apply direct string formatting (works in PyInstaller, unlike df.style.format())
+        # First, convert numeric columns to proper numeric type
+        for col in display_df.columns:
+            if col in ['Campaign', 'Target', 'Match Type', 'Target Type', 'Ad Type', 'Search Term', 'Product', 'Product Group']:
+                # Keep text columns as-is
+                continue
+            else:
+                # Convert to numeric (strip currency and percent symbols)
+                display_df[col] = pd.to_numeric(
+                    display_df[col].astype(str).str.replace('$', '', regex=False).str.replace('%', '', regex=False).str.replace(',', '', regex=False), 
+                    errors='coerce'
+                ).fillna(0)
+        
+        # Debug: log after conversion
+        if 'debug_messages' in st.session_state and not display_df.empty and 'Spend' in display_df.columns:
+            st.session_state.debug_messages.append(f"[style_acos] After conversion - Spend dtype: {display_df['Spend'].dtype}")
+            st.session_state.debug_messages.append(f"[style_acos] After conversion - Sample Spend: {display_df['Spend'].head(3).tolist()}")
+        
+        # Now apply direct string formatting to each column using vectorized operations
+        # This avoids lambda functions which can have issues in PyInstaller
+        for col in display_df.columns:
+            if col in ['Campaign', 'Target', 'Match Type', 'Target Type', 'Ad Type', 'Search Term', 'Product', 'Product Group']:
+                continue  # Skip text columns
+            elif col == 'ROAS':
+                # ROAS formatting: 2 decimals
+                display_df[col] = display_df[col].round(2).astype(str)
+                display_df[col] = display_df[col].replace('nan', '0.00')
+            elif col in ['ACoS', 'TACoS', 'CVR', 'CTR', '% Ad Sales', '% of Spend', '% of Ad Sales', 'Ad Traffic % Sessions']:
+                # Percentage formatting: 2 decimals with %
+                display_df[col] = display_df[col].round(2).astype(str) + '%'
+                display_df[col] = display_df[col].replace('nan%', '0.00%')
+            elif col in ['CPC', 'AOV', 'CPA', 'Bid']:
+                # Small currency formatting: $X.XX
+                display_df[col] = '$' + display_df[col].round(2).astype(str)
+                display_df[col] = display_df[col].replace('$nan', '$0.00')
+            elif col in ['Spend', 'Ad Sales', 'Sales', 'Total Sales']:
+                # Large currency formatting: $X,XXX.XX
+                # Use manual comma insertion to avoid locale issues in PyInstaller
+                def format_currency(val):
+                    if pd.isnull(val) or val != val:  # Check for NaN
+                        return "$0.00"
+                    try:
+                        # Manual comma insertion
+                        val_str = f"{val:.2f}"
+                        parts = val_str.split('.')
+                        integer_part = parts[0]
+                        decimal_part = parts[1] if len(parts) > 1 else "00"
+                        # Add commas manually
+                        if len(integer_part) > 3:
+                            integer_part = integer_part[::-1]  # Reverse
+                            grouped = [integer_part[i:i+3] for i in range(0, len(integer_part), 3)]
+                            integer_part = ','.join(grouped)[::-1]  # Reverse back
+                        return f"${integer_part}.{decimal_part}"
+                    except:
+                        return "$0.00"
+                display_df[col] = display_df[col].apply(format_currency)
+            elif col in ['Impressions', 'Clicks', 'Orders', 'Units Sold', 'Sessions']:
+                # Integer formatting with commas
+                def format_integer(val):
+                    if pd.isnull(val) or val != val:
+                        return "0"
+                    try:
+                        val_int = int(round(val))
+                        val_str = str(val_int)
+                        if len(val_str) > 3:
+                            val_str = val_str[::-1]
+                            grouped = [val_str[i:i+3] for i in range(0, len(val_str), 3)]
+                            val_str = ','.join(grouped)[::-1]
+                        return val_str
+                    except:
+                        return "0"
+                display_df[col] = display_df[col].apply(format_integer)
+            else:
+                # Default: format as integer with commas
+                def format_integer(val):
+                    if pd.isnull(val) or val != val:
+                        return "0"
+                    try:
+                        val_int = int(round(val))
+                        val_str = str(val_int)
+                        if len(val_str) > 3:
+                            val_str = val_str[::-1]
+                            grouped = [val_str[i:i+3] for i in range(0, len(val_str), 3)]
+                            val_str = ','.join(grouped)[::-1]
+                        return val_str
+                    except:
+                        return "0"
+                display_df[col] = display_df[col].apply(format_integer)
+        
+        # Debug: log after formatting
+        if 'debug_messages' in st.session_state:
+            if not display_df.empty and 'Spend' in display_df.columns:
+                st.session_state.debug_messages.append(f"[style_acos] After formatting - Sample Spend: {display_df['Spend'].head(3).tolist()}")
+            st.session_state.debug_messages.append(f"[style_acos] Final dtypes: {display_df.dtypes.to_dict()}")
+        
+        # Display the formatted dataframe (no .style needed)
         if use_expander and title:
             is_expanded, section_key = create_expandable_section(title)
             if is_expanded:
@@ -759,22 +861,23 @@ def style_acos(df, target_acos=None, column_config=None, use_avg_as_fallback=Fal
                     # Add download button
                     get_table_download_link(df, f"{title.lower().replace(' ', '_')}")
                 
-                # Display the dataframe without styling
-                return st.dataframe(df, use_container_width=True, column_config=column_config, hide_index=True) if column_config else st.dataframe(df, use_container_width=True, hide_index=True)
+                # Display the dataframe
+                return st.dataframe(display_df, use_container_width=True, hide_index=True)
         else:
-            return st.dataframe(df, use_container_width=True, column_config=column_config, hide_index=True) if column_config else st.dataframe(df, use_container_width=True, hide_index=True)
+            return st.dataframe(display_df, use_container_width=True, hide_index=True)
     except Exception as e:
         if 'debug_messages' in st.session_state:
             st.session_state.debug_messages.append(f"[style_acos debug] Exception in style_acos: {e}")
+        # Fallback to unstyled display
         if use_expander and title:
             is_expanded, section_key = create_expandable_section(title)
             if is_expanded:
                 col1, col2 = st.columns([0.85, 0.15])
                 with col2:
                     get_table_download_link(df, f"{title.lower().replace(' ', '_')}")
-                return st.dataframe(df, use_container_width=True, column_config=column_config, hide_index=True) if column_config else st.dataframe(df, use_container_width=True, hide_index=True)
+                return st.dataframe(df, use_container_width=True, hide_index=True)
         else:
-            return st.dataframe(df, use_container_width=True, column_config=column_config, hide_index=True) if column_config else st.dataframe(df, use_container_width=True, hide_index=True)
+            return st.dataframe(df, use_container_width=True, hide_index=True)
 
 
 # --- Helper Functions for Consistent ACoS Range Distribution ---
@@ -8788,21 +8891,12 @@ if st.session_state.client_config:
                     st.session_state.asin_select_all = False
 
                 # Display the editable table with the temp DataFrame
+                # Note: column_config removed for PyInstaller compatibility
                 edited_df = st.data_editor(
                     st.session_state.branded_asins_editor_temp,
                     key="branded_asins_editor",
                     use_container_width=True,
-                    hide_index=True,
-                    column_config={
-                        'SKU': st.column_config.TextColumn('SKU', help="SKU for this ASIN (auto-populated from bulk files)"),
-                        'ASIN': st.column_config.TextColumn('ASIN', disabled=True),
-                        'Product Title': st.column_config.TextColumn('Product Title', disabled=True),
-                        'Product Group': st.column_config.TextColumn('Product Group'),
-                        'Tag 1': st.column_config.TextColumn('Tag 1', help="Optional Tag 1 for this ASIN"),
-                        'Tag 2': st.column_config.TextColumn('Tag 2', help="Optional Tag 2 for this ASIN"),
-                        'Tag 3': st.column_config.TextColumn('Tag 3', help="Optional Tag 3 for this ASIN"),
-                        'Delete': st.column_config.CheckboxColumn('Delete Row')
-                    }
+                    hide_index=True
                 )
                 st.session_state.branded_asins_editor_temp = edited_df.copy()
 
@@ -9400,19 +9494,12 @@ if st.session_state.client_config:
 
                 
                 # Display the editable table with the temp DataFrame
+                # Note: column_config removed for PyInstaller compatibility
                 edited_df = st.data_editor(
                     st.session_state.campaign_tags_editor_temp,
                     key="campaign_tags_editor",
                     use_container_width=True,
-                    hide_index=True,
-                    column_config={
-                        'Campaign Name': st.column_config.TextColumn('Campaign Name', disabled=True),
-                        'Campaign Type': st.column_config.TextColumn('Campaign Type', disabled=True),
-                        'Product Group': st.column_config.TextColumn('Product Group'),
-                        'Spend': st.column_config.TextColumn('Spend', disabled=True),
-                        'State': st.column_config.TextColumn('State', disabled=True),
-                        'Delete': st.column_config.CheckboxColumn('Delete Row')
-                    }
+                    hide_index=True
                 )
                 st.session_state.campaign_tags_editor_temp = edited_df.copy()
 
@@ -13708,13 +13795,17 @@ if st.session_state.client_config:
                     pass
                 # Order columns for display (omit raw 'Sales')
                 disp_cols = [c for c in ['Text','Kind','Found Via','Classification','Spend','Ad Sales','ROAS'] if c in cand_df.columns]
-                # Column formatting
-                col_cfg = {
-                    'Spend': st.column_config.NumberColumn('Spend', format='$%.2f'),
-                    'Ad Sales': st.column_config.NumberColumn('Ad Sales', format='$%.2f'),
-                    'ROAS': st.column_config.NumberColumn('ROAS', format='%.2f')
-                }
-                st.dataframe(cand_df[disp_cols], use_container_width=True, height=220, column_config=col_cfg)
+                
+                # Format display dataframe
+                display_cand_df = cand_df[disp_cols].copy()
+                if 'Spend' in display_cand_df.columns:
+                    display_cand_df['Spend'] = pd.to_numeric(display_cand_df['Spend'], errors='coerce').fillna(0).apply(lambda x: f"${x:,.2f}")
+                if 'Ad Sales' in display_cand_df.columns:
+                    display_cand_df['Ad Sales'] = pd.to_numeric(display_cand_df['Ad Sales'], errors='coerce').fillna(0).apply(lambda x: f"${x:,.2f}")
+                if 'ROAS' in display_cand_df.columns:
+                    display_cand_df['ROAS'] = pd.to_numeric(display_cand_df['ROAS'], errors='coerce').fillna(0).apply(lambda x: f"{x:.2f}")
+                
+                st.dataframe(display_cand_df, use_container_width=True, height=220)
                 if st.button("Add Candidates", key="cc_add_cands"):
                     # Classify branding using client settings
                     client_cfg = st.session_state.get('client_config', {}) or {}
@@ -14166,18 +14257,20 @@ if st.session_state.client_config:
                     disp = disp[[c for c in order if c in disp.columns] + [c for c in disp.columns if c not in order]]
                     # Round ROAS to 2 decimals
                     disp['ROAS'] = pd.to_numeric(disp['ROAS'], errors='coerce').fillna(0).round(2)
-                    # Configure currency formatting
-                    col_cfg2 = {
-                        'Spend': st.column_config.NumberColumn('Spend', format='$%.2f'),
-                        'Ad Sales': st.column_config.NumberColumn('Ad Sales', format='$%.2f'),
-                        'ROAS': st.column_config.NumberColumn('ROAS', format='%.2f')
-                    }
+                    
+                    # Format currency columns for display
+                    if 'Spend' in disp.columns:
+                        disp['Spend'] = pd.to_numeric(disp['Spend'], errors='coerce').fillna(0).apply(lambda x: f"${x:,.2f}")
+                    if 'Ad Sales' in disp.columns:
+                        disp['Ad Sales'] = pd.to_numeric(disp['Ad Sales'], errors='coerce').fillna(0).apply(lambda x: f"${x:,.2f}")
+                    if 'ROAS' in disp.columns:
+                        disp['ROAS'] = pd.to_numeric(disp['ROAS'], errors='coerce').fillna(0).apply(lambda x: f"{x:.2f}")
+                    
                     edited = st.data_editor(
                         disp.drop(columns=['_key'], errors='ignore'),
                         num_rows="dynamic",
                         use_container_width=True,
-                        key="cc_targets_editor",
-                        column_config=col_cfg2
+                        key="cc_targets_editor"
                     )
                     # Persist edits back to core df, keep metrics and scope columns
                     if isinstance(edited, pd.DataFrame):
@@ -18149,7 +18242,7 @@ if st.session_state.client_config:
                                             'x': sales_df['Sales'],
                                             'text': [f'${val:,.2f}' for val in sales_df['Sales']],
                                             'textposition': 'inside',
-                                            'textfont': {'color': 'white', 'size': 14, 'weight': 'bold'},
+                                            'textfont': {'color': 'white', 'size': 14},
                                             'hoverinfo': 'text',
                                             'hovertext': [f'{cat}: ${val:,.2f} ({pct:.1f}%)' for cat, val, pct in zip(sales_df['Category'], sales_df['Sales'], sales_df['Percentage'])],
                                             'marker': {
@@ -18229,7 +18322,7 @@ if st.session_state.client_config:
                                                 'x': traffic_df['Sessions'],
                                                 'text': [f'{val:,.0f}' for val in traffic_df['Sessions']],
                                                 'textposition': 'inside',
-                                                'textfont': {'color': 'white', 'size': 14, 'weight': 'bold'},
+                                                'textfont': {'color': 'white', 'size': 14},
                                                 'hoverinfo': 'text',
                                                 'hovertext': [f'{cat}: {val:,.0f} ({pct:.1f}%)' for cat, val, pct in zip(traffic_df['Category'], traffic_df['Sessions'], traffic_df['Percentage'])],
                                                 'marker': {
@@ -18653,7 +18746,7 @@ if st.session_state.client_config:
                                                 'x': spend_df['Spend'],
                                                 'text': [f'${val:,.2f}' for val in spend_df['Spend']],
                                                 'textposition': 'inside',
-                                                'textfont': {'color': 'white', 'size': 14, 'weight': 'bold'},
+                                                'textfont': {'color': 'white', 'size': 14},
                                                 'hoverinfo': 'text',
                                                 'hovertext': [f'{cat}: ${val:,.2f} ({pct:.1f}%)' for cat, val, pct in zip(spend_df['Category'], spend_df['Spend'], spend_df['Percentage'])],
                                                 'marker': {
@@ -18732,7 +18825,7 @@ if st.session_state.client_config:
                                                 'x': sales_df['Sales'],
                                                 'text': [f'${val:,.2f}' for val in sales_df['Sales']],
                                                 'textposition': 'inside',
-                                                'textfont': {'color': 'white', 'size': 14, 'weight': 'bold'},
+                                                'textfont': {'color': 'white', 'size': 14},
                                                 'hoverinfo': 'text',
                                                 'hovertext': [f'{cat}: ${val:,.2f} ({pct:.1f}%)' for cat, val, pct in zip(sales_df['Category'], sales_df['Sales'], sales_df['Percentage'])],
                                                 'marker': {
@@ -19266,39 +19359,9 @@ if st.session_state.client_config:
             import math
             goals = st.session_state.client_config.get('goals', {})
 
-            shared_column_config = {
-                # Currency
-                "Spend": st.column_config.NumberColumn(label="Spend", format="dollar"),
-                "Ad Sales": st.column_config.NumberColumn(label="Ad Sales", format="dollar"),
-                "Total Sales": st.column_config.NumberColumn(label="Total Sales ($)", format="dollar"),
-                "AOV": st.column_config.NumberColumn(label="AOV ($)", format="dollar"),
-                "CPA": st.column_config.NumberColumn(label="CPA ($)", format="dollar"),
-                "CPC": st.column_config.NumberColumn(label="CPC ($)", format="dollar"),
-                "Bid": st.column_config.NumberColumn(label="Bid ($)", format="dollar"),
-                # Percentages
-                "ACoS": st.column_config.NumberColumn(label="ACoS (%)", format="%.2f%%"),
-                "CVR": st.column_config.NumberColumn(label="CVR (%)", format="%.2f%%"),
-                "CTR": st.column_config.NumberColumn(label="CTR (%)", format="%.2f%%"),
-                "TACoS": st.column_config.NumberColumn(label="TACoS (%)", format="%.2f%%"),
-                "% Ad Sales": st.column_config.NumberColumn(label="% Ad Sales", format="%.2f%%"),
-                "Ad Traffic % Sessions": st.column_config.NumberColumn(label="Ad Traffic % Sessions", format="%.2f%%"),
-                # Integers with Commas
-                "Impressions": st.column_config.NumberColumn(label="Impressions", format="localized"),
-                "Clicks": st.column_config.NumberColumn(label="Clicks", format="localized"),
-                "Orders": st.column_config.NumberColumn(label="Orders", format="localized"),
-                "Units Sold": st.column_config.NumberColumn(label="Units Sold", format="localized"),
-                "Sessions": st.column_config.NumberColumn(label="Sessions", format="localized"),
-                # General Numbers
-                "ROAS": st.column_config.NumberColumn(label="ROAS", format="%.2f"),
-                # Text columns
-                "Campaign": st.column_config.TextColumn(label="Campaign"),
-                "Target": st.column_config.TextColumn(label="Target"),
-                "Match Type": st.column_config.TextColumn(label="Match Type"),
-                "Target Type": st.column_config.TextColumn(label="Target Type"),
-                "Ad Type": st.column_config.TextColumn(label="Ad Type"),
-                "Search Term": st.column_config.TextColumn(label="Search Term"),
-                "Product Group": st.column_config.TextColumn(label="Product Group")
-            }
+            # Column config without format strings (PyInstaller compatible)
+            # Formatting is now done at Python level using df.style.format()
+            shared_column_config = None
 
             # Retrieve ACoS targets
             branded_acos = goals.get('branded_acos', None)
@@ -19863,7 +19926,8 @@ if st.session_state.client_config:
                                             use_avg_fallback = goals.get('use_avg_acos_account', False)
                                     style_acos(display_df, target_acos, column_config=shared_column_config, use_avg_as_fallback=use_avg_fallback, title=f"{label} Targeting", use_expander=True)
                                 else:
-                                    st.dataframe(display_df, use_container_width=True, hide_index=True, column_config=shared_column_config)
+                                    # Use style_acos without expander for consistent Python-level formatting
+                                    style_acos(display_df, target_acos, column_config=shared_column_config, use_avg_as_fallback=False, title=None, use_expander=False)
                             except Exception as e:
                                 st.error(f"Error displaying styled table: {e}")
                                 st.session_state.debug_messages.append(f"[Targeting Table Error] {e}")
@@ -20101,14 +20165,17 @@ if st.session_state.client_config:
                                 if table_df.empty:
                                     st.info(f"No data available to summarize for {tab_label}.")
                                 else:
+                                    # Format numeric columns
+                                    formatted_df = table_df.copy()
+                                    if '# Terms w/ Clicks' in formatted_df.columns:
+                                        formatted_df['# Terms w/ Clicks'] = formatted_df['# Terms w/ Clicks'].apply(lambda x: f"{int(x):,}" if pd.notnull(x) else "0")
+                                    if '# of Converting Terms' in formatted_df.columns:
+                                        formatted_df['# of Converting Terms'] = formatted_df['# of Converting Terms'].apply(lambda x: f"{int(x):,}" if pd.notnull(x) else "0")
+                                    
                                     st.dataframe(
-                                        table_df,
+                                        formatted_df,
                                         use_container_width=True,
-                                        hide_index=True,
-                                        column_config={
-                                            '# Terms w/ Clicks': st.column_config.NumberColumn(format='%d'),
-                                            '# of Converting Terms': st.column_config.NumberColumn(format='%d'),
-                                        },
+                                        hide_index=True
                                     )
 
                     # --- Search Term Table Section ---
@@ -20721,40 +20788,21 @@ if st.session_state.client_config:
                             df = df.drop(columns=['Ad_Sales_Numeric'])
 
                         # Remove any manual string formatting for display
-                        # Use shared_column_config for column formatting
-                        try:
-                            from . import shared_column_config
-                        except ImportError:
-                            shared_column_config = {
-                                "Spend": st.column_config.NumberColumn(label="Spend", format="dollar"),
-                                "Ad Sales": st.column_config.NumberColumn(label="Ad Sales", format="dollar"),
-                                "Orders": st.column_config.NumberColumn(label="Orders", format="localized"),
-                                "Impressions": st.column_config.NumberColumn(label="Impressions", format="localized"),
-                                "Clicks": st.column_config.NumberColumn(label="Clicks", format="localized"),
-                                "ACoS": st.column_config.NumberColumn(label="ACoS (%)", format="%.2f%%"),
-                                "ROAS": st.column_config.NumberColumn(label="ROAS", format="%.2f"),
-                                "CPC": st.column_config.NumberColumn(label="CPC ($)", format="dollar"),
-                                "CTR": st.column_config.NumberColumn(label="CTR (%)", format="%.2f%%"),
-                                "CVR": st.column_config.NumberColumn(label="CVR (%)", format="%.2f%%"),
-                                "AOV": st.column_config.NumberColumn(label="AOV ($)", format="dollar"),
-                                "Target Type": st.column_config.TextColumn(label="Target Type"),
-                                "Match Type": st.column_config.TextColumn(label="Match Type"),
-                                "Target": st.column_config.TextColumn(label="Target"),
-                                "Search Term": st.column_config.TextColumn(label="Search Term"),
-                                "Campaign": st.column_config.TextColumn(label="Campaign"),
-                                "Product": st.column_config.TextColumn(label="Ad Type"),
-                            }
+                        # Column config removed - using Python-level formatting for PyInstaller compatibility
+                        shared_column_config = None
 
 
 
-                        # Use style_acos for ACoS highlighting if available, otherwise st.dataframe
+                        # Use style_acos for consistent Python-level formatting (compatible with PyInstaller)
                         if 'ACoS' in filtered_df.columns and (target_acos is not None or use_avg_fallback):
                             try:
-                                style_acos(filtered_df[display_columns], target_acos, column_config=shared_column_config, use_avg_as_fallback=use_avg_fallback, title=f"{'Branded' if is_branded else 'Non-Branded' if is_branded is not None else 'All'} Search Terms")
+                                style_acos(filtered_df[display_columns], target_acos, column_config=None, use_avg_as_fallback=use_avg_fallback, title=f"{'Branded' if is_branded else 'Non-Branded' if is_branded is not None else 'All'} Search Terms")
                             except Exception as e:
-                                st.dataframe(filtered_df[display_columns], use_container_width=True, column_config=shared_column_config, hide_index=True)
+                                # Fallback to style_acos without title
+                                style_acos(filtered_df[display_columns], target_acos, column_config=None, use_avg_as_fallback=False, title=None, use_expander=False)
                         else:
-                            st.dataframe(filtered_df[display_columns], use_container_width=True, column_config=shared_column_config, hide_index=True)
+                            # Use style_acos for consistent formatting
+                            style_acos(filtered_df[display_columns], target_acos, column_config=None, use_avg_as_fallback=False, title=None, use_expander=False)
 
                         # --- Export: Search Term Performance (Filtered) -> Excel ---
                         try:
@@ -21271,20 +21319,6 @@ if st.session_state.client_config:
                                     # Select columns to display
                                     display_df = filtered_df[display_cols].copy()
                                     
-                                    # Create column configuration for proper formatting and sorting
-                                    column_config = {
-                                        'Campaign': st.column_config.TextColumn(label="Campaign"),
-                                        'Search Term': st.column_config.TextColumn(label="Search Term"),
-                                        'Search Term Classification': st.column_config.TextColumn(label="Search Term Classification"),
-                                        'Target': st.column_config.TextColumn(label="Target"),
-                                        'Target Classification': st.column_config.TextColumn(label="Target Classification"),
-                                        'Match Type': st.column_config.TextColumn(label="Match Type"),
-                                        'Spend': st.column_config.NumberColumn(label="Spend", format="dollar"),
-                                        'Ad Sales': st.column_config.NumberColumn(label="Ad Sales", format="dollar"),
-                                        'ACoS': st.column_config.NumberColumn(label="ACoS (%)", format="%.2f%%"),
-                                        'ROAS': st.column_config.NumberColumn(label="ROAS", format="%.2f")
-                                    }
-                                    
                                     # Convert ACoS and ROAS to numeric values for proper display
                                     if 'ACoS' in display_df.columns:
                                         display_df['ACoS'] = pd.to_numeric(display_df['ACoS'].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
@@ -21292,12 +21326,22 @@ if st.session_state.client_config:
                                     if 'ROAS' in display_df.columns:
                                         display_df['ROAS'] = pd.to_numeric(display_df['ROAS'].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
                                     
-                                    # Display the table with column config for proper formatting and sorting
+                                    # Format display columns
+                                    formatted_df = display_df.copy()
+                                    if 'Spend' in formatted_df.columns:
+                                        formatted_df['Spend'] = formatted_df['Spend'].apply(lambda x: f"${x:,.2f}" if pd.notnull(x) else "$0.00")
+                                    if 'Ad Sales' in formatted_df.columns:
+                                        formatted_df['Ad Sales'] = formatted_df['Ad Sales'].apply(lambda x: f"${x:,.2f}" if pd.notnull(x) else "$0.00")
+                                    if 'ACoS' in formatted_df.columns:
+                                        formatted_df['ACoS'] = formatted_df['ACoS'].apply(lambda x: f"{x:.2f}%" if pd.notnull(x) else "0.00%")
+                                    if 'ROAS' in formatted_df.columns:
+                                        formatted_df['ROAS'] = formatted_df['ROAS'].apply(lambda x: f"{x:.2f}" if pd.notnull(x) else "0.00")
+                                    
+                                    # Display the table without column config
                                     st.dataframe(
-                                        display_df,
+                                        formatted_df,
                                         use_container_width=True,
-                                        hide_index=True,
-                                        column_config=column_config
+                                        hide_index=True
                                     )
                     # --- Wasted Spend Analysis Section ---
                     st.markdown("<div style='margin-top:3rem;'></div>", unsafe_allow_html=True)
@@ -21593,73 +21637,7 @@ if st.session_state.client_config:
                                             return 'background-color: rgba(0, 128, 0, 0.1); color: #00cc00; font-weight: bold'
                                         return ''
                                     
-                                    # Apply styling to the waste score column
-                                    styled_df = display_df.style.map(
-                                        highlight_waste_score, 
-                                        subset=['Priority']
-                                    )
-                                    
-                                    # Create column configuration for proper formatting and sorting
-                                    column_config = {
-                                        'Campaign': st.column_config.TextColumn(
-                                            'Campaign',
-                                            width='medium'
-                                        ),
-                                        'Target': st.column_config.TextColumn(
-                                            'Target',
-                                            width='medium'
-                                        ),
-                                        'Match Type': st.column_config.TextColumn(
-                                            'Match Type',
-                                            width='small'
-                                        ),
-                                        'Spend': st.column_config.NumberColumn(
-                                            'Spend',
-                                            format='$%.2f',
-                                            width='small'
-                                        ),
-                                        'Ad Sales': st.column_config.NumberColumn(
-                                            'Ad Sales',
-                                            format='$%.2f',
-                                            width='small'
-                                        ),
-                                        'ROAS': st.column_config.NumberColumn(
-                                            'ROAS',
-                                            format='%.2fx',
-                                            width='small'
-                                        ),
-                                        'ACoS': st.column_config.NumberColumn(
-                                            'ACoS',
-                                            format='%.2f%%',
-                                            width='small'
-                                        ),
-                                        'Clicks': st.column_config.NumberColumn(
-                                            'Clicks',
-                                            format='%d',
-                                            width='small'
-                                        ),
-                                        'Orders': st.column_config.NumberColumn(
-                                            'Orders',
-                                            format='%d',
-                                            width='small'
-                                        ),
-                                        'CPC': st.column_config.NumberColumn(
-                                            'CPC',
-                                            format='$%.2f',
-                                            width='small'
-                                        ),
-                                        'Bid': st.column_config.NumberColumn(
-                                            'Bid',
-                                            format='$%.2f',
-                                            width='small'
-                                        ),
-                                        'Priority': st.column_config.TextColumn(
-                                            'Priority',
-                                            width='small'
-                                        )
-                                    }
-
-                                    # Convert formatted string values to numeric for sorting
+                                    # Convert formatted string values to numeric for formatting
                                     numeric_df = display_df.copy()
                                     
                                     # Convert currency and numeric columns from formatted strings to numeric values
@@ -21680,18 +21658,30 @@ if st.session_state.client_config:
                                         if col in numeric_df.columns:
                                             numeric_df[col] = numeric_df[col].apply(lambda x: int(str(x).replace(',', '')) if pd.notna(x) and str(x).strip() != '' else 0)
                                     
+                                    # Format columns for display
+                                    formatted_df = numeric_df.copy()
+                                    for col in ['Spend', 'Ad Sales', 'CPC', 'Bid']:
+                                        if col in formatted_df.columns:
+                                            formatted_df[col] = formatted_df[col].apply(lambda x: f"${x:,.2f}" if pd.notnull(x) else "$0.00")
+                                    if 'ACoS' in formatted_df.columns:
+                                        formatted_df['ACoS'] = formatted_df['ACoS'].apply(lambda x: f"{x:.2f}%" if pd.notnull(x) else "0.00%")
+                                    if 'ROAS' in formatted_df.columns:
+                                        formatted_df['ROAS'] = formatted_df['ROAS'].apply(lambda x: f"{x:.2f}x" if pd.notnull(x) else "0.00x")
+                                    for col in ['Clicks', 'Orders']:
+                                        if col in formatted_df.columns:
+                                            formatted_df[col] = formatted_df[col].apply(lambda x: f"{int(x):,}" if pd.notnull(x) else "0")
+                                    
                                     # Apply styling to the priority column
-                                    styled_df = numeric_df.style.map(
+                                    styled_df = formatted_df.style.map(
                                         highlight_waste_score, 
                                         subset=['Priority']
                                     )
                                     
-                                    # Display the table with column config for proper formatting and sorting
+                                    # Display the table without column config
                                     st.dataframe(
                                         styled_df,
                                         use_container_width=True,
-                                        hide_index=True,
-                                        column_config=column_config
+                                        hide_index=True
                                     )
                                     
 
@@ -21913,24 +21903,20 @@ if st.session_state.client_config:
                                     # Select columns to display
                                     display_df = filtered_df[display_cols].copy()
                                     
-                                    # Create column configuration for proper formatting and sorting
-                                    column_config = {
-                                        'Campaign': st.column_config.TextColumn(label="Campaign"),
-                                        'Search Term': st.column_config.TextColumn(label="Search Term"),
-                                        'Search Term Classification': st.column_config.TextColumn(label="Search Term Classification"),
-                                        'Target': st.column_config.TextColumn(label="Target"),
-                                        'Target Classification': st.column_config.TextColumn(label="Target Classification"),
-                                        'Match Type': st.column_config.TextColumn(label="Match Type"),
-                                        'Spend': st.column_config.NumberColumn(label="Spend", format="$%.2f"),
-                                        'Ad Sales': st.column_config.NumberColumn(label="Ad Sales", format="$%.2f"),
-                                        'ACoS': st.column_config.NumberColumn(label="ACoS", format="%.2f"),
-                                        'ROAS': st.column_config.NumberColumn(label="ROAS", format="%.2f")
-                                    }
+                                    # Format display columns
+                                    formatted_df = display_df.copy()
+                                    if 'Spend' in formatted_df.columns:
+                                        formatted_df['Spend'] = pd.to_numeric(formatted_df['Spend'], errors='coerce').fillna(0).apply(lambda x: f"${x:,.2f}")
+                                    if 'Ad Sales' in formatted_df.columns:
+                                        formatted_df['Ad Sales'] = pd.to_numeric(formatted_df['Ad Sales'], errors='coerce').fillna(0).apply(lambda x: f"${x:,.2f}")
+                                    if 'ACoS' in formatted_df.columns:
+                                        formatted_df['ACoS'] = pd.to_numeric(formatted_df['ACoS'], errors='coerce').fillna(0).apply(lambda x: f"{x:.2f}")
+                                    if 'ROAS' in formatted_df.columns:
+                                        formatted_df['ROAS'] = pd.to_numeric(formatted_df['ROAS'], errors='coerce').fillna(0).apply(lambda x: f"{x:.2f}")
                                     
-                                    # Display the table
+                                    # Display the table without column config
                                     st.dataframe(
-                                        display_df,
-                                        column_config=column_config,
+                                        formatted_df,
                                         use_container_width=True,
                                         hide_index=True
                                     )
@@ -22071,23 +22057,18 @@ if st.session_state.client_config:
                                             # Sort by Spend in descending order by default
                                             display_df = display_df.sort_values("Spend", ascending=False)
                                             
-                                            # Create column configuration
-                                            column_config = {
-                                                'Campaign': st.column_config.TextColumn(label="Campaign Name"),
-                                                'Campaign Classification': st.column_config.TextColumn(label="Campaign Classification"),
-                                                'Target': st.column_config.TextColumn(label="Target"),
-                                                'Match Type': st.column_config.TextColumn(label="Match Type"),
-                                                'Search Term': st.column_config.TextColumn(label="Search Term"),
-                                                'Search Term Classification': st.column_config.TextColumn(label="Search Term Classification"),
-                                                'Spend': st.column_config.NumberColumn(label="Spend", format="$%.2f"),
-                                                'Ad Sales': st.column_config.NumberColumn(label="Ad Sales", format="$%.2f"),
-                                                'ACoS': st.column_config.NumberColumn(label="ACoS", format="%.2f%%")
-                                            }
+                                            # Format display columns
+                                            formatted_df = display_df.copy()
+                                            if 'Spend' in formatted_df.columns:
+                                                formatted_df['Spend'] = pd.to_numeric(formatted_df['Spend'], errors='coerce').fillna(0).apply(lambda x: f"${x:,.2f}")
+                                            if 'Ad Sales' in formatted_df.columns:
+                                                formatted_df['Ad Sales'] = pd.to_numeric(formatted_df['Ad Sales'], errors='coerce').fillna(0).apply(lambda x: f"${x:,.2f}")
+                                            if 'ACoS' in formatted_df.columns:
+                                                formatted_df['ACoS'] = pd.to_numeric(formatted_df['ACoS'], errors='coerce').fillna(0).apply(lambda x: f"{x:.2f}%")
                                             
-                                            # Display the table
+                                            # Display the table without column config
                                             st.dataframe(
-                                                display_df,
-                                                column_config=column_config,
+                                                formatted_df,
                                                 use_container_width=True,
                                                 hide_index=True
                                             )
@@ -22185,22 +22166,18 @@ if st.session_state.client_config:
                                         # Sort by Spend in descending order by default
                                         display_df = display_df.sort_values("Spend", ascending=False)
                                         
-                                        # Create column configuration
-                                        column_config = {
-                                            'Campaign': st.column_config.TextColumn(label="Campaign Name"),
-                                            'Campaign Classification': st.column_config.TextColumn(label="Campaign Classification"),
-                                            'Target': st.column_config.TextColumn(label="Target"),
-                                            'Match Type': st.column_config.TextColumn(label="Match Type"),
-                                            'Target Classification': st.column_config.TextColumn(label="Target Classification"),
-                                            'Spend': st.column_config.NumberColumn(label="Spend", format="$%.2f"),
-                                            'Ad Sales': st.column_config.NumberColumn(label="Ad Sales", format="$%.2f"),
-                                            'ACoS': st.column_config.NumberColumn(label="ACoS", format="%.2f%%")
-                                        }
+                                        # Format display columns
+                                        formatted_df = display_df.copy()
+                                        if 'Spend' in formatted_df.columns:
+                                            formatted_df['Spend'] = pd.to_numeric(formatted_df['Spend'], errors='coerce').fillna(0).apply(lambda x: f"${x:,.2f}")
+                                        if 'Ad Sales' in formatted_df.columns:
+                                            formatted_df['Ad Sales'] = pd.to_numeric(formatted_df['Ad Sales'], errors='coerce').fillna(0).apply(lambda x: f"${x:,.2f}")
+                                        if 'ACoS' in formatted_df.columns:
+                                            formatted_df['ACoS'] = pd.to_numeric(formatted_df['ACoS'], errors='coerce').fillna(0).apply(lambda x: f"{x:.2f}%")
                                         
-                                        # Display the table
+                                        # Display the table without column config
                                         st.dataframe(
-                                            display_df,
-                                            column_config=column_config,
+                                            formatted_df,
                                             use_container_width=True,
                                             hide_index=True
                                         )
@@ -22471,26 +22448,32 @@ if st.session_state.client_config:
                                                 # Store the numeric values for sorting
                                                 sort_df_numeric = sort_df.copy()
                                                 
-                                                # Format the display columns with dollar signs and commas
-                                                formatted_df = sort_df.copy()
-                                                formatted_df["Spend"] = formatted_df["Spend"].apply(lambda x: "${:,.2f}".format(x))
-                                                formatted_df["Ad Sales"] = formatted_df["Ad Sales"].apply(lambda x: "${:,.2f}".format(x))
-                                                
-                                                # Create column configuration for display formatting
-                                                column_config = {
-                                                    "Target": st.column_config.TextColumn("Target"),
-                                                    "Match Type": st.column_config.TextColumn("Match Type"),
-                                                    "Spend": st.column_config.NumberColumn("Spend", help="Ad spend", format="dollar"),
-                                                    "Ad Sales": st.column_config.NumberColumn("Ad Sales", help="Sales attributed to ads", format="dollar"),
-                                                    "ACoS": st.column_config.NumberColumn("ACoS", help="Advertising Cost of Sales", format="%.2f%%"),
-                                                    "ROAS": st.column_config.NumberColumn("ROAS", help="Return on Ad Spend", format="%.2f"),
-                                                    "CPC": st.column_config.NumberColumn("CPC", help="Cost Per Click", format="$%.2f"),
-                                                    "CVR": st.column_config.NumberColumn("CVR", help="Conversion Rate", format="%.2f%%")
-                                                }
-                                                
-                                                # Sort by Ad Sales in descending order
+                                                # Sort by Ad Sales in descending order (using numeric values)
                                                 sort_df = sort_df.sort_values(by='Ad Sales', ascending=False)
-                                                st.dataframe(sort_df, use_container_width=True, hide_index=True, column_config=column_config)
+                                                
+                                                # Apply direct string formatting (works in PyInstaller)
+                                                display_df = sort_df.copy()
+                                                display_df['Spend'] = display_df['Spend'].apply(
+                                                    lambda x: f"${x:,.2f}" if pd.notnull(x) and x != float('inf') else "$0.00"
+                                                )
+                                                display_df['Ad Sales'] = display_df['Ad Sales'].apply(
+                                                    lambda x: f"${x:,.2f}" if pd.notnull(x) and x != float('inf') else "$0.00"
+                                                )
+                                                display_df['ACoS'] = display_df['ACoS'].apply(
+                                                    lambda x: f"{x:.2f}%" if pd.notnull(x) and x != float('inf') else "N/A"
+                                                )
+                                                display_df['ROAS'] = display_df['ROAS'].apply(
+                                                    lambda x: f"{x:.2f}" if pd.notnull(x) and x != float('inf') and x > 0 else "N/A"
+                                                )
+                                                display_df['CPC'] = display_df['CPC'].apply(
+                                                    lambda x: f"${x:.2f}" if pd.notnull(x) and x != float('inf') and x > 0 else "N/A"
+                                                )
+                                                display_df['CVR'] = display_df['CVR'].apply(
+                                                    lambda x: f"{x:.2f}%" if pd.notnull(x) and x != float('inf') and x > 0 else "N/A"
+                                                )
+                                                
+                                                # Display the formatted dataframe
+                                                st.dataframe(display_df, use_container_width=True, hide_index=True)
                                             else:
                                                 st.info(f"No targets found in the {acos_range} range.")
                                     else:
@@ -22746,31 +22729,32 @@ if st.session_state.client_config:
                                                         "CVR": grouped_df["CVR_sort"]
                                                     })
                                                     
-                                                    # Store the numeric values for sorting
-                                                    sort_df_numeric = sort_df.copy()
-                                                    
-                                                    # Format the display columns with dollar signs and commas
-                                                    formatted_df = sort_df.copy()
-                                                    formatted_df["Spend"] = formatted_df["Spend"].apply(lambda x: "${:,.2f}".format(x))
-                                                    formatted_df["Ad Sales"] = formatted_df["Ad Sales"].apply(lambda x: "${:,.2f}".format(x))
-                                                    
-                                                    # Create column configuration for display formatting
-                                                    column_config = {
-                                                        "Search Term": st.column_config.TextColumn("Search Term"),
-                                                        "Target": st.column_config.TextColumn("Target"),
-                                                        "Match Type": st.column_config.TextColumn("Match Type"),
-                                                        "Spend": st.column_config.NumberColumn("Spend", help="Ad spend", format="dollar"),
-                                                        "Ad Sales": st.column_config.NumberColumn("Ad Sales", help="Sales attributed to ads", format="dollar"),
-                                                        "ACoS": st.column_config.NumberColumn("ACoS", help="Advertising Cost of Sales", format="%.2f%%"),
-                                                        "ROAS": st.column_config.NumberColumn("ROAS", help="Return on Ad Spend", format="%.2f"),
-                                                        "CPC": st.column_config.NumberColumn("CPC", help="Cost Per Click", format="$%.2f"),
-                                                        "CVR": st.column_config.NumberColumn("CVR", help="Conversion Rate", format="%.2f%%")
-                                                    }
-                                                    
-                                                    # Display the table with sorting enabled and hide index
-                                                    # Sort by Ad Sales in descending order
+                                                    # Sort by Ad Sales in descending order (using numeric values)
                                                     sort_df = sort_df.sort_values(by='Ad Sales', ascending=False)
-                                                    st.dataframe(sort_df, use_container_width=True, hide_index=True, column_config=column_config)
+                                                    
+                                                    # Apply direct string formatting (works in PyInstaller)
+                                                    display_df = sort_df.copy()
+                                                    display_df['Spend'] = display_df['Spend'].apply(
+                                                        lambda x: f"${x:,.2f}" if pd.notnull(x) and x != float('inf') else "$0.00"
+                                                    )
+                                                    display_df['Ad Sales'] = display_df['Ad Sales'].apply(
+                                                        lambda x: f"${x:,.2f}" if pd.notnull(x) and x != float('inf') else "$0.00"
+                                                    )
+                                                    display_df['ACoS'] = display_df['ACoS'].apply(
+                                                        lambda x: f"{x:.2f}%" if pd.notnull(x) and x != float('inf') else "N/A"
+                                                    )
+                                                    display_df['ROAS'] = display_df['ROAS'].apply(
+                                                        lambda x: f"{x:.2f}" if pd.notnull(x) and x != float('inf') and x > 0 else "N/A"
+                                                    )
+                                                    display_df['CPC'] = display_df['CPC'].apply(
+                                                        lambda x: f"${x:.2f}" if pd.notnull(x) and x != float('inf') and x > 0 else "N/A"
+                                                    )
+                                                    display_df['CVR'] = display_df['CVR'].apply(
+                                                        lambda x: f"{x:.2f}%" if pd.notnull(x) and x != float('inf') and x > 0 else "N/A"
+                                                    )
+                                                    
+                                                    # Display the formatted dataframe
+                                                    st.dataframe(display_df, use_container_width=True, hide_index=True)
                                                 else:
                                                     st.info(f"No search terms found in the {acos_range} range.")
                                             else:
@@ -23362,91 +23346,8 @@ if st.session_state.current_page == "advertising_audit":
     
         return df_fmt
 
-    # Column config for aggregation tables (match main tables)
-    agg_column_config = {
-        # Currency columns with dollar formatting and comma separators
-        "Spend": st.column_config.NumberColumn(
-            "Spend",
-            format="$,.2f",
-            help="Total ad spend"
-        ),
-        "Ad Sales": st.column_config.NumberColumn(
-            "Ad Sales",
-            format="$,.2f",
-            help="Sales attributed to advertising"
-        ),
-        "CPC": st.column_config.NumberColumn(
-            "CPC",
-            format="$,.2f",
-            help="Cost per click"
-        ),
-        "AOV": st.column_config.NumberColumn(
-            "AOV",
-            format="$,.2f",
-            help="Average order value"
-        ),
-        "CPA": st.column_config.NumberColumn(
-            "CPA",
-            format="$,.2f",
-            help="Cost per acquisition"
-        ),
-    
-        # Percentage columns
-        "% of Total Spend": st.column_config.NumberColumn(
-            "% of Total Spend",
-            format="%.2f%%",
-            help="Percentage of total advertising spend"
-        ),
-        "% of Total Ad Sales": st.column_config.NumberColumn(
-            "% of Total Ad Sales",
-            format="%.2f%%",
-            help="Percentage of total advertising sales"
-        ),
-        "ACoS": st.column_config.NumberColumn(
-            "ACoS",
-            format="%.2f%%",
-            help="Advertising cost of sales"
-        ),
-        "CVR": st.column_config.NumberColumn(
-            "CVR",
-            format="%.2f%%",
-            help="Conversion rate"
-        ),
-        "CTR": st.column_config.NumberColumn(
-            "CTR",
-            format="%.2f%%",
-            help="Click-through rate"
-        ),
-    
-        # Decimal columns
-        "ROAS": st.column_config.NumberColumn(
-            "ROAS",
-            format="%.2f",
-            help="Return on ad spend"
-        ),
-    
-        # Integer columns with comma formatting
-        "Impressions": st.column_config.NumberColumn(
-            "Impressions",
-            format="%,d",
-            help="Number of ad impressions"
-        ),
-        "Clicks": st.column_config.NumberColumn(
-            "Clicks",
-            format="%,d",
-            help="Number of ad clicks"
-        ),
-        "Orders": st.column_config.NumberColumn(
-            "Orders",
-            format="%,d",
-            help="Number of orders"
-        ),
-        "Units Sold": st.column_config.NumberColumn(
-            "Units Sold",
-            format="%,d",
-            help="Number of units sold"
-        ),
-    }
+    # Column config removed - using Python-level formatting for PyInstaller compatibility
+    agg_column_config = None
 
     # Helper for Sponsored Display Product Target remarketing classification
 
@@ -23730,35 +23631,21 @@ if st.session_state.current_page == "advertising_audit":
                             st.session_state.debug_messages.append(f"[All Targets Display - {match_type_col}] No ACoS target. Displaying table without ACoS-based colors.")
                     
                         # Create a custom column config based on the actual columns in the dataframe
-                        custom_column_config = {}
-                    
-                        # Add Match Type column
-                        custom_column_config[match_type_col] = st.column_config.TextColumn(label=match_type_col)
-                    
-                        # Add currency columns with dollar formatting
+                        # Convert numeric columns (column_config removed - using Python-level formatting)
                         for col in ['Spend', 'Ad Sales', 'CPC', 'AOV', 'CPA']:
                             if col in mt_all_fmt.columns:
-                                # Convert to numeric first
                                 mt_all_fmt[col] = pd.to_numeric(mt_all_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                                custom_column_config[col] = st.column_config.NumberColumn(label=col, format="dollar")
                     
-                        # Add percentage columns
                         for col in ['ACoS', 'CVR', 'CTR', '% of Spend', '% of Ad Sales']:
                             if col in mt_all_fmt.columns:
-                                # Convert to numeric first (as decimal, not percentage)
                                 mt_all_fmt[col] = pd.to_numeric(mt_all_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                                custom_column_config[col] = st.column_config.NumberColumn(label=col, format="%.2f%%")
                     
-                        # Add ROAS as decimal
                         if 'ROAS' in mt_all_fmt.columns:
                             mt_all_fmt['ROAS'] = pd.to_numeric(mt_all_fmt['ROAS'].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                            custom_column_config['ROAS'] = st.column_config.NumberColumn(label="ROAS", format="%.2f")
                     
-                        # Add integer columns with comma formatting
                         for col in ['Impressions', 'Clicks', 'Orders', 'Units Sold']:
                             if col in mt_all_fmt.columns:
                                 mt_all_fmt[col] = pd.to_numeric(mt_all_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0).astype(int)
-                                custom_column_config[col] = st.column_config.NumberColumn(label=col, format="localized")
                     
                         # Apply sorting if specified
                         if st.session_state.get('all_targets_sort_by') is not None:
@@ -23888,35 +23775,21 @@ if st.session_state.current_page == "advertising_audit":
                     )
             
                 # Create a custom column config based on the actual columns in the dataframe
-                custom_column_config = {}
-            
-                # Add Match Type column
-                custom_column_config[match_type_col] = st.column_config.TextColumn(label=match_type_col)
-            
-                # Add currency columns with dollar formatting
+                # Convert numeric columns (column_config removed - using Python-level formatting)
                 for col in ['Spend', 'Ad Sales', 'CPC', 'AOV', 'CPA']:
                     if col in mt_b_fmt.columns:
-                        # Convert to numeric first
                         mt_b_fmt[col] = pd.to_numeric(mt_b_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                        custom_column_config[col] = st.column_config.NumberColumn(label=col, format="dollar")
             
-                # Add percentage columns
                 for col in ['ACoS', 'CVR', 'CTR', '% of Spend', '% of Ad Sales']:
                     if col in mt_b_fmt.columns:
-                        # Convert to numeric first (as decimal, not percentage)
                         mt_b_fmt[col] = pd.to_numeric(mt_b_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                        custom_column_config[col] = st.column_config.NumberColumn(label=col, format="%.2f%%")
             
-                # Add ROAS as decimal
                 if 'ROAS' in mt_b_fmt.columns:
                     mt_b_fmt['ROAS'] = pd.to_numeric(mt_b_fmt['ROAS'].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                    custom_column_config['ROAS'] = st.column_config.NumberColumn(label="ROAS", format="%.2f")
             
-                # Add integer columns with comma formatting
                 for col in ['Impressions', 'Clicks', 'Orders', 'Units Sold']:
                     if col in mt_b_fmt.columns:
                         mt_b_fmt[col] = pd.to_numeric(mt_b_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0).astype(int)
-                        custom_column_config[col] = st.column_config.NumberColumn(label=col, format="localized")
             
                 # Create a copy for numeric processing for styling
                 numeric_df = mt_b_fmt.copy()
@@ -24030,35 +23903,21 @@ if st.session_state.current_page == "advertising_audit":
                 
                 try:
                     # Create a custom column config based on the actual columns in the dataframe
-                    custom_column_config = {}
-                
-                    # Add Match Type column
-                    custom_column_config[match_type_col] = st.column_config.TextColumn(label=match_type_col)
-                
-                    # Add currency columns with dollar formatting
+                    # Convert numeric columns (column_config removed - using Python-level formatting)
                     for col in ['Spend', 'Ad Sales', 'CPC', 'AOV', 'CPA']:
                         if col in mt_nb_fmt.columns:
-                            # Convert to numeric first
                             mt_nb_fmt[col] = pd.to_numeric(mt_nb_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                            custom_column_config[col] = st.column_config.NumberColumn(label=col, format="dollar")
                 
-                    # Add percentage columns
                     for col in ['ACoS', 'CVR', 'CTR', '% of Spend', '% of Ad Sales']:
                         if col in mt_nb_fmt.columns:
-                            # Convert to numeric first (as decimal, not percentage)
                             mt_nb_fmt[col] = pd.to_numeric(mt_nb_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                            custom_column_config[col] = st.column_config.NumberColumn(label=col, format="%.2f%%")
                 
-                    # Add ROAS as decimal
                     if 'ROAS' in mt_nb_fmt.columns:
                         mt_nb_fmt['ROAS'] = pd.to_numeric(mt_nb_fmt['ROAS'].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                        custom_column_config['ROAS'] = st.column_config.NumberColumn(label="ROAS", format="%.2f")
                 
-                    # Add integer columns with comma formatting
                     for col in ['Impressions', 'Clicks', 'Orders', 'Units Sold']:
                         if col in mt_nb_fmt.columns:
                             mt_nb_fmt[col] = pd.to_numeric(mt_nb_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0).astype(int)
-                            custom_column_config[col] = st.column_config.NumberColumn(label=col, format="localized")
                 
                     # Create a copy for numeric processing for styling
                     numeric_df = mt_nb_fmt.copy()
@@ -24357,36 +24216,21 @@ if st.session_state.current_page == "advertising_audit":
                         )).reset_index(drop=True)
                     ad_df_fmt = format_agg_table(ad_df, index_col='Product')
                 
-                    # Create a custom column config based on the actual columns in the dataframe
-                    custom_column_config = {}
-                
-                    # Add Product column
-                    custom_column_config['Product'] = st.column_config.TextColumn(label="Product")
-                
-                    # Add currency columns with dollar formatting
+                    # Convert numeric columns (column_config removed - using Python-level formatting)
                     for col in ['Spend', 'Ad Sales', 'CPC', 'AOV', 'CPA']:
                         if col in ad_df_fmt.columns:
-                            # Convert to numeric first
                             ad_df_fmt[col] = pd.to_numeric(ad_df_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                            custom_column_config[col] = st.column_config.NumberColumn(label=col, format="dollar")
                 
-                    # Add percentage columns
                     for col in ['ACoS', 'CVR', 'CTR', '% of Spend', '% of Ad Sales']:
                         if col in ad_df_fmt.columns:
-                            # Convert to numeric first (as decimal, not percentage)
                             ad_df_fmt[col] = pd.to_numeric(ad_df_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                            custom_column_config[col] = st.column_config.NumberColumn(label=col, format="%.2f%%")
                 
-                    # Add ROAS as decimal
                     if 'ROAS' in ad_df_fmt.columns:
                         ad_df_fmt['ROAS'] = pd.to_numeric(ad_df_fmt['ROAS'].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                        custom_column_config['ROAS'] = st.column_config.NumberColumn(label="ROAS", format="%.2f")
                 
-                    # Add integer columns with comma formatting
                     for col in ['Impressions', 'Clicks', 'Orders', 'Units Sold']:
                         if col in ad_df_fmt.columns:
                             ad_df_fmt[col] = pd.to_numeric(ad_df_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0).astype(int)
-                            custom_column_config[col] = st.column_config.NumberColumn(label=col, format="localized")
                 
                     # ACoS target display
                     # Use the toggle value from client config for 'use_avg_as_fallback'
@@ -24740,36 +24584,21 @@ if st.session_state.current_page == "advertising_audit":
                 ad_df = ad_df.reindex(expected_ad_types, fill_value=0).reset_index().rename(columns={"index": 'Product'})
                 ad_df_fmt = format_agg_table(ad_df, index_col='Product')
             
-                # Create a custom column config based on the actual columns in the dataframe
-                custom_column_config = {}
-            
-                # Add Product column
-                custom_column_config['Product'] = st.column_config.TextColumn(label="Product")
-            
-                # Add currency columns with dollar formatting
+                # Convert numeric columns (column_config removed - using Python-level formatting)
                 for col in ['Spend', 'Ad Sales', 'CPC', 'AOV', 'CPA']:
-                    if col in ad_all_fmt.columns:
-                        # Convert to numeric first
-                        ad_all_fmt[col] = pd.to_numeric(ad_all_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                        custom_column_config[col] = st.column_config.NumberColumn(label=col, format="dollar")
+                    if col in ad_df_fmt.columns:
+                        ad_df_fmt[col] = pd.to_numeric(ad_df_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
             
-                # Add percentage columns
                 for col in ['ACoS', 'CVR', 'CTR', '% of Spend', '% of Ad Sales']:
-                    if col in ad_all_fmt.columns:
-                        # Convert to numeric first (as decimal, not percentage)
-                        ad_all_fmt[col] = pd.to_numeric(ad_all_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                        custom_column_config[col] = st.column_config.NumberColumn(label=col, format="%.2f%%")
+                    if col in ad_df_fmt.columns:
+                        ad_df_fmt[col] = pd.to_numeric(ad_df_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
             
-                # Add ROAS as decimal
-                if 'ROAS' in ad_all_fmt.columns:
-                    ad_all_fmt['ROAS'] = pd.to_numeric(ad_all_fmt['ROAS'].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                    custom_column_config['ROAS'] = st.column_config.NumberColumn(label="ROAS", format="%.2f")
+                if 'ROAS' in ad_df_fmt.columns:
+                    ad_df_fmt['ROAS'] = pd.to_numeric(ad_df_fmt['ROAS'].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
             
-                # Add integer columns with comma formatting
                 for col in ['Impressions', 'Clicks', 'Orders', 'Units Sold']:
-                    if col in ad_all_fmt.columns:
-                        ad_all_fmt[col] = pd.to_numeric(ad_all_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0).astype(int)
-                        custom_column_config[col] = st.column_config.NumberColumn(label=col, format="localized")
+                    if col in ad_df_fmt.columns:
+                        ad_df_fmt[col] = pd.to_numeric(ad_df_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0).astype(int)
             
                 # ACoS target display removed
                 # Use the toggle value from client config for 'use_avg_as_fallback'
@@ -24777,7 +24606,7 @@ if st.session_state.current_page == "advertising_audit":
                 account_target = goals.get('account_wide_acos')
             
                 # Create a copy for numeric processing
-                numeric_df = ad_all_fmt.copy()
+                numeric_df = ad_df_fmt.copy()
             
                 # Convert formatted values to numeric for proper sorting
                 for col in numeric_df.columns:
@@ -24906,36 +24735,21 @@ if st.session_state.current_page == "advertising_audit":
                 ad_nb = ad_nb.reindex(expected_ad_types, fill_value=0).reset_index().rename(columns={"index": 'Product'})
                 ad_nb_fmt = format_agg_table(ad_nb, index_col='Product')
             
-                # Create a custom column config based on the actual columns in the dataframe
-                custom_column_config = {}
-            
-                # Add Product column
-                custom_column_config['Product'] = st.column_config.TextColumn(label="Product")
-            
-                # Add currency columns with dollar formatting
+                # Convert numeric columns (column_config removed - using Python-level formatting)
                 for col in ['Spend', 'Ad Sales', 'CPC', 'AOV', 'CPA']:
                     if col in ad_nb_fmt.columns:
-                        # Convert to numeric first
                         ad_nb_fmt[col] = pd.to_numeric(ad_nb_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                        custom_column_config[col] = st.column_config.NumberColumn(label=col, format="dollar")
             
-                # Add percentage columns
                 for col in ['ACoS', 'CVR', 'CTR', '% of Spend', '% of Ad Sales']:
                     if col in ad_nb_fmt.columns:
-                        # Convert to numeric first (as decimal, not percentage)
                         ad_nb_fmt[col] = pd.to_numeric(ad_nb_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                        custom_column_config[col] = st.column_config.NumberColumn(label=col, format="%.2f%%")
             
-                # Add ROAS as decimal
                 if 'ROAS' in ad_nb_fmt.columns:
                     ad_nb_fmt['ROAS'] = pd.to_numeric(ad_nb_fmt['ROAS'].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                    custom_column_config['ROAS'] = st.column_config.NumberColumn(label="ROAS", format="%.2f")
             
-                # Add integer columns with comma formatting
                 for col in ['Impressions', 'Clicks', 'Orders', 'Units Sold']:
                     if col in ad_nb_fmt.columns:
                         ad_nb_fmt[col] = pd.to_numeric(ad_nb_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0).astype(int)
-                        custom_column_config[col] = st.column_config.NumberColumn(label=col, format="localized")
             
                 # Create a copy for numeric processing
                 numeric_df = ad_nb_fmt.copy()
@@ -25356,36 +25170,21 @@ if st.session_state.current_page == "advertising_audit":
                 combined_all = combined_all.reindex(expected_adtype_matchtypes, fill_value=0).reset_index().rename(columns={"index": 'Ad Type & Match Type'})
                 combined_all_fmt = format_agg_table(combined_all, index_col='Ad Type & Match Type')
             
-                # Create a custom column config based on the actual columns in the dataframe
-                custom_column_config = {}
-            
-                # Add Ad Type & Match Type column
-                custom_column_config['Ad Type & Match Type'] = st.column_config.TextColumn(label="Ad Type & Match Type")
-            
-                # Add currency columns with dollar formatting
+                # Convert numeric columns (column_config removed - using Python-level formatting)
                 for col in ['Spend', 'Ad Sales', 'CPC', 'AOV', 'CPA']:
                     if col in combined_all_fmt.columns:
-                        # Convert to numeric first
                         combined_all_fmt[col] = pd.to_numeric(combined_all_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                        custom_column_config[col] = st.column_config.NumberColumn(label=col, format="dollar")
             
-                # Add percentage columns
                 for col in ['ACoS', 'CVR', 'CTR', '% of Spend', '% of Ad Sales']:
                     if col in combined_all_fmt.columns:
-                        # Convert to numeric first (as decimal, not percentage)
                         combined_all_fmt[col] = pd.to_numeric(combined_all_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                        custom_column_config[col] = st.column_config.NumberColumn(label=col, format="%.2f%%")
             
-                # Add ROAS as decimal
                 if 'ROAS' in combined_all_fmt.columns:
                     combined_all_fmt['ROAS'] = pd.to_numeric(combined_all_fmt['ROAS'].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                    custom_column_config['ROAS'] = st.column_config.NumberColumn(label="ROAS", format="%.2f")
             
-                # Add integer columns with comma formatting
                 for col in ['Impressions', 'Clicks', 'Orders', 'Units Sold']:
                     if col in combined_all_fmt.columns:
                         combined_all_fmt[col] = pd.to_numeric(combined_all_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0).astype(int)
-                        custom_column_config[col] = st.column_config.NumberColumn(label=col, format="localized")
             
                 # ACoS target display removed
                 # Use the toggle value from client config for 'use_avg_as_fallback'
@@ -25479,36 +25278,21 @@ if st.session_state.current_page == "advertising_audit":
                 combined_b = combined_b.reindex(expected_adtype_matchtypes, fill_value=0).reset_index().rename(columns={"index": 'Ad Type & Match Type'})
                 combined_b_fmt = format_agg_table(combined_b, index_col='Ad Type & Match Type')
             
-                # Create a custom column config based on the actual columns in the dataframe
-                custom_column_config = {}
-            
-                # Add Ad Type & Match Type column
-                custom_column_config['Ad Type & Match Type'] = st.column_config.TextColumn(label="Ad Type & Match Type")
-            
-                # Add currency columns with dollar formatting
+                # Convert numeric columns (column_config removed - using Python-level formatting)
                 for col in ['Spend', 'Ad Sales', 'CPC', 'AOV', 'CPA']:
                     if col in combined_b_fmt.columns:
-                        # Convert to numeric first
                         combined_b_fmt[col] = pd.to_numeric(combined_b_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                        custom_column_config[col] = st.column_config.NumberColumn(label=col, format="dollar")
             
-                # Add percentage columns
                 for col in ['ACoS', 'CVR', 'CTR', '% of Spend', '% of Ad Sales']:
                     if col in combined_b_fmt.columns:
-                        # Convert to numeric first (as decimal, not percentage)
                         combined_b_fmt[col] = pd.to_numeric(combined_b_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                        custom_column_config[col] = st.column_config.NumberColumn(label=col, format="%.2f%%")
             
-                # Add ROAS as decimal
                 if 'ROAS' in combined_b_fmt.columns:
                     combined_b_fmt['ROAS'] = pd.to_numeric(combined_b_fmt['ROAS'].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                    custom_column_config['ROAS'] = st.column_config.NumberColumn(label="ROAS", format="%.2f")
             
-                # Add integer columns with comma formatting
                 for col in ['Impressions', 'Clicks', 'Orders', 'Units Sold']:
                     if col in combined_b_fmt.columns:
                         combined_b_fmt[col] = pd.to_numeric(combined_b_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0).astype(int)
-                        custom_column_config[col] = st.column_config.NumberColumn(label=col, format="localized")
             
                 # ACoS target display removed
                 # Use the toggle value from client config for 'use_avg_as_fallback'
@@ -25602,36 +25386,21 @@ if st.session_state.current_page == "advertising_audit":
                 combined_nb = combined_nb.reindex(expected_adtype_matchtypes, fill_value=0).reset_index().rename(columns={"index": 'Ad Type & Match Type'})
                 combined_nb_fmt = format_agg_table(combined_nb, index_col='Ad Type & Match Type')
             
-                # Create a custom column config based on the actual columns in the dataframe
-                custom_column_config = {}
-            
-                # Add Ad Type & Match Type column
-                custom_column_config['Ad Type & Match Type'] = st.column_config.TextColumn(label="Ad Type & Match Type")
-            
-                # Add currency columns with dollar formatting
+                # Convert numeric columns (column_config removed - using Python-level formatting)
                 for col in ['Spend', 'Ad Sales', 'CPC', 'AOV', 'CPA']:
                     if col in combined_nb_fmt.columns:
-                        # Convert to numeric first
                         combined_nb_fmt[col] = pd.to_numeric(combined_nb_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                        custom_column_config[col] = st.column_config.NumberColumn(label=col, format="dollar")
             
-                # Add percentage columns
                 for col in ['ACoS', 'CVR', 'CTR', '% of Spend', '% of Ad Sales']:
                     if col in combined_nb_fmt.columns:
-                        # Convert to numeric first (as decimal, not percentage)
                         combined_nb_fmt[col] = pd.to_numeric(combined_nb_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                        custom_column_config[col] = st.column_config.NumberColumn(label=col, format="%.2f%%")
             
-                # Add ROAS as decimal
                 if 'ROAS' in combined_nb_fmt.columns:
                     combined_nb_fmt['ROAS'] = pd.to_numeric(combined_nb_fmt['ROAS'].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0)
-                    custom_column_config['ROAS'] = st.column_config.NumberColumn(label="ROAS", format="%.2f")
             
-                # Add integer columns with comma formatting
                 for col in ['Impressions', 'Clicks', 'Orders', 'Units Sold']:
                     if col in combined_nb_fmt.columns:
                         combined_nb_fmt[col] = pd.to_numeric(combined_nb_fmt[col].astype(str).str.replace(r'[^0-9.-]', '', regex=True), errors='coerce').fillna(0).astype(int)
-                        custom_column_config[col] = st.column_config.NumberColumn(label=col, format="localized")
             
                 # ACoS target display removed
                 # Use the toggle value from client config for 'use_avg_as_fallback'
@@ -29983,25 +29752,12 @@ if st.session_state.current_page == "advertising_audit":
             styled_df = display_df.style.apply(highlight_parent_child_rows, axis=1)
             
             # Display the scrollable table
+            # Note: column_config removed for PyInstaller compatibility
             st.dataframe(
                 styled_df,
                 use_container_width=True,
                 hide_index=True,
-                height=600,  # Fixed height to make it scrollable
-                column_config={
-                    "Type": st.column_config.TextColumn("Type", width="small"),
-                    "ASIN": st.column_config.TextColumn("ASIN", width="medium"),
-                    "Product Group": st.column_config.TextColumn("Product Group", width="medium"),
-                    "Product Title": st.column_config.TextColumn("Product Title", width="large"),
-                    "% of Spend": st.column_config.TextColumn("% of Spend", width="small"),
-                    "% of Ad Sales": st.column_config.TextColumn("% of Ad Sales", width="small"),
-                    "% of Total Sales": st.column_config.TextColumn("% of Total Sales", width="small"),
-                    "Spend": st.column_config.TextColumn("Spend", width="small"),
-                    "Ad Sales": st.column_config.TextColumn("Ad Sales", width="small"),
-                    "Total Sales": st.column_config.TextColumn("Total Sales", width="small"),
-                    "ACoS": st.column_config.TextColumn("ACoS", width="small"),
-                    "Child Count": st.column_config.TextColumn("Children", width="small"),
-                }
+                height=600  # Fixed height to make it scrollable
             )
             
             # Add Export Table button (mirrors Performance by ASIN export)
@@ -31649,7 +31405,7 @@ if st.session_state.current_page == "advertising_audit":
                                 text=[spend_text],
                                 textposition='inside',
                                 insidetextanchor='middle',
-                                textfont=dict(color='#fff', size=13, family='Inter, Arial, sans-serif', weight='bold'),
+                                textfont=dict(color='#fff', size=13, family='Inter, Arial, sans-serif'),
                                 showlegend=idx==0,  # Only show in legend for first row
                                 hoverinfo='text',
                                 hovertext=spend_hover,
@@ -31668,7 +31424,7 @@ if st.session_state.current_page == "advertising_audit":
                                 text=[ad_sales_text],
                                 textposition='inside',
                                 insidetextanchor='middle',
-                                textfont=dict(color='#fff', size=13, family='Inter, Arial, sans-serif', weight='bold'),
+                                textfont=dict(color='#fff', size=13, family='Inter, Arial, sans-serif'),
                                 showlegend=idx==0,  # Only show in legend for first row
                                 hoverinfo='text',
                                 hovertext=ad_sales_hover,
@@ -31687,7 +31443,7 @@ if st.session_state.current_page == "advertising_audit":
                                 text=[total_sales_text],
                                 textposition='inside',
                                 insidetextanchor='middle',
-                                textfont=dict(color='#fff', size=13, family='Inter, Arial, sans-serif', weight='bold'),
+                                textfont=dict(color='#fff', size=13, family='Inter, Arial, sans-serif'),
                                 showlegend=idx==0,  # Only show in legend for first row
                                 hoverinfo='text',
                                 hovertext=total_sales_hover,
@@ -31837,7 +31593,7 @@ if st.session_state.current_page == "advertising_audit":
                                 text=[spend_text],
                                 textposition='inside',
                                 insidetextanchor='middle',
-                                textfont=dict(color='#fff', size=13, family='Inter, Arial, sans-serif', weight='bold'),
+                                textfont=dict(color='#fff', size=13, family='Inter, Arial, sans-serif'),
                                 showlegend=idx==0,  # Only show in legend for first row
                                 hoverinfo='text',
                                 hovertext=spend_hover,
@@ -31856,7 +31612,7 @@ if st.session_state.current_page == "advertising_audit":
                                 text=[ad_sales_text],
                                 textposition='inside',
                                 insidetextanchor='middle',
-                                textfont=dict(color='#fff', size=13, family='Inter, Arial, sans-serif', weight='bold'),
+                                textfont=dict(color='#fff', size=13, family='Inter, Arial, sans-serif'),
                                 showlegend=idx==0,  # Only show in legend for first row
                                 hoverinfo='text',
                                 hovertext=ad_sales_hover,
@@ -31875,7 +31631,7 @@ if st.session_state.current_page == "advertising_audit":
                                 text=[total_sales_text],
                                 textposition='inside',
                                 insidetextanchor='middle',
-                                textfont=dict(color='#fff', size=13, family='Inter, Arial, sans-serif', weight='bold'),
+                                textfont=dict(color='#fff', size=13, family='Inter, Arial, sans-serif'),
                                 showlegend=idx==0,  # Only show in legend for first row
                                 hoverinfo='text',
                                 hovertext=total_sales_hover,
