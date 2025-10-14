@@ -2457,6 +2457,47 @@ def process_bulk_data(uploaded_file):
                 
                 df['Campaign Type'] = campaign_type
                 
+                # Fix Auto targeting classification for all campaign types
+                # When Targeting Type = 'Auto', ensure Entity, Match Type, and Targeting Type are correctly set
+                if 'Targeting Type' in df.columns:
+                    auto_mask = df['Targeting Type'].fillna('').astype(str).str.strip().str.lower() == 'auto'
+                    if auto_mask.any():
+                        # Ensure Match Type='Auto' and preserve/normalize Targeting Type; do not alter Entity
+                        df.loc[auto_mask, 'Match Type'] = 'Auto'
+                        df.loc[auto_mask, 'Targeting Type'] = 'Auto'  # Explicitly preserve Targeting Type
+                        auto_count = auto_mask.sum()
+                        st.session_state.debug_messages.append(
+                            f"[Auto Targeting Fix] Corrected {auto_count} rows with Targeting Type='Auto' "
+                            f"in {sheet_name} (set Match Type='Auto', Targeting Type='Auto'; Entity unchanged)"
+                        )
+                
+                # Additionally, precisely map SP Auto targets for bulk files
+                # Criteria: Product='Sponsored Products' AND Entity='Product Targeting' AND
+                # Product Targeting Expression in {'loose-match','close-match','complements','compliments','substitutes'} (case-insensitive)
+                if campaign_type == 'SP':
+                    # Case-insensitive column lookup
+                    col_map = {c.lower(): c for c in df.columns}
+                    product_col = col_map.get('product')
+                    entity_col = col_map.get('entity')
+                    pte_col = col_map.get('product targeting expression')
+                    if product_col and entity_col and pte_col:
+                        prod_ser = df[product_col].fillna('').astype(str).str.strip().str.lower()
+                        entity_ser = df[entity_col].fillna('').astype(str).str.strip().str.lower()
+                        pte_ser = df[pte_col].fillna('').astype(str).str.strip().str.lower()
+                        auto_terms = {'loose-match', 'close-match', 'complements', 'compliments', 'substitutes'}
+                        mask = (
+                            (prod_ser == 'sponsored products') &
+                            (entity_ser == 'product targeting') &
+                            (pte_ser.isin(auto_terms))
+                        )
+                        if mask.any():
+                            df.loc[mask, 'Match Type'] = 'Auto'
+                            if 'Targeting Type' in df.columns:
+                                df.loc[mask, 'Targeting Type'] = 'Auto'
+                            st.session_state.debug_messages.append(
+                                f"[Auto Target Mapping] Set Match Type='Auto' for {int(mask.sum())} SP rows based on Product='Sponsored Products', Entity='Product Targeting' and PTE auto terms in {sheet_name}"
+                            )
+
                 # Store processed data
                 # For Multi Ad Group, store it under the standard Sponsored Brands key
                 if sheet_name.lower() == 'sb multi ad group campaigns':
@@ -2715,7 +2756,7 @@ def process_companion_search_term_data(uploaded_file):
                 return 'Product Targeting', 'ASIN Target', 'Product Targeting'
             # Check if it's auto targeting (from campaign_targeting_type column)
             elif targeting_type == 'auto':
-                return 'Product Targeting', row.get('Keyword Text', ''), 'Auto'
+                return 'Keyword', row.get('Keyword Text', ''), 'Auto'
             # Check if it's keyword targeting (broad, exact, phrase)
             elif match_type in ['broad', 'exact', 'phrase']:
                 # Capitalize the match type for proper display
@@ -2962,7 +3003,7 @@ def process_companion_targeting_data(uploaded_file):
                         # Generic auto targeting
                         clean_target = target_value if target_value else 'Auto Targeting'
                 
-                return 'Product Targeting', clean_target, 'Auto'
+                return 'Keyword', clean_target, 'Auto'
 
             # Special handling for Sponsored Display (SD) targeting
             if kind == 'sd' and target_value:
@@ -3717,6 +3758,15 @@ def get_targeting_performance_data(bulk_data, client_config):
             if 'keyword' in entity_type and keyword_text_col and pd.notna(row[keyword_text_col]):
                 target_str = str(row[keyword_text_col]).strip()
                 entity_type = 'keyword'  # Normalize entity type
+                
+                # Check if this is actually Auto targeting (Entity=Keyword but Match Type=Auto)
+                if match_type_col and pd.notna(row.get(match_type_col)):
+                    current_match_type = str(row.get(match_type_col)).strip()
+                    if current_match_type == 'Auto':
+                        entity_type = 'auto targeting'
+                        st.session_state.debug_messages.append(
+                            f"[Auto Detection] Found Auto targeting: Entity=Keyword, Match Type=Auto, Target='{target_str}'"
+                        )
             # Handle product targeting (including variations)
             elif any(target_type in entity_type for target_type in ['product targeting', 'targeting', 'contextual targeting', 'audience targeting', 'product', 'asin', 'category']):
                 # For Campaign sheets (from companion targeting), prioritize cleaned target names
@@ -8405,6 +8455,11 @@ if st.session_state.client_config:
                                     break  # Stop at first matching rule
                         if asins_updated > 0:
                             save_client_config(st.session_state.selected_client_name, st.session_state.client_config)
+                            # Clear temp DataFrame to force refresh
+                            if 'branded_asins_editor_temp' in st.session_state:
+                                del st.session_state.branded_asins_editor_temp
+                            if 'last_asin_filter_key' in st.session_state:
+                                del st.session_state.last_asin_filter_key
                             st.success(f"Updated {asins_updated} ASINs with Product Groups")
                             st.rerun()
                         else:
@@ -8445,6 +8500,11 @@ if st.session_state.client_config:
                                         st.session_state.selected_client_name,
                                         st.session_state.client_config
                                     )
+                                    # Clear temp DataFrame to force refresh
+                                    if 'branded_asins_editor_temp' in st.session_state:
+                                        del st.session_state.branded_asins_editor_temp
+                                    if 'last_asin_filter_key' in st.session_state:
+                                        del st.session_state.last_asin_filter_key
                                     st.success(f"Updated {updated_count} ASIN(s) with Product Group '{bulk_pg.strip()}'")
                                     st.rerun()
                                 else:
@@ -8645,6 +8705,11 @@ if st.session_state.client_config:
                                             st.session_state.selected_client_name,
                                             st.session_state.client_config
                                         )
+                                        # Clear temp DataFrame to force refresh
+                                        if 'branded_asins_editor_temp' in st.session_state:
+                                            del st.session_state.branded_asins_editor_temp
+                                        if 'last_asin_filter_key' in st.session_state:
+                                            del st.session_state.last_asin_filter_key
                                         msg_bits = []
                                         if updated_count_pg:
                                             msg_bits.append(f"{updated_count_pg} Product Group update(s)")
@@ -8723,6 +8788,11 @@ if st.session_state.client_config:
                                     st.session_state.asin_csv_missing_count = 0
                                     st.session_state.asin_csv_missing_sku_count = 0
                                     st.session_state.asin_csv_prompt_open = False
+                                    # Clear temp DataFrame to force refresh
+                                    if 'branded_asins_editor_temp' in st.session_state:
+                                        del st.session_state.branded_asins_editor_temp
+                                    if 'last_asin_filter_key' in st.session_state:
+                                        del st.session_state.last_asin_filter_key
                                     st.success(f"Added {created} ASIN(s) to Branded ASINs")
                                     st.rerun()
                         with cols_add_missing[1]:
@@ -8877,13 +8947,19 @@ if st.session_state.client_config:
                     if product_group and product_group.strip():
                         existing_product_groups.add(product_group.strip())
                 
-                # Always use fresh filtered data for edits to prevent stale state bugs
                 # Ensure desired column arrangement with SKU column positioned left of ASIN
                 desired_cols = ['SKU', 'ASIN', 'Product Title', 'Product Group', 'Tag 1', 'Tag 2', 'Tag 3', 'Delete']
                 existing_cols = [c for c in desired_cols if c in filtered_df.columns]
                 remaining_cols = [c for c in filtered_df.columns if c not in existing_cols]
                 filtered_df = filtered_df[existing_cols + remaining_cols]
-                st.session_state.branded_asins_editor_temp = filtered_df.copy()
+                
+                # Only initialize temp DataFrame if it doesn't exist or filters changed
+                # This preserves user edits between reruns before Save is clicked
+                filter_key = f"{asin_selected_groups}_{filter_asin}_{filter_title}_{st.session_state.get('filter_tag1', '')}_{st.session_state.get('filter_tag2', '')}_{st.session_state.get('filter_tag3', '')}_{st.session_state.get('show_blank_asins', False)}"
+                if 'branded_asins_editor_temp' not in st.session_state or st.session_state.get('last_asin_filter_key') != filter_key:
+                    st.session_state.branded_asins_editor_temp = filtered_df.copy()
+                    st.session_state.last_asin_filter_key = filter_key
+                
                 # Apply select-all flag to mark all Delete checkboxes
                 if st.session_state.get('asin_select_all', False):
                     if 'Delete' in st.session_state.branded_asins_editor_temp.columns:
@@ -8898,6 +8974,7 @@ if st.session_state.client_config:
                     use_container_width=True,
                     hide_index=True
                 )
+                # Update temp with edited data
                 st.session_state.branded_asins_editor_temp = edited_df.copy()
 
                 # --- Action Buttons ---
@@ -8917,7 +8994,13 @@ if st.session_state.client_config:
                                 st.session_state.client_config['branded_asins_data'][asin]['tag2'] = row.get('Tag 2', '')
                                 st.session_state.client_config['branded_asins_data'][asin]['tag3'] = row.get('Tag 3', '')
                         save_client_config(st.session_state.selected_client_name, st.session_state.client_config)
+                        # Clear temp DataFrame to force refresh on next load
+                        if 'branded_asins_editor_temp' in st.session_state:
+                            del st.session_state.branded_asins_editor_temp
+                        if 'last_asin_filter_key' in st.session_state:
+                            del st.session_state.last_asin_filter_key
                         st.success("Branded ASINs updated.")
+                        st.rerun()
                 with col_delete_sel:
                     if st.button("Delete Selected Rows", key="delete_branded_asins_btn"):
                         rows_to_delete = st.session_state.branded_asins_editor_temp[st.session_state.branded_asins_editor_temp['Delete'] == True]
@@ -9100,13 +9183,15 @@ if st.session_state.client_config:
                             save_client_config(st.session_state.selected_client_name, st.session_state.client_config)
                             
                             if campaigns_tagged > 0:
-                                st.markdown(f"""<div class='success-box'>
-                                    <span style='font-weight: 500;'>Successfully auto-tagged {campaigns_tagged} campaigns based on product groups</span>
-                                </div>""", unsafe_allow_html=True)
+                                # Clear temp DataFrame to force refresh
+                                if 'campaign_tags_editor_temp' in st.session_state:
+                                    del st.session_state.campaign_tags_editor_temp
+                                if 'last_campaign_filter_key' in st.session_state:
+                                    del st.session_state.last_campaign_filter_key
+                                st.success(f"Successfully auto-tagged {campaigns_tagged} campaigns based on product groups")
+                                st.rerun()
                             else:
-                                st.markdown("""<div class='info-box'>
-                                    <span style='font-weight: 500;'>No campaigns met the threshold for auto-tagging</span>
-                                </div>""", unsafe_allow_html=True)
+                                st.info("No campaigns met the threshold for auto-tagging")
                         else:
                             st.markdown("""<div class='warning-box'>
                                 <span style='font-weight: 500;'>No product groups found. Please assign product groups to your ASINs in the Branded ASINs tab first.</span>
@@ -9303,13 +9388,15 @@ if st.session_state.client_config:
                     save_client_config(st.session_state.selected_client_name, st.session_state.client_config)
 
                     if campaigns_updated:
-                        st.markdown(f"""<div class='success-box'>
-                            <span style='font-weight: 500;'>Successfully tagged {campaigns_updated} campaign(s) based on rules</span>
-                        </div>""", unsafe_allow_html=True)
+                        # Clear temp DataFrame to force refresh
+                        if 'campaign_tags_editor_temp' in st.session_state:
+                            del st.session_state.campaign_tags_editor_temp
+                        if 'last_campaign_filter_key' in st.session_state:
+                            del st.session_state.last_campaign_filter_key
+                        st.success(f"Successfully tagged {campaigns_updated} campaign(s) based on rules")
+                        st.rerun()
                     else:
-                        st.markdown("""<div class='info-box'>
-                            <span style='font-weight: 500;'>No campaigns matched the rules or all were already tagged</span>
-                        </div>""", unsafe_allow_html=True)
+                        st.info("No campaigns matched the rules or all were already tagged")
             
             # -----------------------------------------------------------------------------
             # Get campaign data from bulk file if available
@@ -9483,8 +9570,12 @@ if st.session_state.client_config:
                 if filter_states:
                     filtered_df = filtered_df[filtered_df['State'].isin(filter_states)]
                 
-                # Always use fresh filtered data for edits to prevent stale state bugs
-                st.session_state.campaign_tags_editor_temp = filtered_df.copy()
+                # Only initialize temp DataFrame if it doesn't exist or filters changed
+                # This preserves user edits between reruns before Save is clicked
+                filter_key = f"{filter_name}_{filter_group}_{filter_types}_{min_spend}_{filter_states}_{st.session_state.get('show_blank_campaigns', False)}"
+                if 'campaign_tags_editor_temp' not in st.session_state or st.session_state.get('last_campaign_filter_key') != filter_key:
+                    st.session_state.campaign_tags_editor_temp = filtered_df.copy()
+                    st.session_state.last_campaign_filter_key = filter_key
 
                 # If a select-all flag is set from the previous click, mark all rows for deletion and reset the flag
                 if st.session_state.get('campaign_select_all', False):
@@ -9501,6 +9592,7 @@ if st.session_state.client_config:
                     use_container_width=True,
                     hide_index=True
                 )
+                # Update temp with edited data
                 st.session_state.campaign_tags_editor_temp = edited_df.copy()
 
                 # --- Action Buttons ---
@@ -9514,7 +9606,13 @@ if st.session_state.client_config:
                             if campaign_name in st.session_state.client_config['campaign_tags_data']:
                                 st.session_state.client_config['campaign_tags_data'][campaign_name]['tag_1'] = product_group
                         save_client_config(st.session_state.selected_client_name, st.session_state.client_config)
+                        # Clear temp DataFrame to force refresh on next load
+                        if 'campaign_tags_editor_temp' in st.session_state:
+                            del st.session_state.campaign_tags_editor_temp
+                        if 'last_campaign_filter_key' in st.session_state:
+                            del st.session_state.last_campaign_filter_key
                         st.success("Campaign tags updated.")
+                        st.rerun()
                 
                 with col_delete_sel:
                     if st.button("Delete Selected Rows", key="delete_selected_campaigns"):
@@ -22219,7 +22317,7 @@ if st.session_state.client_config:
                             # Update filter active state based on current selection
                             st.session_state.target_filter_active = len(st.session_state.target_product_group_filter) > 0
                         
-                        # Add product group filter above the tabs
+                        # Add product group filter and campaign level checkbox above the tabs
                         filter_col1, filter_col2 = st.columns([0.4, 0.6])
                         with filter_col1:
                             if product_groups:
@@ -22243,6 +22341,18 @@ if st.session_state.client_config:
                                 if st.session_state.target_product_group_filter:
                                     st.session_state.target_product_group_filter = []
                                     st.session_state.target_filter_active = False
+                        with filter_col2:
+                            # Initialize session state for campaign level checkbox
+                            if 'acos_tables_target_campaign_level' not in st.session_state:
+                                st.session_state.acos_tables_target_campaign_level = False
+                            
+                            # Add checkbox for campaign level data
+                            st.checkbox(
+                                "Keep data campaign level",
+                                value=st.session_state.acos_tables_target_campaign_level,
+                                key="acos_tables_target_campaign_level",
+                                help="When checked, shows targets at the campaign level instead of aggregating across all campaigns"
+                            )
                         
                         # Create tabs for the Target tables
                         target_tab_labels = ["All Targets", "Branded Targets", "Non-Branded Targets"]
@@ -22339,19 +22449,29 @@ if st.session_state.client_config:
                                                                      (target_df_copy['Ad_Sales_numeric'] > 0)]
                                             
                                             if not range_df.empty:
-                                                # Group by Target and Match Type
+                                                # Group by Target and Match Type (and Campaign if checkbox is checked)
                                                 if 'Match Type' not in range_df.columns:
                                                     range_df['Match Type'] = range_df.get('Target Type', 'Unknown')
                                                 
+                                                # Determine if we should show campaign level data
+                                                show_campaign_level = st.session_state.get('acos_tables_target_campaign_level', False)
+                                                
                                                 # Select and prepare columns for display
-                                                display_cols = ['Target', 'Match Type', 'Spend', 'Ad Sales', 'ACoS', 'ROAS', 'CPC', 'CVR']
+                                                if show_campaign_level:
+                                                    display_cols = ['Campaign', 'Target', 'Match Type', 'Spend', 'Ad Sales', 'ACoS', 'ROAS', 'CPC', 'CVR']
+                                                    groupby_cols = ['Campaign', 'Target', 'Match Type']
+                                                else:
+                                                    display_cols = ['Target', 'Match Type', 'Spend', 'Ad Sales', 'ACoS', 'ROAS', 'CPC', 'CVR']
+                                                    groupby_cols = ['Target', 'Match Type']
                                                 
                                                 # Ensure all required columns exist
                                                 for col in display_cols:
                                                     if col not in range_df.columns:
-                                                        range_df[col] = None
+                                                        if col == 'Campaign':
+                                                            range_df[col] = range_df.get('Campaign Name', 'Unknown')
+                                                        else:
+                                                            range_df[col] = None
                                                 
-                                                # Group by Target and Match Type
                                                 # Create numeric columns for aggregation
                                                 range_df = range_df.copy()
                                                 
@@ -22359,8 +22479,8 @@ if st.session_state.client_config:
                                                 range_df['Spend_numeric'] = safe_convert_to_numeric(range_df['Spend'])
                                                 range_df['Ad_Sales_numeric'] = safe_convert_to_numeric(range_df['Ad Sales'])
                                                 
-                                                # Group by Target and Match Type
-                                                grouped_df = range_df.groupby(['Target', 'Match Type']).agg({
+                                                # Group by selected columns
+                                                grouped_df = range_df.groupby(groupby_cols).agg({
                                                     'Spend_numeric': 'sum',
                                                     'Ad_Sales_numeric': 'sum',
                                                     'Impressions': 'sum',
@@ -22434,16 +22554,29 @@ if st.session_state.client_config:
                                                 # but are formatted for display using the Streamlit column configuration
                                                 
                                                 # First, create a DataFrame with the numeric columns for sorting
-                                                sort_df = pd.DataFrame({
-                                                    "Target": grouped_df["Target"],
-                                                    "Match Type": grouped_df["Match Type"],
-                                                    "Spend": grouped_df["Spend_numeric"],
-                                                    "Ad Sales": grouped_df["Ad_Sales_numeric"],
-                                                    "ACoS": grouped_df["ACoS_sort"],
-                                                    "ROAS": grouped_df["ROAS_sort"],
-                                                    "CPC": grouped_df["CPC_sort"],
-                                                    "CVR": grouped_df["CVR_sort"]
-                                                })
+                                                if show_campaign_level:
+                                                    sort_df = pd.DataFrame({
+                                                        "Campaign": grouped_df["Campaign"],
+                                                        "Target": grouped_df["Target"],
+                                                        "Match Type": grouped_df["Match Type"],
+                                                        "Spend": grouped_df["Spend_numeric"],
+                                                        "Ad Sales": grouped_df["Ad_Sales_numeric"],
+                                                        "ACoS": grouped_df["ACoS_sort"],
+                                                        "ROAS": grouped_df["ROAS_sort"],
+                                                        "CPC": grouped_df["CPC_sort"],
+                                                        "CVR": grouped_df["CVR_sort"]
+                                                    })
+                                                else:
+                                                    sort_df = pd.DataFrame({
+                                                        "Target": grouped_df["Target"],
+                                                        "Match Type": grouped_df["Match Type"],
+                                                        "Spend": grouped_df["Spend_numeric"],
+                                                        "Ad Sales": grouped_df["Ad_Sales_numeric"],
+                                                        "ACoS": grouped_df["ACoS_sort"],
+                                                        "ROAS": grouped_df["ROAS_sort"],
+                                                        "CPC": grouped_df["CPC_sort"],
+                                                        "CVR": grouped_df["CVR_sort"]
+                                                    })
                                                 
                                                 # Store the numeric values for sorting
                                                 sort_df_numeric = sort_df.copy()
@@ -22507,7 +22640,7 @@ if st.session_state.client_config:
                                     # Update filter active state based on current selection
                                     st.session_state.search_term_filter_active1 = len(st.session_state.search_term_product_group_filter1) > 0
                                 
-                                # Add product group filter above the tabs
+                                # Add product group filter and campaign level checkbox above the tabs
                                 filter_col1, filter_col2 = st.columns([0.4, 0.6])
                                 with filter_col1:
                                     if product_groups:
@@ -22531,11 +22664,22 @@ if st.session_state.client_config:
                                         if st.session_state.search_term_product_group_filter1:
                                             st.session_state.search_term_product_group_filter1 = []
                                             st.session_state.search_term_filter_active1 = False
+                                with filter_col2:
+                                    # Initialize session state for campaign level checkbox
+                                    if 'acos_tables_search_campaign_level' not in st.session_state:
+                                        st.session_state.acos_tables_search_campaign_level = False
+                                    
+                                    # Add checkbox for campaign level data
+                                    st.checkbox(
+                                        "Keep data campaign level",
+                                        value=st.session_state.acos_tables_search_campaign_level,
+                                        key="acos_tables_search_campaign_level",
+                                        help="When checked, shows search terms at the campaign level instead of aggregating across all campaigns"
+                                    )
                                         
                                 # Apply product group filter if active
                                 filtered_search_term_df = search_term_df.copy()
-                                st.subheader("Contradicting Targets and Search Terms")
-        
+                                
                                 if st.session_state.get('search_term_filter_active1', False) and len(st.session_state.get('search_term_product_group_filter1', [])) > 0:
                                     if 'Product Group' in filtered_search_term_df.columns:
                                         filtered_search_term_df = filtered_search_term_df[filtered_search_term_df['Product Group'].isin(st.session_state.search_term_product_group_filter1)]
@@ -22643,17 +22787,28 @@ if st.session_state.client_config:
                                                                              (search_df_copy['Ad_Sales_numeric'] > 0)]
                                                 
                                                 if not range_df.empty:
-                                                    # Group by Search Term, Target, and Match Type
+                                                    # Group by Search Term, Target, and Match Type (and Campaign if checkbox is checked)
                                                     if 'Match Type' not in range_df.columns:
                                                         range_df['Match Type'] = range_df.get('Target Type', 'Unknown')
                                                     
+                                                    # Determine if we should show campaign level data
+                                                    show_campaign_level = st.session_state.get('acos_tables_search_campaign_level', False)
+                                                    
                                                     # Select and prepare columns for display
-                                                    display_cols = ['Search Term', 'Target', 'Match Type', 'Spend', 'Ad Sales', 'ACoS', 'ROAS', 'CPC', 'CVR']
+                                                    if show_campaign_level:
+                                                        display_cols = ['Campaign', 'Search Term', 'Target', 'Match Type', 'Spend', 'Ad Sales', 'ACoS', 'ROAS', 'CPC', 'CVR']
+                                                        groupby_cols = ['Campaign', 'Search Term', 'Target', 'Match Type']
+                                                    else:
+                                                        display_cols = ['Search Term', 'Target', 'Match Type', 'Spend', 'Ad Sales', 'ACoS', 'ROAS', 'CPC', 'CVR']
+                                                        groupby_cols = ['Search Term', 'Target', 'Match Type']
                                                     
                                                     # Ensure all required columns exist
                                                     for col in display_cols:
                                                         if col not in range_df.columns:
-                                                            range_df[col] = None
+                                                            if col == 'Campaign':
+                                                                range_df[col] = range_df.get('Campaign Name', 'Unknown')
+                                                            else:
+                                                                range_df[col] = None
                                                     
                                                     # Create numeric columns for aggregation
                                                     range_df = range_df.copy()
@@ -22662,8 +22817,8 @@ if st.session_state.client_config:
                                                     range_df['Spend_numeric'] = safe_convert_to_numeric(range_df['Spend'])
                                                     range_df['Ad_Sales_numeric'] = safe_convert_to_numeric(range_df['Ad Sales'])
                                                     
-                                                    # Group by Search Term, Target and Match Type
-                                                    grouped_df = range_df.groupby(['Search Term', 'Target', 'Match Type']).agg({
+                                                    # Group by selected columns
+                                                    grouped_df = range_df.groupby(groupby_cols).agg({
                                                         'Spend_numeric': 'sum',
                                                         'Ad_Sales_numeric': 'sum',
                                                         'Impressions': 'sum',
@@ -22717,17 +22872,31 @@ if st.session_state.client_config:
                                                     # but are formatted for display using the Streamlit column configuration
                                                     
                                                     # First, create a DataFrame with the numeric columns for sorting
-                                                    sort_df = pd.DataFrame({
-                                                        "Search Term": grouped_df["Search Term"],
-                                                        "Target": grouped_df["Target"],
-                                                        "Match Type": grouped_df["Match Type"],
-                                                        "Spend": grouped_df["Spend_numeric"],
-                                                        "Ad Sales": grouped_df["Ad_Sales_numeric"],
-                                                        "ACoS": grouped_df["ACoS_sort"],
-                                                        "ROAS": grouped_df["ROAS_sort"],
-                                                        "CPC": grouped_df["CPC_sort"],
-                                                        "CVR": grouped_df["CVR_sort"]
-                                                    })
+                                                    if show_campaign_level:
+                                                        sort_df = pd.DataFrame({
+                                                            "Campaign": grouped_df["Campaign"],
+                                                            "Search Term": grouped_df["Search Term"],
+                                                            "Target": grouped_df["Target"],
+                                                            "Match Type": grouped_df["Match Type"],
+                                                            "Spend": grouped_df["Spend_numeric"],
+                                                            "Ad Sales": grouped_df["Ad_Sales_numeric"],
+                                                            "ACoS": grouped_df["ACoS_sort"],
+                                                            "ROAS": grouped_df["ROAS_sort"],
+                                                            "CPC": grouped_df["CPC_sort"],
+                                                            "CVR": grouped_df["CVR_sort"]
+                                                        })
+                                                    else:
+                                                        sort_df = pd.DataFrame({
+                                                            "Search Term": grouped_df["Search Term"],
+                                                            "Target": grouped_df["Target"],
+                                                            "Match Type": grouped_df["Match Type"],
+                                                            "Spend": grouped_df["Spend_numeric"],
+                                                            "Ad Sales": grouped_df["Ad_Sales_numeric"],
+                                                            "ACoS": grouped_df["ACoS_sort"],
+                                                            "ROAS": grouped_df["ROAS_sort"],
+                                                            "CPC": grouped_df["CPC_sort"],
+                                                            "CVR": grouped_df["CVR_sort"]
+                                                        })
                                                     
                                                     # Sort by Ad Sales in descending order (using numeric values)
                                                     sort_df = sort_df.sort_values(by='Ad Sales', ascending=False)
