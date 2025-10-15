@@ -65,6 +65,13 @@ from openpyxl.styles import PatternFill, Font, Alignment, NamedStyle
 from openpyxl.formatting.rule import ColorScaleRule
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.utils import get_column_letter
+import hashlib
+try:
+    from cryptography.fernet import Fernet, InvalidToken
+except Exception:
+    Fernet = None  # cryptography not available; encryption disabled
+    class InvalidToken(Exception):
+        pass
 try:
     from supabase_store import (
         is_supabase_configured,
@@ -186,6 +193,97 @@ def get_cache_stats():
         'total': total,
         'hit_rate': hit_rate
     }
+
+# --- Encryption Utilities (optional, enabled when ENCRYPTION_KEY is set) ---
+def _derive_fernet_key_from_string(key_str: str) -> bytes:
+    """Derive a valid Fernet key from an arbitrary string.
+    Accepts either a raw passphrase or a pre-generated Fernet key.
+    """
+    if not isinstance(key_str, str):
+        key_str = str(key_str)
+    s = key_str.strip()
+    # If it looks like a Fernet key (urlsafe base64 32 bytes -> 44 chars), try to use it directly
+    if 40 <= len(s) <= 64:
+        try:
+            # If this succeeds without error, use it
+            base64.urlsafe_b64decode(s + ("=" * ((4 - len(s) % 4) % 4)))
+            return s.encode('utf-8')
+        except Exception:
+            pass
+    # Otherwise, derive from SHA-256 of the passphrase
+    digest = hashlib.sha256(s.encode('utf-8')).digest()
+    return base64.urlsafe_b64encode(digest)
+
+def _get_fernet():
+    """Return a cached Fernet instance if ENCRYPTION_KEY is set and cryptography is available; else None."""
+    try:
+        if Fernet is None:
+            return None
+        if '_fernet' in st.session_state:
+            return st.session_state._fernet
+        key = None
+        try:
+            key = st.secrets.get('ENCRYPTION_KEY')
+        except Exception:
+            key = None
+        if not key:
+            st.session_state._fernet = None
+            return None
+        derived = _derive_fernet_key_from_string(key)
+        st.session_state._fernet = Fernet(derived)
+        return st.session_state._fernet
+    except Exception:
+        st.session_state._fernet = None
+        return None
+
+def _read_json_secure(filepath: str):
+    """Read JSON from filepath. If encryption is enabled, decrypt; else read plaintext.
+    If decryption fails but plaintext JSON exists, auto-migrate by re-writing encrypted.
+    """
+    f = _get_fernet()
+    # Try encrypted read first if encryption enabled
+    if f is not None:
+        try:
+            with open(filepath, 'rb') as fh:
+                token = fh.read()
+            data = f.decrypt(token)
+            return json.loads(data.decode('utf-8'))
+        except (InvalidToken, json.JSONDecodeError, UnicodeDecodeError, FileNotFoundError):
+            # Fall through to plaintext attempt for migration/backward compatibility
+            pass
+    # Plaintext read path
+    try:
+        with open(filepath, 'r') as fh:
+            obj = json.load(fh)
+        # If encryption enabled, auto-migrate by re-writing encrypted
+        if f is not None:
+            try:
+                _write_json_secure(filepath, obj)
+            except Exception:
+                # Non-fatal if migration fails
+                pass
+        return obj
+    except FileNotFoundError:
+        return None
+    except Exception as e:
+        # Log and surface a readable error; return None to let callers handle
+        try:
+            st.session_state.debug_messages.append(f"Secure read error for {filepath}: {e}")
+        except Exception:
+            pass
+        return None
+
+def _write_json_secure(filepath: str, obj: Any):
+    """Write JSON to filepath, encrypting when enabled."""
+    f = _get_fernet()
+    if f is not None:
+        data = json.dumps(obj, indent=2).encode('utf-8')
+        token = f.encrypt(data)
+        with open(filepath, 'wb') as fh:
+            fh.write(token)
+    else:
+        with open(filepath, 'w') as fh:
+            json.dump(obj, fh, indent=2)
 
 # --- Helper Functions for Expandable/Downloadable Sections ---
 def create_expandable_section(title, key=None):
@@ -1321,23 +1419,33 @@ if False and is_cloud_environment() and is_supabase_configured():
         st.info("Please sign in to access your clients and sessions.")
         st.stop()
 
-# --- Password Gate for Cloud Runs ---
+# --- Password Gate and Per-User Selection (Cloud Only) ---
 if is_cloud_environment():
-    # Ensure secure directories exist
+    # Ensure secure base directories exist
     try:
-        os.makedirs(CLIENT_CONFIG_DIR, exist_ok=True)
-        # Session directory constant is defined later; create root now
-        os.makedirs(os.path.join(SECURE_ROOT_DIR, 'client_sessions'), exist_ok=True)
+        os.makedirs(SECURE_ROOT_DIR, exist_ok=True)
+        os.makedirs(os.path.join(SECURE_ROOT_DIR, 'users'), exist_ok=True)
     except Exception:
         pass
 
-    # Require password to proceed
+    # Require access password from secrets
+    expected_pw = None
+    try:
+        expected_pw = st.secrets.get('ACCESS_PASSWORD')
+    except Exception:
+        expected_pw = None
+
+    if not expected_pw:
+        st.title("Amazon Advertising Dashboard")
+        st.error("ACCESS_PASSWORD is not set in Streamlit secrets. Set it (e.g., 'BW!') to use the app.")
+        st.stop()
+
     if not st.session_state.get('_cloud_password_ok', False):
         with st.sidebar:
             st.markdown("### Access Password")
             pw = st.text_input("Enter password", type="password", key="cloud_pw")
             if st.button("Unlock", key="cloud_unlock"):
-                if pw == "BlueWheel!":
+                if pw == expected_pw:
                     st.session_state['_cloud_password_ok'] = True
                 else:
                     st.error("Incorrect password.")
@@ -1345,6 +1453,79 @@ if is_cloud_environment():
             st.title("Amazon Advertising Dashboard")
             st.info("Enter the access password to use the app.")
             st.stop()
+
+    # After unlock, require a user to be selected/created, and route storage accordingly
+    users_root = os.path.join(SECURE_ROOT_DIR, 'users')
+    try:
+        os.makedirs(users_root, exist_ok=True)
+    except Exception:
+        pass
+
+    def _safe_user(name: str) -> str:
+        import re as _re
+        name = (name or '').strip()
+        # Allow letters, numbers, dash, underscore; replace others with '_'
+        name = _re.sub(r'[^A-Za-z0-9_\-]', '_', name)
+        # Collapse repeats
+        name = _re.sub(r'_+', '_', name)
+        return name[:64]
+
+    with st.sidebar:
+        st.markdown("### User")
+        # Discover existing users (directories under users_root)
+        try:
+            existing_users = sorted([d for d in os.listdir(users_root) if os.path.isdir(os.path.join(users_root, d))])
+        except Exception:
+            existing_users = []
+
+        mode = st.radio("Select", ["Load user", "Create new user"], index=0, key="user_mode")
+
+        if mode == "Create new user":
+            new_user_input = st.text_input("New username", key="new_user_input")
+            if st.button("Create user", key="create_user_btn"):
+                uname = _safe_user(new_user_input)
+                if not uname:
+                    st.error("Please enter a valid username.")
+                else:
+                    user_root = os.path.join(users_root, uname)
+                    try:
+                        os.makedirs(os.path.join(user_root, 'clients'), exist_ok=True)
+                        os.makedirs(os.path.join(user_root, 'client_sessions'), exist_ok=True)
+                        st.session_state['active_user'] = uname
+                        st.success(f"User '{uname}' created and selected.")
+                    except Exception as e:
+                        st.error(f"Failed to create user: {e}")
+        else:
+            if not existing_users:
+                st.info("No users yet. Create a new user to begin.")
+            selected = st.selectbox("Username", existing_users, key="load_user_select") if existing_users else None
+            if st.button("Load user", key="load_user_btn"):
+                if selected:
+                    st.session_state['active_user'] = selected
+                else:
+                    st.error("Select a user to load.")
+
+        # Show currently active user if any
+        if st.session_state.get('active_user'):
+            st.caption(f"Active user: {st.session_state['active_user']}")
+
+    # Block until a user is selected
+    if not st.session_state.get('active_user'):
+        st.title("Amazon Advertising Dashboard")
+        st.info("Create or load a user to continue.")
+        st.stop()
+
+    # With an active user, redirect all storage paths to that user's directories
+    _user_root = os.path.join(users_root, st.session_state['active_user'])
+    try:
+        os.makedirs(os.path.join(_user_root, 'clients'), exist_ok=True)
+        os.makedirs(os.path.join(_user_root, 'client_sessions'), exist_ok=True)
+    except Exception:
+        pass
+
+    # Update global directories for downstream functions
+    CLIENT_CONFIG_DIR = os.path.join(_user_root, 'clients')
+    CLIENT_SESSIONS_DIR = os.path.join(_user_root, 'client_sessions')
 
 # Lightweight file logger for packaged builds
 def log_app_event(message: str):
@@ -1395,8 +1576,8 @@ def _load_client_config_from_file(client_name):
     
     if os.path.exists(filepath):
         try:
-            with open(filepath, 'r') as f:
-                config = json.load(f)
+            config = _read_json_secure(filepath)
+            if config is not None:
                 log_app_event(f"Successfully loaded config for {client_name}")
                 return config
         except json.JSONDecodeError as e:
@@ -1465,8 +1646,7 @@ def save_client_config(client_name, config_data):
     previous_data = None
     if os.path.exists(filepath):
         try:
-            with open(filepath, "r") as f:
-                previous_data = json.load(f)
+            previous_data = _read_json_secure(filepath)
         except Exception:
             # Corrupted or unreadable file – treat as changed so we overwrite it.
             previous_data = None
@@ -1477,9 +1657,8 @@ def save_client_config(client_name, config_data):
         st.session_state.settings_updated = False
         return  # No meaningful change; skip write & flag.
 
-    # Persist the new configuration to disk.
-    with open(filepath, "w") as f:
-        json.dump(config_data, f, indent=4)
+    # Persist the new configuration to disk (encrypted if enabled).
+    _write_json_secure(filepath, config_data)
 
     # Clear caches so the new/updated client appears in the list
     clear_client_caches()
@@ -1512,9 +1691,10 @@ def get_saved_sessions(client_name):
         if file.endswith('.json'):
             filepath = os.path.join(client_session_dir, file)
             try:
-                with open(filepath, 'r') as f:
-                    session_data = json.load(f)
-                    sessions.append({
+                session_data = _read_json_secure(filepath)
+                if not isinstance(session_data, dict):
+                    raise json.JSONDecodeError("Invalid session format", doc=str(session_data), pos=0)
+                sessions.append({
                         'filename': file,
                         'filepath': filepath,
                         'display_name': session_data.get('session_name', file.replace('.json', '')),
@@ -1583,8 +1763,7 @@ def save_audit_session(client_name, session_name=None, description=""):
         client_session_dir = ensure_session_directory(client_name)
         filepath = os.path.join(client_session_dir, filename)
         
-        with open(filepath, 'w') as f:
-            json.dump(session_data, f, indent=2)
+        _write_json_secure(filepath, session_data)
         
         # Clear the cache to refresh the session list
         get_saved_sessions.clear()
@@ -1609,8 +1788,10 @@ def load_audit_session(client_name, session_filename):
             st.error("Session file not found.")
             return False
         
-        with open(filepath, 'r') as f:
-            session_data = json.load(f)
+        session_data = _read_json_secure(filepath)
+        if not isinstance(session_data, dict):
+            st.error("Session file is corrupted or unreadable.")
+            return False
         
         # Clear existing session data
         st.session_state.bulk_data = None

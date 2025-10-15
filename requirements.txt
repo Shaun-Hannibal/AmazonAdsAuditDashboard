@@ -12,3 +12,6 @@ supabase>=2.4.0
 
 # Browser cookie utilities for Streamlit (cloud-only usage)
 extra-streamlit-components>=0.1.69
+
+# Optional encryption at rest
+cryptography>=41.0.0
