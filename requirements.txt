@@ -9,6 +9,7 @@ pillow>=10.0.0
 scikit-learn>=1.3.0
 requests>=2.31.0
 supabase>=2.4.0
+chardet>=5.0.0
 
 # Browser cookie utilities for Streamlit (cloud-only usage)
 extra-streamlit-components>=0.1.69
